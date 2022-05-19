@@ -18,6 +18,14 @@ jobs:
         # checkout the repo
         - name: 'Checkout GitHub Action'
           uses: actions/checkout@main
+
+        - name: Ensure GitHub NuGet Source
+          run: |
+            dotnet nuget add source ${{ secrets.NUGET_URL }} \
+              -n f3n \
+              -u ${{ secrets.NUGET_READONLY_USER }} \
+              -p ${{ secrets.NUGET_READONLY_USER_PAT }} \
+              --store-password-in-clear-text
           
         - name: Install dependencies
           run: dotnet restore Projections/Troolio.Projection.EntityFramework/Troolio.Projection.EntityFramework.csproj
@@ -29,4 +37,10 @@ jobs:
           run: dotnet pack --configuration Release Projections/Troolio.Projection.EntityFramework/Troolio.Projection.EntityFramework.csproj --no-build -p:PackageVersion=1.0.0.${{ github.run_number }}-prerelease
 
         - name: Publish the package to GitHub packages
-          run: dotnet nuget push Projections/Troolio.Projection.EntityFramework/*/**/*.nupkg --source https://nuget.pkg.github.com/Fifty3North/index.json --api-key ${{secrets.GITHUB_TOKEN}} --skip-duplicate --no-symbols
+          run: dotnet nuget push Projections/Troolio.Projection.EntityFramework/*/**/*.nupkg --source secrets.NUGET_URL --api-key ${{secrets.GITHUB_TOKEN}} --skip-duplicate --no-symbols
+
+        - name: Cleanup
+          if: always()
+          continue-on-error: true
+          run: |
+            dotnet nuget remove source f3n

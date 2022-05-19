@@ -37,7 +37,7 @@ jobs:
           run: dotnet pack --configuration Release Projections/Troolio.Projection.EntityFramework/Troolio.Projection.EntityFramework.csproj --no-build -p:PackageVersion=1.0.0.${{ github.run_number }}-prerelease
 
         - name: Publish the package to GitHub packages
-          run: dotnet nuget push Projections/Troolio.Projection.EntityFramework/*/**/*.nupkg --source secrets.NUGET_URL --api-key ${{secrets.GITHUB_TOKEN}} --skip-duplicate --no-symbols
+          run: dotnet nuget push Projections/Troolio.Projection.EntityFramework/*/**/*.nupkg --source ${{ secrets.NUGET_URL }} --api-key ${{secrets.GITHUB_TOKEN}} --skip-duplicate --no-symbols
 
         - name: Cleanup
           if: always()

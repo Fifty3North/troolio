@@ -1,0 +1,59 @@
+version: '3.7'
+
+services:
+  shopping-api:
+    image: ${DOCKER_REGISTRY-}shopping-api
+    build:
+      context: .
+      dockerfile: Sample.Api/Dockerfile
+    depends_on: 
+      - "shopping-silo"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Local
+      - ASPNETCORE_URLS=http://+:8081
+    ports:
+      - "8081:8081"
+    networks:
+      - Shopping-Net
+  shopping-silo:
+    image: ${DOCKER_REGISTRY-}shopping-silo
+    expose: 
+      - "9000"
+      - "9001"
+    build:
+      context: .
+      dockerfile: Sample.Silo/Dockerfile
+    depends_on: 
+      - "azurite"
+      - "eventstore"
+    networks:
+      - Shopping-Net
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    restart: always
+    ports:
+      - 10000:10000
+      - 10001:10001
+      - 10002:10002
+    networks:
+      - Shopping-Net
+  eventstore:
+    image: "eventstore/eventstore:latest"
+    environment:
+      - EVENTSTORE_INSECURE=true
+      - EVENTSTORE_RUN_PROJECTIONS=All
+      - EVENTSTORE_CLUSTER_SIZE=1
+      - EVENTSTORE_START_STANDARD_PROJECTIONS=true
+      - EVENTSTORE_EXT_TCP_PORT=1113
+      - EVENTSTORE_HTTP_PORT=2113
+      - EVENTSTORE_ENABLE_EXTERNAL_TCP=true
+      - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
+    ports:
+      - "1113:1113"
+      - "2113:2113" 
+    networks:
+      - Shopping-Net
+networks: 
+  Shopping-Net:
+    driver: bridge
+    name: Shopping-Net

@@ -1,0 +1,32 @@
+# This will build a release version of troolio.projection.entityframework and publish the nuget package to github
+name: Troolio_EntityFramework_Publish
+
+# Controls when the workflow will run
+on:
+    push:
+        branches: 
+            - main
+        paths: 
+            - "Projections/Troolio.Projection.EntityFramework/**"
+    # Allows you to run this workflow manually from the Actions tab
+    workflow_dispatch:
+
+jobs:
+    build-and-push:
+        runs-on: ubuntu-latest
+        steps:
+        # checkout the repo
+        - name: 'Checkout GitHub Action'
+          uses: actions/checkout@main
+          
+        - name: Install dependencies
+          run: dotnet restore Projections/Troolio.Projection.EntityFramework/Troolio.Projection.EntityFramework.csproj
+      
+        - name: Build
+          run: dotnet build --configuration Release --no-restore Projections/Troolio.Projection.EntityFramework/Troolio.Projection.EntityFramework.csproj
+
+        - name: Create NuGet Package
+          run: dotnet pack --configuration Release Projections/Troolio.Projection.EntityFramework/Troolio.Projection.EntityFramework.csproj --no-build -p:PackageVersion=1.0.0.${{ github.run_number }}-prerelease
+
+        - name: Publish the package to GitHub packages
+          run: dotnet nuget push Projections/Troolio.Projection.EntityFramework/*/**/*.nupkg --source https://nuget.pkg.github.com/Fifty3North/index.json --api-key ${{secrets.GITHUB_TOKEN}} --skip-duplicate --no-symbols

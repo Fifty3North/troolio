@@ -1,15 +1,10 @@
-﻿using System;
+﻿using Sample.Shared;
+using Sample.Shared.enums;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace Sample.Database.Model
 {
-    public enum ItemState
-    {
-        Pending = 0,
-        CrossedOff = 1,
-        Deleted = 2
-    }
-
     public class ShoppingListItem
     {
         [Key]

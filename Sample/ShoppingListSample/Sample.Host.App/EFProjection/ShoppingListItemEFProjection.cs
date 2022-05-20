@@ -2,6 +2,7 @@
 using Orleankka;
 using Orleans;
 using Orleans.Concurrency;
+using Sample.Shared.enums;
 using Sample.Shared.ShoppingList;
 using System;
 using System.Threading.Tasks;
@@ -55,7 +56,7 @@ namespace Sample.Database.Projection
                     ShoppingListId = listId,
                     Id = src.Event.ItemId,
                     Name = src.Event.Description,
-                    Status = Model.ItemState.Pending,
+                    Status = ItemState.Pending,
                     Quantity = src.Event.Quantity
                 };
 
@@ -67,7 +68,7 @@ namespace Sample.Database.Projection
                 Guid itemId = src.Event.ItemId;
                 Action<Model.ShoppingListItem>[] actions = new Action<Model.ShoppingListItem>[]
                 {
-                    a => a.Status = Model.ItemState.CrossedOff
+                    a => a.Status = ItemState.CrossedOff
                 };
 
                 return Task.FromResult(new EventEntityUpdate<Model.ShoppingListItem>(itemId, actions));

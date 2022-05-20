@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sample.Database.Model;
-using Sample.Database.Projection;
 using Sample.Host.App.ShoppingList;
 using Sample.Shared.ShoppingList;
 using Troolio.Stores.EventStore;
@@ -16,16 +15,12 @@ IConfiguration configuration = new ConfigurationBuilder()
     .Build();
 
 Action<IServiceCollection> configureServices = (s) =>
-{
-    s.AddTransient<ShoppingListsDbContext>();
-};
+    { s.AddTransient<ShoppingListsDbContext>(); };
 
 
-await Startup.StartWithDefaults(
-    "Shopping", 
+await Startup.StartWithDefaults("Shopping", 
     new[] { 
-        typeof(IShoppingListActor).Assembly, 
-        typeof(ShoppingListActor).Assembly,
-        typeof(IShoppingListEFProjection).Assembly
+        typeof(IShoppingListActor).Assembly,    // Sample.Shared
+        typeof(ShoppingListActor).Assembly      // Sample.Host.App
     },
     configureServices);

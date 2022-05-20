@@ -12,9 +12,9 @@ namespace Sample.Database.Model
 
     public class ShoppingListItem
     {
-        public Guid ShoppingListId { get; set; }
         [Key]
         public Guid Id { get; set; }
+        public Guid ShoppingListId { get; set; }
         public string Name { get; set; }
         public ItemState Status { get; set; }
         public uint Quantity { get; set; }

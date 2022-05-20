@@ -14,7 +14,7 @@ namespace Sample.Database.Projection
 
     [RegexImplicitStreamSubscription("ShoppingListActor-.*")]
     [Reentrant]
-    public class ShoppingListEFProjection : EntityFrameworkBatched<Model.ShoppingList, Model.ShoppingListsContext>, IShoppingListEFProjection, IGrainWithGuidCompoundKey
+    public class ShoppingListEFProjection : EntityFrameworkBatched<Model.ShoppingList, Model.ShoppingListsDbContext>, IShoppingListEFProjection, IGrainWithGuidCompoundKey
     {
         #region Boiler Plate ...
         public override Task OnActivateAsync()

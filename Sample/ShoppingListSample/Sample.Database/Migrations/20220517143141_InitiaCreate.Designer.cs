@@ -10,7 +10,7 @@ using Sample.Database.Model;
 
 namespace Sample.Database.Migrations
 {
-    [DbContext(typeof(ShoppingListsContext))]
+    [DbContext(typeof(ShoppingListsDbContext))]
     [Migration("20220517143141_InitiaCreate")]
     partial class InitiaCreate
     {

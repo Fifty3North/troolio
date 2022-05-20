@@ -3,7 +3,7 @@ using Orleans;
 using Troolio.Core.Creatable;
 using Troolio.Core.Stateful.Interfaces;
 
-namespace Sample.Shared.ShoppingList;
+namespace Sample.Shared.ActorInterfaces;
 
 public interface IAllShoppingListsActor : IStatefulActor, IActorGrain, IGrainWithStringKey { }
 public interface IEmailActor : IActorGrain, IGrainWithStringKey { }

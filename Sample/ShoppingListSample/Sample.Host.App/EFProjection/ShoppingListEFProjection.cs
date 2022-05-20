@@ -2,9 +2,7 @@
 using Orleankka;
 using Orleans;
 using Orleans.Concurrency;
-using Sample.Shared.ShoppingList;
-using System;
-using System.Threading.Tasks;
+using Sample.Shared.Events;
 using Troolio.Core;
 using Troolio.Core.Projection;
 

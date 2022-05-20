@@ -1,7 +1,10 @@
 ﻿using NUnit.Framework;
 using Orleankka;
 using Orleankka.Client;
-using Sample.Shared.ShoppingList;
+using Sample.Shared.ActorInterfaces;
+using Sample.Shared.Commands;
+using Sample.Shared.Enums;
+using Sample.Shared.Queries;
 using System.Collections.Immutable;
 using Troolio.Core;
 
@@ -83,7 +86,7 @@ internal class ShoppingListTests
         list = await shoppingListActor.Ask(new ShoppingListDetails());
         item = list.Items.Where(i => i.Name == itemDescription).FirstOrDefault();
         Assert.IsNotNull(item);
-        Assert.AreEqual(ShoppingItemQueryItemState.CrossedOff, item.Status);
+        Assert.AreEqual(ItemState.CrossedOff, item.Status);
     }
 
     [Test]

@@ -1,5 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Sample.Shared.ShoppingList;
+using Sample.Shared.ActorInterfaces;
+using Sample.Shared.Commands;
+using Sample.Shared.Events;
+using Sample.Shared.Exceptions;
+using Sample.Shared.InternalCommands;
 using System.Collections.Immutable;
 using Troolio.Core;
 using Troolio.Core.Stateful;

@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Sample.Shared.ActorInterfaces;
 using Sample.Database.Model;
 using Sample.Host.App.ShoppingList;
-using Sample.Shared.ShoppingList;
 using Troolio.Stores.EventStore;
 
 Console.WriteLine("Running sample. Booting cluster might take some time ...\n");

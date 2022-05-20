@@ -7,7 +7,7 @@ using Orleankka.Meta;
 using Orleans;
 using Orleans.Hosting;
 using Sample.Host.App.ShoppingList;
-using Sample.Shared.ShoppingList;
+using Sample.Shared.ActorInterfaces;
 using Troolio.Core;
 using Troolio.Stores;
 

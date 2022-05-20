@@ -1,3 +1,4 @@
+using Sample.Shared.ActorInterfaces;
 using Troolio.Core.Client;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,10 +11,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 IConfigurationBuilder cb = new ConfigurationBuilder();
-cb.AddUserSecrets(typeof(Sample.Shared.ShoppingList.IAllShoppingListsActor).Assembly);
+cb.AddUserSecrets(typeof(IAllShoppingListsActor).Assembly);
 
 builder.Services.AddSingleton<ITroolioClient>(
-    new TroolioClient(new[] { typeof(Sample.Shared.ShoppingList.IAllShoppingListsActor).Assembly }, "Shopping", cb));
+    new TroolioClient(new[] { typeof(IAllShoppingListsActor).Assembly }, "Shopping", cb));
 
 var app = builder.Build();
 

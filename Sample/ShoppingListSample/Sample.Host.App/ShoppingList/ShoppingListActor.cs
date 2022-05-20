@@ -1,9 +1,15 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Sample.Shared.ShoppingList;
+using Sample.Shared.Events;
+using Sample.Shared.Exceptions;
+using Sample.Shared.Queries;
+using Sample.Shared.Enums;
 using System.Collections.Immutable;
 using Troolio.Core;
 using Troolio.Core.Creatable;
 using Troolio.Stores;
+using Sample.Shared.ActorInterfaces;
+using Sample.Shared.InternalCommands;
+using Sample.Shared.Commands;
 
 namespace Sample.Host.App.ShoppingList;
 
@@ -100,7 +106,7 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
             this.State.Title,
             this.State.Items.Select(
                 i => new ShoppingItemQueryItem(
-                    i.Id, i.Name, (ShoppingItemQueryItemState)i.Status, i.Quantity
+                    i.Id, i.Name, i.Status, i.Quantity
                 )
             ).ToImmutableList(),
             this.State.Collaborators

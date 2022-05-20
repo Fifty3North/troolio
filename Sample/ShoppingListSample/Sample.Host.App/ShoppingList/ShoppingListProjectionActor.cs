@@ -1,6 +1,9 @@
 ﻿using Orleankka;
 using Orleans;
-using Sample.Shared.ShoppingList;
+using Sample.Shared.ActorInterfaces;
+using Sample.Shared.Events;
+using Sample.Shared.InternalCommands;
+using Sample.Shared.Queries;
 using Troolio.Core;
 
 namespace Sample.Host.App.ShoppingList

@@ -1,6 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Orleankka;
-using Sample.Shared.ShoppingList;
+using Sample.Shared.ActorInterfaces;
+using Sample.Shared.Events;
+using Sample.Shared.InternalCommands;
+using Sample.Shared.Queries;
 using System.Collections.Immutable;
 using Troolio.Core;
 using Troolio.Core.Stateful;

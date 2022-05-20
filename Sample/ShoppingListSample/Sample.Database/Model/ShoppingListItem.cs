@@ -1,5 +1,4 @@
-﻿using Sample.Shared;
-using Sample.Shared.enums;
+﻿using Sample.Shared.Enums;
 using System;
 using System.ComponentModel.DataAnnotations;
 

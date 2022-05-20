@@ -3,7 +3,8 @@ using System.Collections.Immutable;
 using Troolio.Core;
 using Troolio.Core.Client;
 
-using Sample.Shared.ShoppingList;
+using Sample.Shared.Queries;
+using Sample.Shared.ActorInterfaces;
 
 namespace Sample.Api.Controllers
 {

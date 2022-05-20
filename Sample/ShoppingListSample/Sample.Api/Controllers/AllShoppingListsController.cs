@@ -2,7 +2,8 @@
 using Troolio.Core;
 using Troolio.Core.Client;
 
-using Sample.Shared.ShoppingList;
+using Sample.Shared.ActorInterfaces;
+using Sample.Shared.Commands;
 
 namespace Sample.Api.Controllers
 {

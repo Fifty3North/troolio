@@ -1,6 +1,7 @@
 ﻿using Orleankka;
 using Orleans.Concurrency;
-using Sample.Shared.ShoppingList;
+using Sample.Shared.ActorInterfaces;
+using Sample.Shared.InternalCommands;
 
 namespace Sample.Host.App.ShoppingList
 {

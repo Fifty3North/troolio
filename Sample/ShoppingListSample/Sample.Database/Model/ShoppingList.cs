@@ -2,7 +2,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace Sample.Domain.Model
+namespace Sample.Database.Model
 {
     public class ShoppingList
     {

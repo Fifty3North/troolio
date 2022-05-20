@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Sample.Domain\Sample.Domain.csproj" />
+    <ProjectReference Include="..\Sample.Database\Sample.Database.csproj" />
     <ProjectReference Include="..\Sample.Host.App\Sample.Host.App.csproj" />
   </ItemGroup>
 

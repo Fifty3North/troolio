@@ -2,22 +2,24 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Sample.Domain.Model;
+using Sample.Database.Model;
 
 #nullable disable
 
-namespace Sample.Domain.Migrations
+namespace Sample.Database.Migrations
 {
     [DbContext(typeof(ShoppingListsContext))]
-    partial class ShoppingListsContextModelSnapshot : ModelSnapshot
+    [Migration("20220517143141_InitiaCreate")]
+    partial class InitiaCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.5");
 
-            modelBuilder.Entity("Sample.Domain.Model.ShoppingList", b =>
+            modelBuilder.Entity("Sample.Database.Model.ShoppingList", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -34,7 +36,7 @@ namespace Sample.Domain.Migrations
                     b.ToTable("ShoppingLists");
                 });
 
-            modelBuilder.Entity("Sample.Domain.Model.ShoppingListItem", b =>
+            modelBuilder.Entity("Sample.Database.Model.ShoppingListItem", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()

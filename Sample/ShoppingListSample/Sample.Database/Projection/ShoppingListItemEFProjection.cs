@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Troolio.Core;
 using Troolio.Core.Projection;
 
-namespace Sample.Domain.Projection
+namespace Sample.Database.Projection
 {
     public interface IShoppingListItemEFProjection : IActorGrain, IGrainWithStringKey { }
 

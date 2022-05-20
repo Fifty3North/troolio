@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace Sample.Domain.Model
+namespace Sample.Database.Model
 {
     public class ShoppingListsContext : DbContext
     {

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Sample.Domain.Migrations
+namespace Sample.Database.Migrations
 {
     public partial class InitiaCreate : Migration
     {

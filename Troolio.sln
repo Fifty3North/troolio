@@ -17,7 +17,7 @@ Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "Sample\Sh
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Api", "Sample\ShoppingListSample\Sample.Api\Sample.Api.csproj", "{B0342A59-C761-415E-B08E-9AD69BF336FA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Domain", "Sample\ShoppingListSample\Sample.Domain\Sample.Domain.csproj", "{ACC27214-6FE6-4773-932E-C9FED64DFFC1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Database", "Sample\ShoppingListSample\Sample.Database\Sample.Database.csproj", "{ACC27214-6FE6-4773-932E-C9FED64DFFC1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{49DBCA53-F78A-452F-91A3-BFF212D07162}"
 EndProject

@@ -7,7 +7,7 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 COPY ["nuget.config", "."]
 COPY ["Sample/ShoppingListSample/Sample.Host/Sample.Host.csproj", "Sample/ShoppingListSample/Sample.Host/"]
-COPY ["Sample/ShoppingListSample/Sample.Server/Sample.Server.csproj", "Sample/ShoppingListSample/Sample.Server/"]
+COPY ["Sample/ShoppingListSample/Sample.Host.App/Sample.Host.App.csproj", "Sample/ShoppingListSample/Sample.Host.App/"]
 COPY ["Sample/ShoppingListSample/Sample.Shared/Sample.Shared.csproj", "Sample/ShoppingListSample/Sample.Shared/"]
 RUN dotnet restore "Sample/ShoppingListSample/Sample.Host/Sample.Host.csproj"
 COPY . .

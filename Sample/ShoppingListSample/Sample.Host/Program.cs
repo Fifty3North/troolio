@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Sample.Domain.Model;
 using Sample.Domain.Projection;
-using Sample.Server.ShoppingList;
+using Sample.Host.App.ShoppingList;
 using Sample.Shared.ShoppingList;
 using Troolio.Stores.EventStore;
 

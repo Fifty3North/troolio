@@ -6,7 +6,7 @@ using Troolio.Core;
 using Troolio.Core.Stateful;
 using Troolio.Stores;
 
-namespace Sample.Server.ShoppingList;
+namespace Sample.Host.App.ShoppingList;
 
 public class UserActor : StatefulActor<UserState>, IUserActor
 {

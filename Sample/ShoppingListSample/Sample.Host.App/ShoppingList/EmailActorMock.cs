@@ -2,7 +2,7 @@
 using Orleans.Concurrency;
 using Sample.Shared.ShoppingList;
 
-namespace Sample.Server.ShoppingList
+namespace Sample.Host.App.ShoppingList
 {
     [Reentrant]
     [StatelessWorker]

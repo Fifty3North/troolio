@@ -3,7 +3,7 @@ using Orleans;
 using Sample.Shared.ShoppingList;
 using Troolio.Core;
 
-namespace Sample.Server.ShoppingList
+namespace Sample.Host.App.ShoppingList
 {
     /// <summary>
     /// The ShoppingListProjection will only take place once a command is fully orchestrated successfully.  This needs 

@@ -5,7 +5,7 @@ using Troolio.Core;
 using Troolio.Core.Creatable;
 using Troolio.Stores;
 
-namespace Sample.Server.ShoppingList;
+namespace Sample.Host.App.ShoppingList;
 
 public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList>, IShoppingListActor
 {

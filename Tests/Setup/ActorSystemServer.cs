@@ -6,7 +6,7 @@ using Orleankka.Cluster;
 using Orleankka.Meta;
 using Orleans;
 using Orleans.Hosting;
-using Sample.Server.ShoppingList;
+using Sample.Host.App.ShoppingList;
 using Sample.Shared.ShoppingList;
 using Troolio.Core;
 using Troolio.Stores;

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Immutable;
 using Troolio.Core.State;
 
-namespace Sample.Server.ShoppingList;
+namespace Sample.Host.App.ShoppingList;
 
 public enum ItemState
 {

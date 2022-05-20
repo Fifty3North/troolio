@@ -4,7 +4,7 @@ using Orleans.Concurrency;
 using Sample.Shared.ShoppingList;
 using Troolio.Core;
 
-namespace Sample.Server.ShoppingList;
+namespace Sample.Host.App.ShoppingList;
 
 [RegexImplicitStreamSubscription("ShoppingListActor-.*")]
 [Reentrant]

@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: Sample.Api/Dockerfile
     depends_on: 
-      - "shopping-silo"
+      - "shopping-host"
     environment:
       - ASPNETCORE_ENVIRONMENT=Local
       - ASPNETCORE_URLS=http://+:8081
@@ -15,14 +15,14 @@ services:
       - "8081:8081"
     networks:
       - Shopping-Net
-  shopping-silo:
-    image: ${DOCKER_REGISTRY-}shopping-silo
+  shopping-host:
+    image: ${DOCKER_REGISTRY-}shopping-host
     expose: 
       - "9000"
       - "9001"
     build:
       context: .
-      dockerfile: Sample.Silo/Dockerfile
+      dockerfile: Sample.Host/Dockerfile
     depends_on: 
       - "azurite"
       - "eventstore"

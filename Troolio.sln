@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Shared", "Sample\Sho
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Server", "Sample\ShoppingListSample\Sample.Server\Sample.Server.csproj", "{B3243B2E-D007-4DCC-B405-3CEC376DE4A0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Silo", "Sample\ShoppingListSample\Sample.Silo\Sample.Silo.csproj", "{49D2B04C-49EC-48FF-A887-3F2617251CE9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Host", "Sample\ShoppingListSample\Sample.Host\Sample.Host.csproj", "{49D2B04C-49EC-48FF-A887-3F2617251CE9}"
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "Sample\ShoppingListSample\docker-compose.dcproj", "{A4FBC061-8DE7-4F3B-AD0C-B0D92DE37D25}"
 EndProject

@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "Sample.Silo": {
+    "Sample.Host": {
       "commandName": "Project"
     },
     "Docker": {

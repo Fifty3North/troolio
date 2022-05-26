@@ -7,19 +7,22 @@ using Troolio.Stores.EventStore;
 
 Console.WriteLine("Running sample. Booting cluster might take some time ...\n");
 
-// create db and run any pending migrations
-new ShoppingListsDbContext().RunMigrations();
-
 IConfiguration configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
     .Build();
 
+// create db and run any pending migrations
+new ShoppingListsDbContext(configuration)
+    .RunMigrations();
+
 Action<IServiceCollection> configureServices = (s) =>
-    { s.AddTransient<ShoppingListsDbContext>(); };
+{
+    s.AddDbContext<ShoppingListsDbContext>();
+};
 
 
-await Startup.StartWithDefaults("Shopping", 
-    new[] { 
+await Startup.StartWithDefaults("Shopping",
+    new[] {
         typeof(IShoppingListActor).Assembly,    // Sample.Shared
         typeof(ShoppingListActor).Assembly      // Sample.Host.App
     },

@@ -5,8 +5,12 @@ namespace Sample.Database.Model;
 public class ShoppingListsDbContext : DbContext
 {
     protected readonly IConfiguration Configuration;
-    private string _connectionString = "Server=db;Database=shopping;User=root;Password=secret;";
+    private string _connectionString = "Server=localhost;Database=shopping;User=root;Password=secret;";
 
+    // empty constructor for use with command line migrations
+    public ShoppingListsDbContext() { }
+
+    // configuration constructor for use with runtime builder
     public ShoppingListsDbContext(IConfiguration configuration)
     {
         Configuration = configuration;

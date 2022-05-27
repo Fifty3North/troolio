@@ -20,9 +20,9 @@ namespace Sample.Database.Projection
 
                 var item = new Model.ShoppingList()
                 {
-                    Id = src.Id,
+                    Id = listId,
                     Title = src.Event.Title,
-                    AuthorId = src.Event.Headers.UserId.ToString(),
+                    AuthorId = src.Event.Headers.UserId,
                 };
 
                 return Task.FromResult(new EventEntityCreate<Model.ShoppingList>(listId, item));

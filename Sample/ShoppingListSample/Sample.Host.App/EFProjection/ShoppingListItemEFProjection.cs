@@ -17,10 +17,12 @@ namespace Sample.Database.Projection
         {
             Mapper.AddMap<EventEnvelope<ItemAddedToList>, Task<EventEntityCreate<Model.ShoppingListItem>>>(src =>
             {
+                Guid listId = Guid.Parse(src.Id);
+
                 var item = new Model.ShoppingListItem()
                 {
-                    ShoppingListId = src.Id,
-                    Id = src.Event.ItemId.ToString(),
+                    ShoppingListId = listId,
+                    Id = src.Event.ItemId,
                     Name = src.Event.Description,
                     Status = ItemState.Pending,
                     Quantity = src.Event.Quantity

@@ -42,7 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Sample\ShoppingListSample\Sample.Server\Sample.Server.csproj" />
+    <ProjectReference Include="..\Sample\ShoppingListSample\Sample.Host.App\Sample.Host.App.csproj" />
   </ItemGroup>
 
 </Project>

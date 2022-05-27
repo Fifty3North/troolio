@@ -9,17 +9,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ShoppingListSample", "Shopp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Shared", "Sample\ShoppingListSample\Sample.Shared\Sample.Shared.csproj", "{F0A1E717-BAA9-4F55-AAD8-9853087C8166}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Server", "Sample\ShoppingListSample\Sample.Server\Sample.Server.csproj", "{B3243B2E-D007-4DCC-B405-3CEC376DE4A0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Host.App", "Sample\ShoppingListSample\Sample.Host.App\Sample.Host.App.csproj", "{B3243B2E-D007-4DCC-B405-3CEC376DE4A0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Silo", "Sample\ShoppingListSample\Sample.Silo\Sample.Silo.csproj", "{49D2B04C-49EC-48FF-A887-3F2617251CE9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Host", "Sample\ShoppingListSample\Sample.Host\Sample.Host.csproj", "{49D2B04C-49EC-48FF-A887-3F2617251CE9}"
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "Sample\ShoppingListSample\docker-compose.dcproj", "{A4FBC061-8DE7-4F3B-AD0C-B0D92DE37D25}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Api", "Sample\ShoppingListSample\Sample.Api\Sample.Api.csproj", "{B0342A59-C761-415E-B08E-9AD69BF336FA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Domain", "Sample\ShoppingListSample\Sample.Domain\Sample.Domain.csproj", "{ACC27214-6FE6-4773-932E-C9FED64DFFC1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Database", "Sample\ShoppingListSample\Sample.Database\Sample.Database.csproj", "{ACC27214-6FE6-4773-932E-C9FED64DFFC1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{49DBCA53-F78A-452F-91A3-BFF212D07162}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Troolio.Projection.EntityFramework", "Projections\Troolio.Projection.EntityFramework\Troolio.Projection.EntityFramework.csproj", "{327CD2C6-CF79-4072-BC24-D1C2D7F77AC7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,6 +57,10 @@ Global
 		{49DBCA53-F78A-452F-91A3-BFF212D07162}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{49DBCA53-F78A-452F-91A3-BFF212D07162}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{49DBCA53-F78A-452F-91A3-BFF212D07162}.Release|Any CPU.Build.0 = Release|Any CPU
+		{327CD2C6-CF79-4072-BC24-D1C2D7F77AC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{327CD2C6-CF79-4072-BC24-D1C2D7F77AC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{327CD2C6-CF79-4072-BC24-D1C2D7F77AC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{327CD2C6-CF79-4072-BC24-D1C2D7F77AC7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

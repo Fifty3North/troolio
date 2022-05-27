@@ -2,12 +2,13 @@ version: '3.7'
 
 services:
   shopping-api:
+    container_name: shopping-api
     image: ${DOCKER_REGISTRY-}shopping-api
     build:
       context: .
       dockerfile: Sample.Api/Dockerfile
     depends_on: 
-      - "shopping-silo"
+      - "shopping-host"
     environment:
       - ASPNETCORE_ENVIRONMENT=Local
       - ASPNETCORE_URLS=http://+:8081
@@ -15,20 +16,23 @@ services:
       - "8081:8081"
     networks:
       - Shopping-Net
-  shopping-silo:
-    image: ${DOCKER_REGISTRY-}shopping-silo
+  shopping-host:
+    container_name: shopping-host
+    image: ${DOCKER_REGISTRY-}shopping-host
     expose: 
       - "9000"
       - "9001"
     build:
       context: .
-      dockerfile: Sample.Silo/Dockerfile
+      dockerfile: Sample.Host/Dockerfile
     depends_on: 
       - "azurite"
+      - "db"
       - "eventstore"
     networks:
       - Shopping-Net
   azurite:
+    container_name: shopping-azurite
     image: mcr.microsoft.com/azure-storage/azurite
     restart: always
     ports:
@@ -38,6 +42,7 @@ services:
     networks:
       - Shopping-Net
   eventstore:
+    container_name: shopping-eventstore
     image: "eventstore/eventstore:latest"
     environment:
       - EVENTSTORE_INSECURE=true
@@ -51,6 +56,16 @@ services:
     ports:
       - "1113:1113"
       - "2113:2113" 
+    networks:
+      - Shopping-Net
+  db:
+    container_name: shopping-db
+    image: "mysql"
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_ROOT_HOST=%
+    ports:
+      - "3306:3306"
     networks:
       - Shopping-Net
 networks: 

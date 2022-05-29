@@ -5,14 +5,9 @@ using Microsoft.Extensions.Logging;
 using Omu.ValueInjecter;
 using Orleankka;
 using Orleans;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
-using Troolio.Core.Logging;
+
 using Troolio.Projection.EntityFramework;
 
 namespace Troolio.Core.Projection
@@ -21,11 +16,12 @@ namespace Troolio.Core.Projection
         where TEntity : class
         where TDbContext : DbContext
     {
-        protected Microsoft.Extensions.Logging.ILogger _logger = new Logger();
+        protected Microsoft.Extensions.Logging.ILogger<EFPersistance<TEntity, TDbContext>>? _logger;
         protected static readonly string _entityName = typeof(TEntity).Name;
 
         public override Task OnActivateAsync()
         {
+            _logger = RequestServices?.GetRequiredService<ILogger<EFPersistance<TEntity, TDbContext>>>();
             return base.OnActivateAsync();
         }
 
@@ -47,7 +43,7 @@ namespace Troolio.Core.Projection
         }
 
         public virtual async Task<int> Create<TEvent>(EventEnvelope<TEvent> e)
-            where TEvent : TroolioEvent
+            where TEvent : Event
         {
             using (DbContext dbContext = this.RequestServices!.GetRequiredService<TDbContext>())
             {
@@ -57,7 +53,7 @@ namespace Troolio.Core.Projection
         }
 
         public virtual async Task Update<TEvent>(EventEnvelope<TEvent> e)
-            where TEvent : TroolioEvent
+            where TEvent : Event
         {
             using (DbContext dbContext = this.RequestServices!.GetRequiredService<TDbContext>())
             {
@@ -68,7 +64,7 @@ namespace Troolio.Core.Projection
 
         public virtual async Task AddItem<TChildEntity, TEvent>(EventEnvelope<TEvent> e)
             where TChildEntity : class
-            where TEvent : TroolioEvent
+            where TEvent : Event
         {
             using (DbContext dbContext = this.RequestServices!.GetRequiredService<TDbContext>())
             {
@@ -79,7 +75,7 @@ namespace Troolio.Core.Projection
 
         public virtual async Task RemoveItem<TChildEntity, TEvent>(EventEnvelope<TEvent> e)
             where TChildEntity : class
-            where TEvent : TroolioEvent
+            where TEvent : Event
         {
             using (DbContext dbContext = this.RequestServices!.GetRequiredService<TDbContext>())
             {
@@ -100,7 +96,7 @@ namespace Troolio.Core.Projection
             }
             catch (Exception ex)
             {
-                _logger.Log(LogLevel.Error, $"Error adding Entity to set ({_entityName}) ({ex.GetType().Name}) (Non DbEntityValidationException): {ex.Message}");
+                _logger?.Log(LogLevel.Error, $"Error adding Entity to set ({_entityName}) ({ex.GetType().Name}) (Non DbEntityValidationException): {ex.Message}");
             }
 
             try
@@ -166,28 +162,28 @@ namespace Troolio.Core.Projection
 
         protected void CatchError(Exception e)
         {
-            _logger.Log(LogLevel.Error, $"Error Linking Entity: {_entityName} ({e.Message}");
+            _logger?.Log(LogLevel.Error, $"Error Linking Entity: {_entityName} ({e.Message}");
         }
 
         protected void CatchUpdateError(DbUpdateException ex)
         {
-            _logger.Log(LogLevel.Error, $"DbUpdateException Inserting Entity of type: {_entityName} - {ex.Message}");
+            _logger?.Log(LogLevel.Error, $"DbUpdateException Inserting Entity of type: {_entityName} - {ex.Message}");
 
             if (ex.InnerException != null)
             {
-                _logger.Log(LogLevel.Error, $"- InnerException ({ex.InnerException.GetType().Name}) {ex.InnerException.Message}");
+                _logger?.Log(LogLevel.Error, $"- InnerException ({ex.InnerException.GetType().Name}) {ex.InnerException.Message}");
 
                 if (ex.InnerException.InnerException != null)
                 {
-                    _logger.Log(LogLevel.Error, $"- InnerInnerException ({ex.InnerException.InnerException.GetType().Name}) {ex.InnerException.InnerException.Message}");
+                    _logger?.Log(LogLevel.Error, $"- InnerInnerException ({ex.InnerException.InnerException.GetType().Name}) {ex.InnerException.InnerException.Message}");
                 }
             }
         }
 
         protected void CatchValidationError(ValidationException ex)
         {
-            _logger.Log(LogLevel.Error, $"Error Linking Entity: {_entityName} ({ex.Message}");
-            _logger.Log(LogLevel.Error, $"Property Name: {ex.ValidationAttribute?.ErrorMessageResourceName} Message: {ex.ValidationAttribute?.ErrorMessage}");
+            _logger?.Log(LogLevel.Error, $"Error Linking Entity: {_entityName} ({ex.Message}");
+            _logger?.Log(LogLevel.Error, $"Property Name: {ex.ValidationAttribute?.ErrorMessageResourceName} Message: {ex.ValidationAttribute?.ErrorMessage}");
         }
 
         protected async Task LinkEntity<TChildEntity>(DbContext dbContext, Expression<Func<TEntity, bool>> entityQuery, Expression<Func<TChildEntity, bool>> childEntityQuery, Expression<Func<TEntity, ICollection<TChildEntity>>> collectionFunc)

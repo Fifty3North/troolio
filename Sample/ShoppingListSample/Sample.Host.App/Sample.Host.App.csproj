@@ -12,7 +12,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.1" />
-    <PackageReference Include="Troolio.Core" Version="1.0.0.23-prerelease" />
+    <PackageReference Include="Troolio.Core" Version="1.0.0.24-prerelease" />
     <PackageReference Include="Troolio.Projection.EntityFramework" Version="1.0.0.5-prerelease" />
   </ItemGroup>
 

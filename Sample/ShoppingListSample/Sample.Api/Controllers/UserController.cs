@@ -26,7 +26,7 @@ public class UserController : BaseController
     /// <param name="actorId">The id of the actor to execute the command against</param>
     /// <param name="command">The command to be executed using the metadata passed in the call</param>
     /// <returns></returns>
-    private async Task<IActionResult> ExecuteCommand(Metadata userHeaders, string actorId, TroolioPublicCommand<IUserActor> command)
+    private async Task<IActionResult> ExecuteCommand(Metadata userHeaders, string actorId, Command<IUserActor> command)
     {
         try
         {
@@ -48,7 +48,7 @@ public class UserController : BaseController
     /// <param name="actorId">The id of the actor to execute the command against</param>
     /// <param name="command">The command to be executed using the metadata generated from the passed in user details</param>
     /// <returns></returns>
-    private async Task<IActionResult> ExecuteCommand(Guid userId, Guid deviceId, Guid actorId, TroolioPublicCommand<IUserActor> command)
+    private async Task<IActionResult> ExecuteCommand(Guid userId, Guid deviceId, Guid actorId, Command<IUserActor> command)
     {
         Metadata userHeaders = GetUserMetadata(userId, deviceId);
 
@@ -62,7 +62,7 @@ public class UserController : BaseController
     /// <param name="deviceId">The unique Id of the device</param>
     /// <param name="command">The command to be executed using the metadata generated from the passed in user details</param>
     /// <returns></returns>
-    private async Task<IActionResult> ExecuteCommand(Guid userId, Guid deviceId, TroolioPublicCommand<IUserActor> command)
+    private async Task<IActionResult> ExecuteCommand(Guid userId, Guid deviceId, Command<IUserActor> command)
     {
         Metadata userHeaders = GetUserMetadata(userId, deviceId);
 

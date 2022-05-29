@@ -232,7 +232,7 @@ namespace Troolio.Core.Projection
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"Error Updating Entity for Type: {_entityName} - Mapping failed. (Event: {eventName}, Source Id: {e.Id})", ex);
+                    _logger?.LogError($"Error Updating Entity for Type: {_entityName} - Mapping failed. (Event: {eventName}, Source Id: {e.Id})", ex);
                     // TODO: should we throw this or just swallow it and return here?
                     throw;
                 }
@@ -249,14 +249,14 @@ namespace Troolio.Core.Projection
 
                     try
                     {
-                        _logger.LogTrace($"Update Entity for Type: {_entityName}. (Event: {eventName}, Source Id: {e.Id}, Entity Id: {entityId})");
+                        _logger?.LogTrace($"Update Entity for Type: {_entityName}. (Event: {eventName}, Source Id: {e.Id}, Entity Id: {entityId})");
                         var errorMessage = $"Error Updating Entity for Type: {_entityName} - Existing entity does not exist. (Event: {eventName}, Source Id: {e.Id}, Entity Id: {entityId})";
 
                         TEntity existingEntity = await GetExistingEntity<TEntity>(dbContext, entityId, _entityPrimaryKeyPropertyInfo?.PropertyType ?? throw new Exception(errorMessage));
 
                         if (existingEntity == null)
                         {
-                            _logger.LogError(errorMessage);
+                            _logger?.LogError(errorMessage);
                         }
                         else
                         {
@@ -282,7 +282,7 @@ namespace Troolio.Core.Projection
         }
 
         public async Task Delete<TEvent>(EventEnvelope<TEvent> e)
-            where TEvent : TroolioEvent
+            where TEvent : Event
         {
             await AddJobToQueue(async () =>
             {
@@ -297,7 +297,7 @@ namespace Troolio.Core.Projection
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"Error Deleting Entity for Type: {_entityName} - Mapping failed. (Event: {eventName}, Source Id: {e.Id})", ex);
+                    _logger?.LogError($"Error Deleting Entity for Type: {_entityName} - Mapping failed. (Event: {eventName}, Source Id: {e.Id})", ex);
                     // TODO: should we throw this or just swallow it and return here?
                     throw;
                 }
@@ -358,7 +358,7 @@ namespace Troolio.Core.Projection
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"Error Adding Item for Type: {_entityName} - Mapping failed. (Event: {eventName}, Source Id: {e.Id}) from {this.GetType().Name}", ex);
+                    _logger?.LogError($"Error Adding Item for Type: {_entityName} - Mapping failed. (Event: {eventName}, Source Id: {e.Id}) from {this.GetType().Name}", ex);
                     // TODO: should we throw this or just swallow it and return here?
                     throw;
                 }
@@ -373,14 +373,14 @@ namespace Troolio.Core.Projection
                         TEntity parent = await GetExistingEntity<TEntity>(dbContext, parentId, _entityPrimaryKeyPropertyInfo?.PropertyType ?? throw new Exception("Property Type is null"));
                         if (parent == null)
                         {
-                            _logger.LogError($"Error Adding Item for Type: {_entityName} - Parent entity does not exist. (Event: {eventName}, Source Id: {e.Id}, Parent Id: {parentId}, Child Id: {childId}) from {this.GetType().Name}");
+                            _logger?.LogError($"Error Adding Item for Type: {_entityName} - Parent entity does not exist. (Event: {eventName}, Source Id: {e.Id}, Parent Id: {parentId}, Child Id: {childId}) from {this.GetType().Name}");
                             return;
                         }
 
                         TChildEntity child = await GetExistingEntity<TChildEntity>(dbContext, childId);
                         if (child == null)
                         {
-                            _logger.LogError($"Error Adding Item for Type: {_entityName} - Child entity does not exist. (Event: {eventName}, Source Id: {e.Id}, Parent Id: {parentId}, Child Id: {childId}) from {this.GetType().Name}");
+                            _logger?.LogError($"Error Adding Item for Type: {_entityName} - Child entity does not exist. (Event: {eventName}, Source Id: {e.Id}, Parent Id: {parentId}, Child Id: {childId}) from {this.GetType().Name}");
                             return;
                         }
 
@@ -388,7 +388,7 @@ namespace Troolio.Core.Projection
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError($"Error Adding Item for Type: {_entityName} - {ex.Message}. (Event: {eventName}, Source Id: {e.Id}, Parent Id: {parentId}, Child Id: {childId}) from {this.GetType().Name}", ex);
+                        _logger?.LogError($"Error Adding Item for Type: {_entityName} - {ex.Message}. (Event: {eventName}, Source Id: {e.Id}, Parent Id: {parentId}, Child Id: {childId}) from {this.GetType().Name}", ex);
                         // TODO: should we throw this or just swallow it and return here?
                         throw;
                     }
@@ -411,7 +411,7 @@ namespace Troolio.Core.Projection
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"Error Removing Item for Type: {_entityName} - Mapping failed. (Event: {eventName}, Source Id: {e.Id}) from {this.GetType().Name}", ex);
+                    _logger?.LogError($"Error Removing Item for Type: {_entityName} - Mapping failed. (Event: {eventName}, Source Id: {e.Id}) from {this.GetType().Name}", ex);
                     // TODO: should we throw this or just swallow it and return here?
                     throw;
                 }
@@ -426,14 +426,14 @@ namespace Troolio.Core.Projection
                         TEntity parent = await GetExistingEntity<TEntity>(dbContext, parentId, _entityPrimaryKeyPropertyInfo?.PropertyType ?? throw new Exception("Property Type is null"));
                         if (parent == null)
                         {
-                            _logger.LogError($"Error Removing Item for Type: {_entityName} - Parent entity does not exist. (Event: {eventName}, Source Id: {e.Id}, Parent Id: {parentId}, Child Id: {childId}) from {this.GetType().Name}");
+                            _logger?.LogError($"Error Removing Item for Type: {_entityName} - Parent entity does not exist. (Event: {eventName}, Source Id: {e.Id}, Parent Id: {parentId}, Child Id: {childId}) from {this.GetType().Name}");
                             return;
                         }
 
                         TChildEntity child = await GetExistingEntity<TChildEntity>(dbContext, childId);
                         if (child == null)
                         {
-                            _logger.LogError($"Error Removing Item for Type: {_entityName} - Child entity does not exist. (Event: {eventName}, Source Id: {e.Id}, Parent Id: {parentId}, Child Id: {childId}) from {this.GetType().Name}");
+                            _logger?.LogError($"Error Removing Item for Type: {_entityName} - Child entity does not exist. (Event: {eventName}, Source Id: {e.Id}, Parent Id: {parentId}, Child Id: {childId}) from {this.GetType().Name}");
                             return;
                         }
 
@@ -500,7 +500,7 @@ namespace Troolio.Core.Projection
             TEntity existingEntity = await GetExistingEntity(dbContext, entityPredicate);
             if (existingEntity == null)
             {
-                _logger.LogError($"Error Updating Entity - Existing entity does not exist for Type: {_entityName} from {this.GetType().Name}");
+                _logger?.LogError($"Error Updating Entity - Existing entity does not exist for Type: {_entityName} from {this.GetType().Name}");
             }
             else
             {
@@ -545,7 +545,7 @@ namespace Troolio.Core.Projection
             TEntity existingEntity = await GetExistingEntity(dbContext, entityPredicate);
             if (existingEntity == null)
             {
-                _logger.LogError($"Existing entity to Delete does not exist for Type: {_entityName}");
+                _logger?.LogError($"Existing entity to Delete does not exist for Type: {_entityName}");
             }
             else
             {

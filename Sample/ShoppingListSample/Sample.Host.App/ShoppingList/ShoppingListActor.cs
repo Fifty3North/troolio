@@ -18,7 +18,7 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
     public ShoppingListActor(IStore store, IConfiguration configuration) : base(store, configuration) { }
 
     #region Commands ...
-    public IEnumerable<TroolioEvent> Handle(AddItemToList command)
+    public IEnumerable<Event> Handle(AddItemToList command)
     {
         if (!(this.State.Author == command.Headers.UserId || this.State.Collaborators.Contains(command.Headers.UserId)))
         {
@@ -33,8 +33,8 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
 
         yield return new ItemAddedToList(Guid.NewGuid(), command.payload.Description, command.payload.Quantity, command.Headers);
     }
-    public IEnumerable<TroolioEvent> Handle(CreateNewList command) => new[] { new NewListCreated(command.payload.Title, command.Headers) };
-    public IEnumerable<TroolioEvent> Handle(CrossItemOffList command)
+    public IEnumerable<Event> Handle(CreateNewList command) => new[] { new NewListCreated(command.payload.Title, command.Headers) };
+    public IEnumerable<Event> Handle(CrossItemOffList command)
     {
         if (!(this.State.Author == command.Headers.UserId || this.State.Collaborators.Contains(command.Headers.UserId)))
         {
@@ -47,7 +47,7 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
 
         yield return new ItemCrossedOffList(command.payload.ItemId, command.Headers);
     }
-    public IEnumerable<TroolioEvent> Handle(JoinList command)
+    public IEnumerable<Event> Handle(JoinList command)
     {
         if (this.State.Author == command.Headers.UserId)
         {
@@ -60,7 +60,7 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
 
         yield return new ListJoined(command.Headers);
     }
-    public IEnumerable<TroolioEvent> Handle(RemoveItemFromList command)
+    public IEnumerable<Event> Handle(RemoveItemFromList command)
     {
         if (!(this.State.Author == command.Headers.UserId || this.State.Collaborators.Contains(command.Headers.UserId)))
         {

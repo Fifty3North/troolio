@@ -55,7 +55,7 @@ namespace Troolio.Tests.Setup
                             {
                                 Type messageType = message.GetType();
 
-                                if (message is TroolioPublicCommand command)
+                                if (message is Command command)
                                 {
                                     System.Diagnostics.Debug.WriteLine(">>>>>>" + messageType.Name);
                                     System.Diagnostics.Debug.WriteLine(">>>>>> messageId:" + command.Headers.MessageId);
@@ -65,7 +65,7 @@ namespace Troolio.Tests.Setup
                                     System.Diagnostics.Debug.WriteLine(">>>>>> transactionId:" + command.Headers.TransactionId);
                                     System.Diagnostics.Debug.WriteLine(">>>>>> userId:" + command.Headers.UserId);
                                 }
-                                else if (message is TroolioInternalCommand icommand)
+                                else if (message is InternalCommand icommand)
                                 {
                                     System.Diagnostics.Debug.WriteLine(">>>>>>" + messageType.Name);
                                     System.Diagnostics.Debug.WriteLine(">>>>>> messageId:" + icommand.Headers.MessageId);
@@ -75,7 +75,7 @@ namespace Troolio.Tests.Setup
                                     System.Diagnostics.Debug.WriteLine(">>>>>> transactionId:" + icommand.Headers.TransactionId);
                                     System.Diagnostics.Debug.WriteLine(">>>>>> userId:" + icommand.Headers.UserId);
                                 }
-                                else if (message is TroolioEvent ev)
+                                else if (message is Event ev)
                                 {
                                     System.Diagnostics.Debug.WriteLine(">>>>>>" + messageType.Name);
                                     System.Diagnostics.Debug.WriteLine(">>>>>> messageId:" + ev.Headers.MessageId);

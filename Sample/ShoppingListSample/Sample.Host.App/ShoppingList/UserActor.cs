@@ -16,7 +16,7 @@ public class UserActor : StatefulActor<UserState>, IUserActor
     public UserActor(IStore store, IConfiguration configuration) : base(store, configuration) { State = new UserState(ImmutableList<Guid>.Empty); }
 
     #region Commands ...
-    public IEnumerable<TroolioEvent> Handle(RecordListId command) => new[] { new ListIdRecorded(command.ListId, command.Headers) };
+    public IEnumerable<Event> Handle(RecordListId command) => new[] { new ListIdRecorded(command.ListId, command.Headers) };
     #endregion
 
     #region Events ...

@@ -3,13 +3,13 @@ using Troolio.Core;
 
 namespace Sample.Shared.InternalCommands;
 public record AddShoppingList(Metadata Headers, Guid ListId) 
-    : TroolioInternalCommand<IAllShoppingListsActor>(Headers);
+    : InternalCommand<IAllShoppingListsActor>(Headers);
 
 public record JoinList(Metadata Headers) 
-    : TroolioInternalCommand<IShoppingListActor>(Headers);
+    : InternalCommand<IShoppingListActor>(Headers);
 
 public record RecordListId(Metadata Headers, Guid ListId) 
-    : TroolioInternalCommand<IUserActor>(Headers);
+    : InternalCommand<IUserActor>(Headers);
 
 public record SendEmailNotification(Metadata Headers, string email, string description)
-    : TroolioInternalCommand<IEmailActor>(Headers);
+    : InternalCommand<IEmailActor>(Headers);

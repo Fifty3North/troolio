@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Orleankka;
 using Orleankka.Client;
 using Orleankka.Cluster;
-using Orleankka.Meta;
 using Orleans;
 using Orleans.Hosting;
 using Sample.Host.App.ShoppingList;

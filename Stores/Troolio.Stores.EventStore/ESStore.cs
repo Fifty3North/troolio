@@ -24,12 +24,12 @@ namespace Troolio.Stores
             throw new NotImplementedException();
         }
 
-        public async Task <TroolioEvent[]> ReadStream(string streamName)
+        public async Task <Event[]> ReadStream(string streamName)
         {
             StreamEventsSlice? currentSlice;
             long startEventNumber = StreamPosition.Start;
 
-            List<TroolioEvent> events = new List<TroolioEvent>();
+            List<Event> events = new List<Event>();
 
             do
             {
@@ -49,7 +49,7 @@ namespace Troolio.Stores
 
                 foreach (ResolvedEvent e in currentSlice.Events) 
                 {
-                    TroolioEvent @event = DeserializeStoredEvent(e.Event)!;
+                    Event @event = DeserializeStoredEvent(e.Event)!;
                     @event = @event with { Headers = new Metadata(Guid.Empty, Guid.Empty, Guid.Empty) };
                     Dictionary<string, object> metadata = DeserializeMetadata(e.Event.Metadata);
 
@@ -121,7 +121,7 @@ namespace Troolio.Stores
             }
         }
 
-        internal TroolioEvent? DeserializeStoredEvent(RecordedEvent @event)
+        internal Event? DeserializeStoredEvent(RecordedEvent @event)
         {
             try
             {
@@ -129,7 +129,7 @@ namespace Troolio.Stores
 
                 if (eventType != null)
                 {
-                    return (TroolioEvent)Serializer.Deserialize(@event.Data, eventType);
+                    return (Event)Serializer.Deserialize(@event.Data, eventType);
                 }
                 else
                 {
@@ -149,7 +149,7 @@ namespace Troolio.Stores
         }
 
         //TODO: Class to hook up to EventStore, as a database
-        public async Task<StoreWriteResponse> Write(string streamName, ulong evVersion, ICollection<ITroolioEvent> events)
+        public async Task<StoreWriteResponse> Write(string streamName, ulong evVersion, ICollection<IEvent> events)
         {
             events = events.ToList();
             if (events.Count == 0)
@@ -159,7 +159,7 @@ namespace Troolio.Stores
 
             EventData[] serialized = events.Select(e => e is LinkEvent le ? 
                 ToEventData(le.EventId, le, new Dictionary<string,object>()) : 
-                ToEventData((TroolioEvent)e)
+                ToEventData((Event)e)
             ).ToArray();
 
             try
@@ -177,7 +177,7 @@ namespace Troolio.Stores
         {
             // remove metadata from event body as they get inserted into metadata
             byte[] data = Serializer.Serialize(@event, new Dictionary<string, Type> { 
-                { nameof(TroolioEvent.Headers), typeof(TroolioMessage) } 
+                { nameof(Event.Headers), typeof(Message) } 
             });
 
             byte[] metadata = Serializer.Serialize(headers);
@@ -194,7 +194,7 @@ namespace Troolio.Stores
             
         }
 
-        protected internal EventData ToEventData(TroolioEvent @event)
+        protected internal EventData ToEventData(Event @event)
         {
             IDictionary<string, object> headers = new Dictionary<string, object>()
             {

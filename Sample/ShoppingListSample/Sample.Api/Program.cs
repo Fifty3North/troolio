@@ -16,6 +16,8 @@ cb.AddUserSecrets(typeof(IAllShoppingListsActor).Assembly);
 builder.Services.AddSingleton<ITroolioClient>(
     new TroolioClient(new[] { typeof(IAllShoppingListsActor).Assembly }, "Shopping", cb));
 
+builder.Logging.AddConsole();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

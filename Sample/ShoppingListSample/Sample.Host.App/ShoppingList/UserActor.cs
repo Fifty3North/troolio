@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Orleankka;
 using Sample.Shared.ActorInterfaces;
 using Sample.Shared.Events;
 using Sample.Shared.InternalCommands;
@@ -29,7 +28,7 @@ public class UserActor : StatefulActor<UserState>, IUserActor
         return (
           await Task.WhenAll(
             this.State.Lists.Select(async (l) =>
-                await this.System.TypedActorOf<IShoppingListActor>(l.ToString())
+                await this.System.ActorOf<IShoppingListActor>(l.ToString())
                     .Ask(new ShoppingListDetails())
             )
           )

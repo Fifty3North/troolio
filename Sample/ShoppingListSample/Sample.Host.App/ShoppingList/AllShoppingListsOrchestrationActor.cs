@@ -1,5 +1,4 @@
-﻿using Orleankka;
-using Orleans;
+﻿using Orleans;
 using Orleans.Concurrency;
 using Sample.Shared.ActorInterfaces;
 using Sample.Shared.Events;

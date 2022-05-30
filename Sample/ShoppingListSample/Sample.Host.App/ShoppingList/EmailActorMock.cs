@@ -1,19 +1,14 @@
-﻿using Orleankka;
-using Orleans.Concurrency;
+﻿using Orleans.Concurrency;
 using Sample.Shared.ActorInterfaces;
 using Sample.Shared.InternalCommands;
+using Troolio.Core;
 
 namespace Sample.Host.App.ShoppingList
 {
     [Reentrant]
     [StatelessWorker]
-    public class EmailActorMock : DispatchActorGrain, IEmailActor
+    public class EmailActorMock : DispatchActor, IEmailActor
     {
-        public EmailActorMock(IActorRuntime? runtime = null)
-            : base(runtime)
-        {
-        }
-
         #region Command Handlers
 
         public async Task Handle(SendEmailNotification command)

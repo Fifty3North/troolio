@@ -1,5 +1,4 @@
-﻿using Orleankka;
-using Orleans;
+﻿using Orleans;
 using Sample.Shared.ActorInterfaces;
 using Sample.Shared.Events;
 using Sample.Shared.InternalCommands;
@@ -22,7 +21,7 @@ namespace Sample.Host.App.ShoppingList
 
             ShoppingListQueryResult result = await System.ActorOf<IShoppingListActor>(e.Event.ListId.ToString()).Ask<ShoppingListQueryResult>(new ShoppingListDetails());
 
-            await System.ActorOf<EmailActorMock>(Constants.SingletonActorId).Tell(new SendEmailNotification(e.Event.Headers, email, result.Title));
+            await System.ActorOf<IEmailActor>(Constants.SingletonActorId).Tell(new SendEmailNotification(e.Event.Headers, email, result.Title));
         }
     }
 }

@@ -12,7 +12,7 @@ using Troolio.Projection.EntityFramework;
 
 namespace Troolio.Core.Projection
 {
-    public abstract class EFPersistance<TEntity, TDbContext> : DispatchActorGrain, IIncomingGrainCallFilter
+    public abstract class EFPersistance<TEntity, TDbContext> : DispatchActor, IIncomingGrainCallFilter
         where TEntity : class
         where TDbContext : DbContext
     {

@@ -1,7 +1,7 @@
-﻿using Orleankka.Meta;
-using Sample.Shared.ActorInterfaces;
+﻿using Sample.Shared.ActorInterfaces;
 using Sample.Shared.Enums;
 using System.Collections.Immutable;
+using Troolio.Core;
 
 namespace Sample.Shared.Queries;
 

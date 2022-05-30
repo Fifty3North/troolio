@@ -29,9 +29,19 @@ public record AddItemToList(Metadata Headers, string Name, int Quantity) : Comma
 and the command handler in the ShoppingListActor:
 
 ```
-public IEnumberable<Event> Handle(AddItemToList command) 
+public IEnumerable<Event> Handle(AddItemToList command)
 {
-	return new List<Event> { new ItemAddedToList(command.Headers, command.Name, command.Quantity) };
+    if (!(this.State.Author == command.Headers.UserId || this.State.Collaborators.Contains(command.Headers.UserId)))
+    {
+        throw new UnauthorizedAccessException();
+    }
+
+    if (this.State.Items.Any(i => i.Name.ToLower() == command.payload.Description))
+    {
+        throw new ItemAlreadyExistsException();
+    }
+
+    yield return new ItemAddedToList(Guid.NewGuid(), command.payload.Description, command.payload.Quantity, command.Headers);
 }
 ```
 
@@ -54,7 +64,7 @@ And the event handler:
 ```
 public void On(ItemAddedToList ev) 
 {
-	State = State with { Items = State.Items.Add(new ShoppingListItemState(ev.ItemId, ev.Description, ItemState.Pending, ev.Quantity)) };
+    State = State with { Items = State.Items.Add(new ShoppingListItemState(ev.ItemId, ev.Description, ItemState.Pending, ev.Quantity)) };
 }
 ```
 
@@ -65,5 +75,7 @@ Shared
 Client
 Server
 
-Install NuGet package Troolio.Core to all 3 projects.
+Install NuGet package Troolio.Core to the shared project.
+
+Reference the shared project from Client and Server.
 

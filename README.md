@@ -1,13 +1,13 @@
 # Troolio
 This project contains projections, stores and samples to be used with Trool.io.  Trool.io is an opinionated CQRS and Event Sourcing library running on top of Microsoft Orleans - the virtual actor framework.  Lowering the barrier to entry for Event Sourcing and CQRS, Trool.io lets you quickly and safely build robust and scalable distributed systems without extensive knowledge of the underlying technology.
 
-##Concepts
+## Concepts
 All functionality is performed by passing immutable messages to actors. Immutable means that messages cannot be modified. There are 3 types of message:-
 * Command e.g. AddToDoItem
 * Event e.g. ToDoItemCompleted 
 * Query e.g. GetAllOutstandingToDoItems
 
-##Actors
+## Actors
 Actors are made up of collections of functionality which handle messages and optionally state. 
 
 An actor can receive messages from clients as Commands or Queries. Commands are defined to allow users to modify the state of the system. They contain all the information required to modify the state of the actor and validate that the command is valid given the current actor state.
@@ -23,7 +23,7 @@ Let's take a look at how an actor handles a command:
 Take the command AddItemToList. 
 
 ```
-public record AddItemToList(Metadata Headers, string Name, int Quantity) : Command<ShoppingListActor>(Headers);`
+public record AddItemToList(Metadata Headers, string Name, int Quantity) : Command<ShoppingListActor>(Headers);
 ```
 
 and the command handler in the ShoppingListActor:

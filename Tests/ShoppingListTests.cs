@@ -4,20 +4,22 @@ using Orleankka.Client;
 using Sample.Shared.ActorInterfaces;
 using Sample.Shared.Commands;
 using Sample.Shared.Enums;
+using Sample.Shared.Exceptions;
 using Sample.Shared.Queries;
 using System.Collections.Immutable;
 using Troolio.Core;
+using Troolio.Core.Client;
 
 namespace Troolio.Tests;
 
 internal class ShoppingListTests
 {
-    private IClientActorSystem _actorSystem;
+    private ITroolioClient _client;
 
     [OneTimeSetUp]
     public async Task Setup()
     {
-        _actorSystem = await Troolio.Tests.Setup.ActorSystemServer.ConnectClient();
+        _client = await Troolio.Tests.Setup.ActorSystemServer.ConnectClient();
     }
 
     [OneTimeTearDown]
@@ -29,23 +31,23 @@ internal class ShoppingListTests
     #region Helpers ...
     private async Task<ImmutableList<ShoppingListQueryResult>> GetUserShoppingLists(Metadata user)
     {
-        return await _actorSystem.TypedActorOf<IUserActor>(user.UserId.ToString())
-            .Ask(new MyShoppingLists());
+        return await _client.Ask(user.UserId.ToString(), new MyShoppingLists());
     }
-    private async Task<string> HavingAddedAnItemToAShoppingList(ActorRef<IShoppingListActor> actor, Metadata user)
+    private async Task<string> HavingAddedAnItemToAShoppingList(Guid shoppingListId, Metadata user, string item = null)
     {
-        string itemDescription = Guid.NewGuid().ToString();
-        await actor.Tell(new AddItemToList(user with { CorrelationId = Guid.NewGuid() }, new AddItemToListPayload(itemDescription, 1)));
-
+        string itemDescription = item == null ? Guid.NewGuid().ToString() : item;
+        await _client.Tell(shoppingListId.ToString(), new AddItemToList(user with { CorrelationId = Guid.NewGuid() }, new AddItemToListPayload(itemDescription, 1)));
+        
         return itemDescription;
     }
-    private async Task<(Guid Id, ActorRef<IShoppingListActor> ActorRef)> HavingCreatedShoppingListForUser(Metadata user)
+    private async Task<Guid> HavingCreatedShoppingListForUser(Metadata user)
     {
         Guid shoppingListId = Guid.NewGuid();
-        ActorRef<IShoppingListActor> actor = _actorSystem.TypedActorOf<IShoppingListActor>(shoppingListId.ToString());
-        await actor
-            .Tell(new CreateNewList(user with { CorrelationId = Guid.NewGuid() }, new CreateNewListPayload(shoppingListId.ToString())));
-        return (shoppingListId, actor);
+        await _client.Tell(
+            shoppingListId.ToString(), 
+            new CreateNewList(user with { CorrelationId = Guid.NewGuid() }, new CreateNewListPayload(shoppingListId.ToString())));
+        
+        return shoppingListId;
     }
     #endregion
 
@@ -65,10 +67,10 @@ internal class ShoppingListTests
     public async Task AddItemToList()
     {
         Metadata user = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
-        (Guid shoppingListId, ActorRef<IShoppingListActor> shoppingListActor) = await HavingCreatedShoppingListForUser(user);
-        string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListActor, user);
+        Guid shoppingListId = await HavingCreatedShoppingListForUser(user);
+        string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListId, user);
 
-        var listDetails = await shoppingListActor.Ask(new ShoppingListDetails());
+        var listDetails = await _client.Ask(shoppingListId.ToString(), new ShoppingListDetails());
         Assert.AreEqual(1, listDetails.Items.Count());
     }
 
@@ -76,14 +78,14 @@ internal class ShoppingListTests
     public async Task CrossItemOffList()
     {
         Metadata user = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
-        (Guid shoppingListId, ActorRef<IShoppingListActor> shoppingListActor) = await HavingCreatedShoppingListForUser(user);
-        string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListActor, user);
-        ShoppingListQueryResult list = await shoppingListActor.Ask(new ShoppingListDetails());
+        Guid shoppingListId = await HavingCreatedShoppingListForUser(user);
+        string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListId, user);
+        ShoppingListQueryResult list = await _client.Ask(shoppingListId.ToString(), new ShoppingListDetails());
         var item = list.Items.Where(i => i.Name == itemDescription).FirstOrDefault();
 
-        await shoppingListActor.Tell(new CrossItemOffList(user, new CrossItemOffListPayload(item.Id)));
+        await _client.Tell(shoppingListId.ToString(), new CrossItemOffList(user, new CrossItemOffListPayload(item.Id)));
 
-        list = await shoppingListActor.Ask(new ShoppingListDetails());
+        list = await _client.Ask(shoppingListId.ToString(), new ShoppingListDetails());
         item = list.Items.Where(i => i.Name == itemDescription).FirstOrDefault();
         Assert.IsNotNull(item);
         Assert.AreEqual(ItemState.CrossedOff, item.Status);
@@ -93,16 +95,24 @@ internal class ShoppingListTests
     public async Task RemoveItemFromList()
     {
         Metadata user = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
-        (Guid shoppingListId, ActorRef<IShoppingListActor> shoppingListActor) = await HavingCreatedShoppingListForUser(user);
-        string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListActor, user);
-        ShoppingListQueryResult list = await shoppingListActor.Ask(new ShoppingListDetails());
+        Guid shoppingListId = await HavingCreatedShoppingListForUser(user);
+        string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListId, user);
+        ShoppingListQueryResult list = await _client.Ask(shoppingListId.ToString(), new ShoppingListDetails());
         var item = list.Items.Where(i => i.Name == itemDescription).FirstOrDefault();
 
-        await shoppingListActor.Tell(new RemoveItemFromList(user, new RemoveItemFromListPayload(item.Id)));
+        await _client.Tell(shoppingListId.ToString(), new RemoveItemFromList(user, new RemoveItemFromListPayload(item.Id)));
 
-        list = await shoppingListActor.Ask(new ShoppingListDetails());
+        list = await _client.Ask(shoppingListId.ToString(), new ShoppingListDetails());
         item = list.Items.Where(i => i.Name == itemDescription).FirstOrDefault();
         Assert.IsNull(item);
     }
 
+    [Test]
+    public async Task DuplicateItemThrowsItemAlreadyExistsException()
+    {
+        Metadata user = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        Guid shoppingListId = await HavingCreatedShoppingListForUser(user);
+        string item1Description = await HavingAddedAnItemToAShoppingList(shoppingListId, user, "Milk");
+        Assert.ThrowsAsync<ItemAlreadyExistsException>(async () => { await HavingAddedAnItemToAShoppingList(shoppingListId, user, "Milk"); });
+    }
 }

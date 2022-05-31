@@ -26,12 +26,12 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
         }
 
         // check
-        if (this.State.Items.Any(i => i.Name.ToLower() == command.payload.Description))
+        if (this.State.Items.Any(i => i.Name == command.payload.Description))
         {
             throw new ItemAlreadyExistsException();
         }
 
-        yield return new ItemAddedToList(Guid.NewGuid(), command.payload.Description, command.payload.Quantity, command.Headers);
+        return new[] { new ItemAddedToList(Guid.NewGuid(), command.payload.Description, command.payload.Quantity, command.Headers) };
     }
     public IEnumerable<Event> Handle(CreateNewList command) => new[] { new NewListCreated(command.payload.Title, command.Headers) };
     public IEnumerable<Event> Handle(CrossItemOffList command)

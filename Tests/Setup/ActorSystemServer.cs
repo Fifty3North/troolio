@@ -26,7 +26,13 @@ namespace Troolio.Tests.Setup
                        typeof(ShoppingListActor).Assembly,
                        typeof(IShoppingListActor).Assembly
                    },
-                   configureServices
+                   configureServices,
+                   // This disables any actors that you do not want to be registered
+                   // Turn off DB projections for running tests
+                   disableActors: new[] { 
+                       "Sample.Database.Projection.ShoppingListEFProjection", 
+                       "Sample.Database.Projection.ShoppingListItemEFProjection" 
+                   }
                );
 
             await _host.StartAsync();

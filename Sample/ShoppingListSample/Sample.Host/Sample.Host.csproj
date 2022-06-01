@@ -30,7 +30,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.1" />
-    <PackageReference Include="Troolio.Stores.EventStore" Version="1.0.0.3-prerelease" />
+    <PackageReference Include="Troolio.Stores.EventStore" Version="1.0.0.4-prerelease" />
   </ItemGroup>
 
   <ItemGroup>

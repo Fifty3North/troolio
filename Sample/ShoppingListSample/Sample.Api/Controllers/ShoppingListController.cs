@@ -2,6 +2,7 @@
 using Sample.Shared.ActorInterfaces;
 using Sample.Shared.Commands;
 using Sample.Shared.Queries;
+using Sample.Shared.ReadModels;
 using Troolio.Core;
 using Troolio.Core.Client;
 
@@ -110,6 +111,29 @@ public class ShoppingListController : BaseController
         try
         {
             result = await _troolioClient.Ask(ShoppingListId.ToString(), new ShoppingListDetails());
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+
+        return Ok(result);
+    }
+
+    [HttpGet]
+    [Route("{ShoppingListId}/ShoppingListReadModel")]
+    public async Task<ActionResult<ShoppingList>> ShoppingListReadModel([FromHeader] Guid userId, [FromHeader] Guid deviceId, [FromRoute] Guid ShoppingListId)
+    {
+        ShoppingList result;
+
+        try
+        {
+            result = await _troolioClient.Get<ShoppingList>(ShoppingListId.ToString());
+
+            if(result.Title == null)
+            {
+                throw new ApplicationException("Shopping list has not been created");
+            }
         }
         catch (Exception ex)
         {

@@ -4,6 +4,7 @@ using Sample.Shared.Commands;
 using Sample.Shared.Events;
 using Sample.Shared.Exceptions;
 using Sample.Shared.InternalCommands;
+using Sample.Shared.Queries;
 using System.Collections.Immutable;
 using Troolio.Core;
 using Troolio.Core.Stateful;
@@ -15,7 +16,7 @@ public class AllShoppingListsActor : StatefulActor<AllShoppingListsState>, IAllS
 {
     public AllShoppingListsActor(IStore store, IConfiguration configuration) : base(store, configuration)
     { 
-         this.State = new AllShoppingListsState( ImmutableDictionary<string, Guid>.Empty);
+         this.State = new AllShoppingListsState(ImmutableDictionary<string, Guid>.Empty);
     }
 
     #region Commands ...
@@ -41,5 +42,9 @@ public class AllShoppingListsActor : StatefulActor<AllShoppingListsState>, IAllS
     #region Events ...
     public void On(ListJoinedUsingCode _) { } // Stub this non-state changing event
     public void On(ShoppingListAdded ev) => this.State = this.State with { Lists = State.Lists.Add(ev.joinCode, ev.ListId) };
+    #endregion
+
+    #region Queries 
+    internal string On(AuthorRequestedJoinCode query) => State.Lists.FirstOrDefault(l => l.Value == query.ListId).Key;
     #endregion
 }

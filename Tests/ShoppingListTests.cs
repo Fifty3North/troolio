@@ -33,6 +33,7 @@ internal class ShoppingListTests
     {
         return await _client.Ask(user.UserId.ToString(), new MyShoppingLists());
     }
+    
     private async Task<string> HavingAddedAnItemToAShoppingList(Guid shoppingListId, Metadata user, string item = null)
     {
         string itemDescription = item == null ? Guid.NewGuid().ToString() : item;
@@ -40,6 +41,7 @@ internal class ShoppingListTests
         
         return itemDescription;
     }
+
     private async Task<Guid> HavingCreatedShoppingListForUser(Metadata user)
     {
         Guid shoppingListId = Guid.NewGuid();
@@ -115,4 +117,28 @@ internal class ShoppingListTests
         string item1Description = await HavingAddedAnItemToAShoppingList(shoppingListId, user, "Milk");
         Assert.ThrowsAsync<ItemAlreadyExistsException>(async () => { await HavingAddedAnItemToAShoppingList(shoppingListId, user, "Milk"); });
     }
+    
+    [Test]
+    public async Task AuthorCannotJoinListThrowsException()
+    {
+        Metadata user = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        Guid shoppingListId = await HavingCreatedShoppingListForUser(user);
+        var joinCode = await _client.Ask(shoppingListId.ToString(), new GetJoinCode(user.UserId));
+        
+        Assert.ThrowsAsync<AuthorCannotJoinListException>(async () => { await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(user, new JoinListUsingCodePayload(joinCode))); });
+    }
+    
+    [Test]
+    public async Task ReadModelIsPopulated()
+    {
+        Metadata user = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        Guid shoppingListId = await HavingCreatedShoppingListForUser(user);
+        string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListId, user);
+
+        var readModel = await _client.Get<Sample.Shared.ReadModels.ShoppingList>(shoppingListId.ToString());
+        Assert.AreEqual(1, readModel.Items.Count());
+        Assert.AreEqual(itemDescription, readModel.Items.First().Description);
+    }
+
+    
 }

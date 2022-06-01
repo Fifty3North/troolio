@@ -112,5 +112,15 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
             this.State.Collaborators
          );
     }
+
+    public async Task<string> Handle(GetJoinCode query)
+    {
+        if (this.State.Author != query.UserId)
+        {
+            throw new UnauthorizedAccessException();
+        }
+
+        return await System.ActorOf<IAllShoppingListsActor>(Constants.SingletonActorId).Ask(new AuthorRequestedJoinCode(Guid.Parse(this.Id)));
+    }
     #endregion
 }

@@ -28,31 +28,6 @@ internal class ShoppingListTests
         await Troolio.Tests.Setup.ActorSystemServer.DisconnectClient();
     }
 
-    #region Helpers ...
-    private async Task<ImmutableList<ShoppingListQueryResult>> GetUserShoppingLists(Metadata user)
-    {
-        return await _client.Ask(user.UserId.ToString(), new MyShoppingLists());
-    }
-    
-    private async Task<string> HavingAddedAnItemToAShoppingList(Guid shoppingListId, Metadata user, string item = null)
-    {
-        string itemDescription = item == null ? Guid.NewGuid().ToString() : item;
-        await _client.Tell(shoppingListId.ToString(), new AddItemToList(user with { CorrelationId = Guid.NewGuid() }, new AddItemToListPayload(itemDescription, 1)));
-        
-        return itemDescription;
-    }
-
-    private async Task<Guid> HavingCreatedShoppingListForUser(Metadata user)
-    {
-        Guid shoppingListId = Guid.NewGuid();
-        await _client.Tell(
-            shoppingListId.ToString(), 
-            new CreateNewList(user with { CorrelationId = Guid.NewGuid() }, new CreateNewListPayload(shoppingListId.ToString())));
-        
-        return shoppingListId;
-    }
-    #endregion
-
     [Test]
     public async Task NewList()
     {
@@ -127,7 +102,105 @@ internal class ShoppingListTests
         
         Assert.ThrowsAsync<AuthorCannotJoinListException>(async () => { await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(user, new JoinListUsingCodePayload(joinCode))); });
     }
-    
+
+    [Test]
+    public async Task JoinList()
+    {
+        Metadata author = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        Metadata collaborator = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        Guid shoppingListId = await HavingCreatedShoppingListForUser(author);
+        var joinCode = await _client.Ask(shoppingListId.ToString(), new GetJoinCode(author.UserId));
+        await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(collaborator, new JoinListUsingCodePayload(joinCode)));
+        var list = await _client.Ask(shoppingListId.ToString(), new ShoppingListDetails());
+        Assert.Contains(collaborator.UserId, list.Collaborators);
+    }
+
+    [Test]
+    public async Task UserHasAlreadyJoinedListThrowsException()
+    {
+        Metadata author = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        Metadata collaborator = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        Guid shoppingListId = await HavingCreatedShoppingListForUser(author);
+        var joinCode = await _client.Ask(shoppingListId.ToString(), new GetJoinCode(author.UserId));
+        await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(collaborator, new JoinListUsingCodePayload(joinCode)));
+        
+        Assert.ThrowsAsync<UserHasAlreadyJoinedListException>(async () => {
+            await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(collaborator, new JoinListUsingCodePayload(joinCode)));
+        });
+    }
+
+    [Test]
+    public async Task CollaboratorCannotRemoveItemFromListThrowsException()
+    {
+        // setup users
+        Metadata author = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        Metadata collaborator = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        
+        // create list
+        Guid shoppingListId = await HavingCreatedShoppingListForUser(author);
+        
+        // get join code
+        var joinCode = await _client.Ask(shoppingListId.ToString(), new GetJoinCode(author.UserId));
+
+        // join list
+        await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(collaborator, new JoinListUsingCodePayload(joinCode)));
+        
+        // add item to list
+        string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListId, author);
+        
+        // get item id
+        var list = await _client.Ask(shoppingListId.ToString(), new ShoppingListDetails());
+        var itemId = list.Items.Where(i => i.Name == itemDescription).FirstOrDefault().Id;
+
+        // try to remove item as a collaborator
+        Assert.ThrowsAsync<CollaboratorCannotRemoveItemFromListException>(async () => { 
+            await _client.Tell(shoppingListId.ToString(), new RemoveItemFromList(collaborator, new RemoveItemFromListPayload(itemId))); 
+        });
+    }
+
+    [Test]
+    public async Task InvalidJoinCodeThrowsException()
+    {
+        // setup users
+        Metadata author = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        Metadata collaborator = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+
+        // create list
+        Guid shoppingListId = await HavingCreatedShoppingListForUser(author);
+
+        // get join code
+        var joinCode = await _client.Ask(shoppingListId.ToString(), new GetJoinCode(author.UserId));
+
+        // try to join list with invalid code
+        Assert.ThrowsAsync<InvalidJoinCodeException>(async () => {
+            await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(collaborator, new JoinListUsingCodePayload("abcd")));
+        });
+    }
+
+    [Test]
+    public async Task ItemDoesNotExistThrowsExceptionWhenCrossedOff()
+    {
+        Metadata user = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        Guid shoppingListId = await HavingCreatedShoppingListForUser(user);
+        string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListId, user);
+
+        Assert.ThrowsAsync<ItemDoesNotExistException>(async () => {
+            await _client.Tell(shoppingListId.ToString(), new CrossItemOffList(user, new CrossItemOffListPayload(Guid.NewGuid())));
+        });
+    }
+
+    [Test]
+    public async Task ItemDoesNotExistThrowsExceptionWhenCrossedRemoved()
+    {
+        Metadata user = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        Guid shoppingListId = await HavingCreatedShoppingListForUser(user);
+        string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListId, user);
+
+        Assert.ThrowsAsync<ItemDoesNotExistException>(async () => {
+            await _client.Tell(shoppingListId.ToString(), new RemoveItemFromList(user, new RemoveItemFromListPayload(Guid.NewGuid())));
+        });
+    }
+
     [Test]
     public async Task ReadModelIsPopulated()
     {
@@ -140,5 +213,28 @@ internal class ShoppingListTests
         Assert.AreEqual(itemDescription, readModel.Items.First().Description);
     }
 
-    
+    #region Helpers ...
+    private async Task<ImmutableList<ShoppingListQueryResult>> GetUserShoppingLists(Metadata user)
+    {
+        return await _client.Ask(user.UserId.ToString(), new MyShoppingLists());
+    }
+
+    private async Task<string> HavingAddedAnItemToAShoppingList(Guid shoppingListId, Metadata user, string item = null)
+    {
+        string itemDescription = item == null ? Guid.NewGuid().ToString() : item;
+        await _client.Tell(shoppingListId.ToString(), new AddItemToList(user with { CorrelationId = Guid.NewGuid() }, new AddItemToListPayload(itemDescription, 1)));
+
+        return itemDescription;
+    }
+
+    private async Task<Guid> HavingCreatedShoppingListForUser(Metadata user)
+    {
+        Guid shoppingListId = Guid.NewGuid();
+        await _client.Tell(
+            shoppingListId.ToString(),
+            new CreateNewList(user with { CorrelationId = Guid.NewGuid() }, new CreateNewListPayload(shoppingListId.ToString())));
+
+        return shoppingListId;
+    }
+    #endregion    
 }

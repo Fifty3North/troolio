@@ -208,12 +208,69 @@ Action<IServiceCollection> configureServices = (s) =>
 ```
 
 ## Creating a Client
+In order to use the server you need a client.  A client can be a command line application or an API.  When createing a client you only need to reference the assembly with the interfaces, the server determines the implementations.
+
+### Command Line Client
+To create a command line client you need to create a host builder:
+
+```
+var hostBuilder = Host.CreateDefaultBuilder(args);
+hostBuilder.ConfigureServices(services => services.AddTroolioClient("Shopping", new[] { typeof(IShoppingListActor).Assembly }));
+var host = hostBuilder.Build();
+host.Start();
+```
+
+Once you have a host you need to attach to it to get the client:
+
+```
+var client = host.Services.GetRequiredService<ITroolioClient>();
+```
+
+### API Client
+To add the client to the API you simply add a singleton implementation of ITroolioClient:
+
+```
+builder.Services.AddSingleton<ITroolioClient>(
+    new TroolioClient(new[] { typeof(IAllShoppingListsActor).Assembly }, "Shopping", configurationBuilder));
+```
 
 ## Tracing
 
 ## Storage
+Storage is handled by a store.  Configuration of the store could difer between implementations but below is an example of the EventStore store configuration:
+
+```
+"Shopping:Storage": {
+	"EventStoreCluster": "false",
+    "EventStorePort": "1113",
+    "EventStoreHosts": "eventstore"
+}
+```
 
 ## Clustering
+You can use clustering to improve robustness by configuring the clustering setting in the appsettings.json:
+
+For local clustering use the following:
+
+```
+"Shopping:Clustering": {
+	"Storage": "Local",
+}
+```
+
+You can also use Azurite to maintain the cluster:
+
+```
+"Shopping:Clustering": {
+	"ConnectionString": "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;TableEndpoint=http://azurite:10002/devstoreaccount1",
+	"ClusterId": "shopping-dev",
+	"ServiceId": "shopping-service-dev"
+  }
+```
+
+* ConnectionString - The connection string to access the cluster storage.  The example is the published Microsoft connectionstring for development and testing
+* ClusterId - A unique id for the cluster
+* ServiceId - a unique service id
 
 ## Snapshots
 When actors become idle they get shut down to reduce memory usage, when next called they need to read events to get back to their latest state.  To reduce the number of events that need to be used to repopulate the actor Trool.io uses snapshots.  A snapshot is a point in time representation of the actors state which will be loaded and only events after the snapshot was taken will be actioned.  Snapshots will be taken every 100 events by default but this can be changed by specifying a SnapshotThreshhold in appsettings.json:

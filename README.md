@@ -51,6 +51,7 @@ public IEnumerable<Event> Handle(AddItemToList command)
 It's the command handler's responsibility to check that given the current state of the actor the command is valid and can be processed. At this point one or more events is returned from the command handler or an exception can be raised to indicate an invalid command or invalid state.
 ### Queries
 Queries allow the client to retrieve information from the system. 
+
 ### Events
 Events are only ever raised as a result of a command being handled by the actor.  The command can raise multiple events for a single action to keep things atomic.  Events can be listened for and can then trigger other actions to be performed.
 
@@ -73,6 +74,49 @@ And the State object:
 
 ```
 public record ShoppingListState(ImmutableList<ShoppingListItemState> Items)
+```
+
+### Orchestrations
+Each actor has an event stream which is populated from the events raised by the commands when called, this event stream can then be watched by an orchestrator which can raise commands or events when an event is encountered.  Orchestrations can listen to one or more actor event streams.  It is important to note that orchestrations are part of the transaction so if the orchestration fails the entire transaction will fail.
+
+An orchestration can look like this:
+
+```
+[RegexImplicitStreamSubscription("ShoppingListActor-.*")]
+[Reentrant]
+[StatelessWorker]
+public class AllShoppingListsOrchestrationActor : OrchestrationActor
+{
+    public async Task On(EventEnvelope<NewListCreated> e)
+    {
+        await System.ActorOf<IAllShoppingListsActor>(Constants.SingletonActorId).Tell(new AddShoppingList(e.Event.Headers, Guid.Parse(e.Id)));
+    }
+}
+```
+
+In the above example we can see the following: 
+* It subscribes, i.e. listens to the ShoppingListActor stream
+* It is Reentrant so doesn't lock during a request
+* It is a StatelessWorker so doesn't change between calls and can be instantiated many times to improve throughput.
+
+### Projections
+Projections are similar to orchestrations but differ in one major way.  Projections are not contained in the transaction so a projection will only take place if a transaction has completed successfully.  Projections can be used for such things as sending an email when a user has been successfully created in the system.
+
+A projection looks like this:
+
+```
+[RegexImplicitStreamSubscription("AllShoppingListsActor-.*")]
+public class ShoppingListProjectionActor : ProjectionActor
+{
+	async Task On(EventEnvelope<ListJoinedUsingCode> e)
+	{
+		string email = "dummy@somewhere.com";
+
+		ShoppingListQueryResult result = await System.ActorOf<IShoppingListActor>(e.Event.ListId.ToString()).Ask<ShoppingListQueryResult>(new ShoppingListDetails());
+
+		await System.ActorOf<IEmailActor>(Constants.SingletonActorId).Tell(new SendEmailNotification(e.Event.Headers, email, result.Title));
+	}
+}
 ```
 
 ### Read Models
@@ -124,3 +168,61 @@ public class ShoppingReadModelOrchestrator
 
 }
 ```
+
+## Creating a Server (Host)
+In order to run a Trool.io project you first need to create a server.  An example can be found in the Sample.Host project.  The server is a command line application which configures all the actors and runs them waiting for a client.
+It starts the server using the "StartWithDefaults" passing in the application name, the list of assemblies and the service delegates:
+
+```
+await Startup.StartWithDefaults("Shopping",
+    new[] {
+        typeof(IShoppingListActor).Assembly,    // Sample.Shared
+        typeof(ShoppingListActor).Assembly      // Sample.Host.App
+    },
+    configureServices);
+```
+
+The list of assemblies will be scanned to determine the relevant interfaces and implementations of those interfaces to be used by the application.  ConfigureServices allows mapping of services to delegates for dependancy injection.
+
+### Configuration / Dependancy Injection
+The Sample.Host uses json configuration in the form of appsettings.json which will automatically be loaded in while starting the server if started with defaults.
+
+You can configure services by passing in an Action<IServiceCollection> to the StartWithDefaults.  It allows mapping of interfaces and types so that you can inject implementations for different cases
+
+This is how to specify a database context:
+
+```
+Action<IServiceCollection> configureServices = (s) =>
+{
+    s.AddDbContext<ShoppingListsDbContext>();
+};
+```
+
+And then a singleton:
+
+```
+Action<IServiceCollection> configureServices = (s) =>
+{
+    s.AddSingleton<IAllShoppingListsActor, DummyAllShoppingListsActor>();
+};
+```
+
+## Creating a Client
+
+## Tracing
+
+## Storage
+
+## Clustering
+
+## Snapshots
+When actors become idle they get shut down to reduce memory usage, when next called they need to read events to get back to their latest state.  To reduce the number of events that need to be used to repopulate the actor Trool.io uses snapshots.  A snapshot is a point in time representation of the actors state which will be loaded and only events after the snapshot was taken will be actioned.  Snapshots will be taken every 100 events by default but this can be changed by specifying a SnapshotThreshhold in appsettings.json:
+
+```
+{
+  "snapshotThreshold": 5
+}
+```
+
+## Sending Emails
+

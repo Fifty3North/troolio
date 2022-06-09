@@ -235,13 +235,30 @@ builder.Services.AddSingleton<ITroolioClient>(
 ```
 
 ## Tracing
+Tracing allows you to see all the commands and events that have been issued to the system.  It can be enabled by issueing an "EnableTracing" command to the Trool.io client:
+
+```
+await client.Tell(Constants.SingletonActorId, new EnableTracing());
+```
+
+And once enabled you can access it by issuing a Flush query:
+
+```
+var tracingLog = await _client.Ask(Constants.SingletonActorId, new Flush());
+```
+
+An example of using the trace to write out to a file is in the Sample.Api.  Should you wish to switch it off you can issue a "DisableTracing" command:
+
+```
+await client.Tell(Constants.SingletonActorId, new DisableTracing());
+```
 
 ## Storage
 Storage is handled by a store.  Configuration of the store could difer between implementations but below is an example of the EventStore store configuration:
 
 ```
 "Shopping:Storage": {
-	"EventStoreCluster": "false",
+    "EventStoreCluster": "false",
     "EventStorePort": "1113",
     "EventStoreHosts": "eventstore"
 }

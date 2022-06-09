@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Troolio.Core" Version="1.0.0.32-prerelease" />
+    <PackageReference Include="Troolio.Core" Version="1.0.0.35-prerelease" />
   </ItemGroup>
 
 </Project>

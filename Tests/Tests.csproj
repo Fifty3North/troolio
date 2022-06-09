@@ -31,7 +31,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
-    <PackageReference Include="Troolio.Core" Version="1.0.0.32-prerelease" />
+    <PackageReference Include="Troolio.Core" Version="1.0.0.35-prerelease" />
   </ItemGroup>
 
   <ItemGroup>

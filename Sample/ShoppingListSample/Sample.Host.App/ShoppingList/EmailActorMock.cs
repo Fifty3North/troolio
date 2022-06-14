@@ -15,6 +15,8 @@ namespace Sample.Host.App.ShoppingList
         {
             try
             {
+                throw new ApplicationException("test error");
+
                 string email = command.email;
                 //string subject = "New Shopping list user.";
                 string content = $"The {command.description} shopping list had a new contributor join.";

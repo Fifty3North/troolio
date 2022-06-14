@@ -108,14 +108,14 @@ A projection looks like this:
 [RegexImplicitStreamSubscription("AllShoppingListsActor-.*")]
 public class ShoppingListProjectionActor : ProjectionActor
 {
-	async Task On(EventEnvelope<ListJoinedUsingCode> e)
-	{
-		string email = "dummy@somewhere.com";
+    async Task On(EventEnvelope<ListJoinedUsingCode> e)
+    {
+        string email = "dummy@somewhere.com";
 
-		ShoppingListQueryResult result = await System.ActorOf<IShoppingListActor>(e.Event.ListId.ToString()).Ask<ShoppingListQueryResult>(new ShoppingListDetails());
+        ShoppingListQueryResult result = await System.ActorOf<IShoppingListActor>(e.Event.ListId.ToString()).Ask<ShoppingListQueryResult>(new ShoppingListDetails());
 
-		await System.ActorOf<IEmailActor>(Constants.SingletonActorId).Tell(new SendEmailNotification(e.Event.Headers, email, result.Title));
-	}
+        await System.ActorOf<IEmailActor>(Constants.SingletonActorId).Tell(new SendEmailNotification(e.Event.Headers, email, result.Title));
+    }
 }
 ```
 
@@ -271,7 +271,7 @@ For local clustering use the following:
 
 ```
 "Shopping:Clustering": {
-	"Storage": "Local",
+    "Storage": "Local",
 }
 ```
 
@@ -279,9 +279,9 @@ You can also use Azurite to maintain the cluster:
 
 ```
 "Shopping:Clustering": {
-	"ConnectionString": "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;TableEndpoint=http://azurite:10002/devstoreaccount1",
-	"ClusterId": "shopping-dev",
-	"ServiceId": "shopping-service-dev"
+    "ConnectionString": "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;TableEndpoint=http://azurite:10002/devstoreaccount1",
+    "ClusterId": "shopping-dev",
+    "ServiceId": "shopping-service-dev"
   }
 ```
 

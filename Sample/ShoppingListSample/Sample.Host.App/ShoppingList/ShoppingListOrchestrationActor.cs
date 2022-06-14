@@ -10,7 +10,7 @@ namespace Sample.Host.App.ShoppingList;
 [RegexImplicitStreamSubscription("AllShoppingListsActor-.*")]
 [Reentrant]
 [StatelessWorker]
-public class ShoppingListOrchestrationActor : OrchestrationActor
+public class ShoppingListOrchestrationActor : OrchestrationActor, IShoppingListOrchestrationActor
 {
     async Task On(EventEnvelope<ListJoinedUsingCode> e)
     {

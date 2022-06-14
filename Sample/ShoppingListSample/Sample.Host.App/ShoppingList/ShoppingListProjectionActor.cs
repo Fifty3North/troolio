@@ -4,7 +4,6 @@ using Sample.Shared.Events;
 using Sample.Shared.InternalCommands;
 using Sample.Shared.Queries;
 using Troolio.Core;
-using Troolio.Core.Reliable;
 using Troolio.Core.Reliable.Interfaces;
 using Troolio.Core.Reliable.Messages;
 
@@ -16,7 +15,7 @@ namespace Sample.Host.App.ShoppingList
     /// subsequently fails
     /// </summary>
     [RegexImplicitStreamSubscription("AllShoppingListsActor-.*")]
-    public class ShoppingListProjectionActor : ProjectionActor
+    public class ShoppingListProjectionActor : ProjectionActor, IShoppingListProjectionActor
     {
         async Task On(EventEnvelope<ListJoinedUsingCode> e)
         {

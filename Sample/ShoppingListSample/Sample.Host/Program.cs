@@ -18,7 +18,6 @@ new ShoppingListsDbContext(configuration)
 Action<IServiceCollection> configureServices = (s) =>
 {
     s.AddDbContext<ShoppingListsDbContext>()
-    .AddSingleton<F3N.Core.Logging.ILogger>(new F3N.Core.Logging.LoggerMock())
     .AddSingleton<F3N.Providers.MessageQueue.IMessageQueueProvider>(new F3N.Providers.MessageQueue.InMemoryMessageQueueProvider());
 };
 

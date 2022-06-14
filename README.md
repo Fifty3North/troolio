@@ -12,10 +12,12 @@ Trool.io is fully tracible and transaction based.  Tracibility is achieved throu
 In addition to queries to retrieve information from the system there are also read models.  Read models allow you to see a model built from one or more actors.
 
 ## Actors
-Actors are made up of collections of functionality which handle messages.  Actors can implement one of 3 interfaces:-
+Actors are made up of collections of functionality which handle messages.  Actors can implement one of 5 interfaces:-
 * IActor - This type of actor doesn't have any state so is used as a worker or to project outside the system
 * IStatefulActor - This type of actor maintains its own state so can include validation as to when actions can be performed
 * ICreatableActor - This type of actor maintains its own state but also must have an explicit create command and will raise an exception if other actions are requested before the actor has been created.
+* IOrchestrationActor - This type of actor responds to events raised by other actors.  It doesn't maintain state and an error will cause the transaction to fail
+* IProjectionActor - This type of actor responds to events raised by other actors but only once a transaction has completed successfully
 
 Messages from clients can be Commands or Queries. 
 ### Commands
@@ -298,5 +300,33 @@ When actors become idle they get shut down to reduce memory usage, when next cal
 }
 ```
 
-## Sending Emails
+## Batch commands (Used for sending Emails etc)
+Batch commands are out of process commands backed up by a message queue.  They will be actioned and if failed will be retried a certain number of times (default is 3 times).
+To add batch jobs you first need to configure the queue.  To do this you need to dependancy inject an F3N.Providers.MessageQueue.IMessageQueueProvider, e.g.
 
+```
+Action<IServiceCollection> configureServices = (s) =>
+{
+    s.AddSingleton<F3N.Providers.MessageQueue.IMessageQueueProvider>(new F3N.Providers.MessageQueue.InMemoryMessageQueueProvider());
+};
+```
+This example uses the InMemoryMessageQueueProvider but it shouldn't be used in production as messages are only contained on the machine so any reboot or interuption will cause loss of messages.
+Once the message queue is setup you can then add batch jobs by:
+
+Create a command you want to execute:
+```
+var command = new SendEmailNotification(e.Event.Headers, "someone@somewhere.com", "test email");
+```
+
+Retrieve the path to the actor that needs to execute the command:
+```
+var actorPath = System.ActorOf<IEmailActor>(Constants.SingletonActorId).Path;
+```
+
+And finally tell the batch job actor the actor path and command to execute:
+```
+await System.ActorOf<IBatchJobActor>(Constants.SingletonActorId)
+	.Tell(new AddBatchJob(actorPath, command));
+```
+
+This will have a single batch job actor but you could use more.

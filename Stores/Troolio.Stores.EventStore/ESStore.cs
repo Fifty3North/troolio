@@ -24,72 +24,9 @@ namespace Troolio.Stores
             throw new NotImplementedException();
         }
 
-        public async Task <Event[]> ReadStream(string streamName)
+        public async Task <IEvent[]> ReadStream(string streamName)
         {
-            StreamEventsSlice? currentSlice;
-            long startEventNumber = StreamPosition.Start;
-
-            List<Event> events = new List<Event>();
-
-            do
-            {
-                currentSlice = await ES.Connection!.ReadStreamEventsForwardAsync(streamName, startEventNumber, 256, true);
-
-                if (currentSlice.Status == SliceReadStatus.StreamNotFound)
-                {
-                    break;
-                }
-
-                if (currentSlice.Status == SliceReadStatus.StreamDeleted)
-                {
-                    throw new InvalidOperationException($"Stream '{streamName}' has beed unexpectedly deleted");
-                }
-
-                startEventNumber = currentSlice.NextEventNumber;
-
-                foreach (ResolvedEvent e in currentSlice.Events) 
-                {
-                    Event @event = DeserializeStoredEvent(e.Event)!;
-                    @event = @event with { Headers = new Metadata(Guid.Empty, Guid.Empty, Guid.Empty) };
-                    Dictionary<string, object> metadata = DeserializeMetadata(e.Event.Metadata);
-
-                    if (TryGetMetadataId(metadata, nameof(Metadata.CorrelationId), out Guid correlationId))
-                    {
-                        @event = @event with { Headers = @event.Headers with { CorrelationId = correlationId } };
-                    }
-
-                    if (TryGetMetadataId(metadata, nameof(Metadata.UserId), out Guid userId))
-                    {
-                        @event = @event with { Headers = @event.Headers with { UserId = userId } };
-                    }
-
-                    if (TryGetMetadataId(metadata, nameof(Metadata.DeviceId), out Guid deviceId))
-                    {
-                        @event = @event with { Headers = @event.Headers with { DeviceId = deviceId } };
-                    }
-
-                    if (TryGetMetadataId(metadata, nameof(Metadata.MessageId), out Guid messageId))
-                    {
-                        @event = @event with { Headers = @event.Headers with { MessageId = messageId } };
-                    }
-
-                    if (TryGetMetadataId(metadata, nameof(Metadata.TransactionId), out Guid transactionId))
-                    {
-                        @event = @event with { Headers = @event.Headers with { TransactionId = transactionId } };
-                    }
-
-                    if (TryGetMetadataId(metadata, nameof(Metadata.CausationId), out Guid causationId))
-                    {
-                        @event = @event with { Headers = @event.Headers with { CausationId = causationId } };
-                    }
-
-                    events.Add(@event);
-                }
-                
-            }
-            while (!currentSlice.IsEndOfStream);
-
-            return events.ToArray();
+            return await ReadStreamFromEvent(streamName, StreamPosition.Start);
         }
 
         private static bool TryGetMetadataId(Dictionary<string, object> metadata, string key, out Guid id)
@@ -207,6 +144,110 @@ namespace Troolio.Stores
             };
 
             return ToEventData(@event.Headers.MessageId, @event, headers);
+        }
+
+        public async Task<IEvent[]> ReadStreamFromEvent(string streamName, ulong evVersion)
+        {
+            StreamEventsSlice? currentSlice;
+            long startEventNumber = (long)evVersion;
+
+            List<IEvent> events = new List<IEvent>();
+
+            do
+            {
+                currentSlice = await ES.Connection!.ReadStreamEventsForwardAsync(streamName, startEventNumber, 256, true);
+
+                if (currentSlice.Status == SliceReadStatus.StreamNotFound)
+                {
+                    break;
+                }
+
+                if (currentSlice.Status == SliceReadStatus.StreamDeleted)
+                {
+                    throw new InvalidOperationException($"Stream '{streamName}' has beed unexpectedly deleted");
+                }
+
+                startEventNumber = currentSlice.NextEventNumber;
+
+                foreach (ResolvedEvent e in currentSlice.Events)
+                {
+                    events.Add(ConvertResolvedEventToIEvent(e));
+                }
+
+            }
+            while (!currentSlice.IsEndOfStream);
+
+            return events.ToArray();
+        }
+
+        public async Task<IEvent?> ReadLastEvent(string streamName)
+        {
+            EventReadResult? eventReadResult = await ES.Connection!.ReadEventAsync(streamName, StreamPosition.End, true);
+
+            if (eventReadResult != null)
+            {
+                return ConvertResolvedEventToIEvent(eventReadResult.Event.Value);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public async Task<IEvent?> ReadStreamEvent(string streamName, ulong evVersion)
+        {
+            EventReadResult? eventReadResult = await ES.Connection!.ReadEventAsync(streamName, (long)evVersion, true);
+
+            if (eventReadResult != null)
+            {
+                return ConvertResolvedEventToIEvent(eventReadResult.Event.Value);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+
+
+
+        private IEvent ConvertResolvedEventToIEvent(ResolvedEvent resolvedEvent)
+        {
+            Event @event = DeserializeStoredEvent(resolvedEvent.Event)!;
+            @event = @event with { Headers = new Metadata(Guid.Empty, Guid.Empty, Guid.Empty) };
+            Dictionary<string, object> metadata = DeserializeMetadata(resolvedEvent.Event.Metadata);
+
+            if (TryGetMetadataId(metadata, nameof(Metadata.CorrelationId), out Guid correlationId))
+            {
+                @event = @event with { Headers = @event.Headers with { CorrelationId = correlationId } };
+            }
+
+            if (TryGetMetadataId(metadata, nameof(Metadata.UserId), out Guid userId))
+            {
+                @event = @event with { Headers = @event.Headers with { UserId = userId } };
+            }
+
+            if (TryGetMetadataId(metadata, nameof(Metadata.DeviceId), out Guid deviceId))
+            {
+                @event = @event with { Headers = @event.Headers with { DeviceId = deviceId } };
+            }
+
+            if (TryGetMetadataId(metadata, nameof(Metadata.MessageId), out Guid messageId))
+            {
+                @event = @event with { Headers = @event.Headers with { MessageId = messageId } };
+            }
+
+            if (TryGetMetadataId(metadata, nameof(Metadata.TransactionId), out Guid transactionId))
+            {
+                @event = @event with { Headers = @event.Headers with { TransactionId = transactionId } };
+            }
+
+            if (TryGetMetadataId(metadata, nameof(Metadata.CausationId), out Guid causationId))
+            {
+                @event = @event with { Headers = @event.Headers with { CausationId = causationId } };
+            }
+
+            return @event;
         }
     }
 }

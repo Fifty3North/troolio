@@ -24,12 +24,47 @@ namespace Troolio.Stores
             throw new NotImplementedException();
         }
 
-        public async Task <Event[]> ReadStream(string streamName)
+        public async Task <IEvent[]> ReadStream(string streamName)
+        {
+            return await ReadStreamFromEvent(streamName, StreamPosition.Start);
+        }
+
+        //TODO: Class to hook up to EventStore, as a database
+        public async Task<StoreWriteResponse> Write(string streamName, ulong evVersion, ICollection<IEvent> events)
+        {
+            // First event version (number) in EventStore is 0. Within Actor implementation is 1.
+            long expectedVersion = (long)evVersion - 1;
+
+            events = events.ToList();
+            if (events.Count == 0)
+            {
+                return new StoreWriteResponse(0);
+            }
+
+            EventData[] serialized = events.Select(e => e is LinkEvent le ? 
+                ToEventData(le.EventId, le, new Dictionary<string,object>()) : 
+                ToEventData((Event)e)
+            ).ToArray();
+
+            try
+            {
+                WriteResult result =  await ES.Connection!.AppendToStreamAsync(streamName, expectedVersion, serialized);
+                return new StoreWriteResponse((ulong)events.Count);
+            }
+            catch (WrongExpectedVersionException)
+            {
+                throw new InvalidOperationException($"Duplicate activation of actor '{streamName}' detected");
+            }
+        }
+
+        public async Task<IEvent[]> ReadStreamFromEvent(string streamName, ulong evVersion)
         {
             StreamEventsSlice? currentSlice;
-            long startEventNumber = StreamPosition.Start;
 
-            List<Event> events = new List<Event>();
+            // First event version (number) in EventStore is 0. Within Actor implementation is 1.
+            long startEventNumber = (long)evVersion -1;
+
+            List<IEvent> events = new List<IEvent>();
 
             do
             {
@@ -47,64 +82,54 @@ namespace Troolio.Stores
 
                 startEventNumber = currentSlice.NextEventNumber;
 
-                foreach (ResolvedEvent e in currentSlice.Events) 
+                foreach (ResolvedEvent e in currentSlice.Events)
                 {
-                    Event @event = DeserializeStoredEvent(e.Event)!;
-                    @event = @event with { Headers = new Metadata(Guid.Empty, Guid.Empty, Guid.Empty) };
-                    Dictionary<string, object> metadata = DeserializeMetadata(e.Event.Metadata);
-
-                    if (TryGetMetadataId(metadata, nameof(Metadata.CorrelationId), out Guid correlationId))
-                    {
-                        @event = @event with { Headers = @event.Headers with { CorrelationId = correlationId } };
-                    }
-
-                    if (TryGetMetadataId(metadata, nameof(Metadata.UserId), out Guid userId))
-                    {
-                        @event = @event with { Headers = @event.Headers with { UserId = userId } };
-                    }
-
-                    if (TryGetMetadataId(metadata, nameof(Metadata.DeviceId), out Guid deviceId))
-                    {
-                        @event = @event with { Headers = @event.Headers with { DeviceId = deviceId } };
-                    }
-
-                    if (TryGetMetadataId(metadata, nameof(Metadata.MessageId), out Guid messageId))
-                    {
-                        @event = @event with { Headers = @event.Headers with { MessageId = messageId } };
-                    }
-
-                    if (TryGetMetadataId(metadata, nameof(Metadata.TransactionId), out Guid transactionId))
-                    {
-                        @event = @event with { Headers = @event.Headers with { TransactionId = transactionId } };
-                    }
-
-                    if (TryGetMetadataId(metadata, nameof(Metadata.CausationId), out Guid causationId))
-                    {
-                        @event = @event with { Headers = @event.Headers with { CausationId = causationId } };
-                    }
-
-                    events.Add(@event);
+                    events.Add(ConvertResolvedEventToIEvent(e));
                 }
-                
+
             }
             while (!currentSlice.IsEndOfStream);
 
             return events.ToArray();
         }
 
-        private static bool TryGetMetadataId(Dictionary<string, object> metadata, string key, out Guid id)
+        public async Task<(IEvent? Event, ulong Version)> ReadLastEvent(string streamName)
         {
-            if (metadata != null && metadata.TryGetValue(key, out object? value) && value != null && Guid.TryParse(value.ToString(), out id))
+            EventReadResult? eventReadResult = await ES.Connection!.ReadEventAsync(streamName, StreamPosition.End, true);
+
+            if (eventReadResult?.Event != null)
             {
-                return true;
+                IEvent @event = ConvertResolvedEventToIEvent(eventReadResult.Event.Value);
+
+                // First event version (number) in EventStore is 0. Within Actor implementation is 1.
+                ulong version = (ulong)eventReadResult.EventNumber + 1;
+
+                return (@event, version);
             }
-
-            id = Guid.Empty;
-
-            return false;
+            else
+            {
+                return (null, 0);
+            }
         }
 
-        internal Dictionary<string, object> DeserializeMetadata(byte[] metadata)
+        public async Task<IEvent?> ReadStreamEvent(string streamName, ulong evVersion)
+        {
+            // First event version (number) in EventStore is 0. Within Actor implementation is 1.
+            long eventNumber = (long)evVersion - 1;
+
+            EventReadResult? eventReadResult = await ES.Connection!.ReadEventAsync(streamName, eventNumber, true);
+
+            if (eventReadResult?.Event != null)
+            {
+                return ConvertResolvedEventToIEvent(eventReadResult.Event.Value);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private Dictionary<string, object> DeserializeMetadata(byte[] metadata)
         {
             try
             {
@@ -121,7 +146,7 @@ namespace Troolio.Stores
             }
         }
 
-        internal Event? DeserializeStoredEvent(RecordedEvent @event)
+        private Event? DeserializeStoredEvent(RecordedEvent @event)
         {
             try
             {
@@ -148,53 +173,27 @@ namespace Troolio.Stores
             }
         }
 
-        //TODO: Class to hook up to EventStore, as a database
-        public async Task<StoreWriteResponse> Write(string streamName, ulong evVersion, ICollection<IEvent> events)
-        {
-            events = events.ToList();
-            if (events.Count == 0)
-            {
-                return new StoreWriteResponse(0);
-            }
-
-            EventData[] serialized = events.Select(e => e is LinkEvent le ? 
-                ToEventData(le.EventId, le, new Dictionary<string,object>()) : 
-                ToEventData((Event)e)
-            ).ToArray();
-
-            try
-            {
-                WriteResult result =  await ES.Connection!.AppendToStreamAsync(streamName, (long)evVersion - 1, serialized);
-                return new StoreWriteResponse((ulong)events.Count);
-            }
-            catch (WrongExpectedVersionException)
-            {
-                throw new InvalidOperationException($"Duplicate activation of actor '{streamName}' detected");
-            }
-        }
-
         private EventData ToEventData(Guid eventId, object @event, IDictionary<string, object> headers)
         {
             // remove metadata from event body as they get inserted into metadata
-            byte[] data = Serializer.Serialize(@event, new Dictionary<string, Type> { 
-                { nameof(Event.Headers), typeof(Message) } 
+            byte[] data = Serializer.Serialize(@event, new Dictionary<string, Type> {
+                { nameof(Event.Headers), typeof(Message) }
             });
 
             byte[] metadata = Serializer.Serialize(headers);
 
             if (@event is LinkEvent l)
             {
-                return new EventData(eventId, "$>", Serializer.IsJson, UTF8Encoding.ASCII.GetBytes(l.data), metadata);
-            } 
+                return new EventData(eventId, "$>", Serializer.IsJson, Encoding.ASCII.GetBytes(l.data), metadata);
+            }
             else
             {
                 string eventTypeName = @event.GetType().AssemblyQualifiedName!;
                 return new EventData(eventId, eventTypeName, Serializer.IsJson, data, metadata);
             }
-            
         }
 
-        protected internal EventData ToEventData(Event @event)
+        private EventData ToEventData(Event @event)
         {
             IDictionary<string, object> headers = new Dictionary<string, object>()
             {
@@ -207,6 +206,57 @@ namespace Troolio.Stores
             };
 
             return ToEventData(@event.Headers.MessageId, @event, headers);
+        }
+
+        private IEvent ConvertResolvedEventToIEvent(ResolvedEvent resolvedEvent)
+        {
+            Event @event = DeserializeStoredEvent(resolvedEvent.Event)!;
+            @event = @event with { Headers = new Metadata(Guid.Empty, Guid.Empty, Guid.Empty) };
+            Dictionary<string, object> metadata = DeserializeMetadata(resolvedEvent.Event.Metadata);
+
+            if (TryGetMetadataId(metadata, nameof(Metadata.CorrelationId), out Guid correlationId))
+            {
+                @event = @event with { Headers = @event.Headers with { CorrelationId = correlationId } };
+            }
+
+            if (TryGetMetadataId(metadata, nameof(Metadata.UserId), out Guid userId))
+            {
+                @event = @event with { Headers = @event.Headers with { UserId = userId } };
+            }
+
+            if (TryGetMetadataId(metadata, nameof(Metadata.DeviceId), out Guid deviceId))
+            {
+                @event = @event with { Headers = @event.Headers with { DeviceId = deviceId } };
+            }
+
+            if (TryGetMetadataId(metadata, nameof(Metadata.MessageId), out Guid messageId))
+            {
+                @event = @event with { Headers = @event.Headers with { MessageId = messageId } };
+            }
+
+            if (TryGetMetadataId(metadata, nameof(Metadata.TransactionId), out Guid transactionId))
+            {
+                @event = @event with { Headers = @event.Headers with { TransactionId = transactionId } };
+            }
+
+            if (TryGetMetadataId(metadata, nameof(Metadata.CausationId), out Guid causationId))
+            {
+                @event = @event with { Headers = @event.Headers with { CausationId = causationId } };
+            }
+
+            return @event;
+        }
+
+        private static bool TryGetMetadataId(Dictionary<string, object> metadata, string key, out Guid id)
+        {
+            if (metadata != null && metadata.TryGetValue(key, out object? value) && value != null && Guid.TryParse(value.ToString(), out id))
+            {
+                return true;
+            }
+
+            id = Guid.Empty;
+
+            return false;
         }
     }
 }

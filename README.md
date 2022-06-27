@@ -98,7 +98,7 @@ public class AllShoppingListsOrchestrationActor : OrchestrationActor
 
 In the above example we can see the following: 
 * It subscribes, i.e. listens to the ShoppingListActor stream
-* It is Reentrant so doesn't lock during a request
+* It is Reentrant so can process more than one message at a time
 * It is a StatelessWorker so doesn't change between calls and can be instantiated many times to improve throughput.
 
 ### Projections
@@ -149,7 +149,7 @@ public record ShoppingList : TroolioReadModel
 }
 ```
 
-And the orchestrator:
+And the orchestrator. This maps from a property of the source event to the primary key of the read model:
 
 ```
 [RegexImplicitStreamSubscription("ShoppingListActor-.*")]
@@ -173,7 +173,52 @@ public class ShoppingReadModelOrchestrator
 
 ## Creating a Server (Host)
 In order to run a Trool.io project you first need to create a server.  An example can be found in the Sample.Host project.  The server is a command line application which configures all the actors and runs them waiting for a client.
-It starts the server using the "StartWithDefaults" passing in the application name, the list of assemblies and the service delegates:
+
+### Local Development (without docker)
+
+To run locally (without docker) you can configure the host as:
+
+```
+    var host = Host
+        .CreateDefaultBuilder(args)
+        .TroolioServer(appName, new[] {
+	    typeof(IShoppingListActor).Assembly,    // Sample.Shared
+	    typeof(ShoppingListActor).Assembly      // Sample.Host.App
+        }, configureServices);
+
+    await host.RunAsync();
+```
+
+appsettings.json needs the following:
+```
+{
+  "{appName}:Clustering": {
+    "Storage": "Local"
+  },
+  "snapshotThreshold":  "100"
+}
+```
+
+This configures the application to use in-memory event database, in-memory node discovery and other in-memory infrastructure which supports the framework. This is for local development only and all state will be lost when the application exits.
+
+### Local Development (with docker)
+
+This spins up a local development docker cluster which mirrors a production setup more closely. 
+
+In the sample there are 5 containers:
+* api: hosts the HTTP REST API which clients can call
+* host: the Troolio application (a node)
+* azurite: an Azure Storage emulator to hold node information
+* eventstore: the event database
+* mysql: sample projections write to this external database
+
+Right click on docker-compose project in Visual Studio and select "Set as Startup Project" and debug as usual
+
+OR
+
+From the command line type: `docker-compose -f "Sample/ShoppingListSample/docker-compose.yml" up -d --build`
+
+This uses the EventStore shortcut to start the server using the "StartWithDefaults" passing in the application name, the list of assemblies and the service delegates:
 
 ```
 await Startup.StartWithDefaults("Shopping",
@@ -184,9 +229,20 @@ await Startup.StartWithDefaults("Shopping",
     configureServices);
 ```
 
+appsettings.json requires more information:
+```
+{
+  "{appName}:Clustering": {
+    "ConnectionString": "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;TableEndpoint=http://azurite:10002/devstoreaccount1",
+    "ClusterId": "shopping-dev",
+    "ServiceId": "shopping-service-dev"
+  }
+}
+```
+
 The list of assemblies will be scanned to determine the relevant interfaces and implementations of those interfaces to be used by the application.  ConfigureServices allows mapping of services to delegates for dependancy injection.
 
-### Configuration / Dependancy Injection
+### Configuration / Dependency Injection
 The Sample.Host uses json configuration in the form of appsettings.json which will automatically be loaded in while starting the server if started with defaults.
 
 You can configure services by passing in an Action<IServiceCollection> to the StartWithDefaults.  It allows mapping of interfaces and types so that you can inject implementations for different cases
@@ -235,6 +291,8 @@ To add the client to the API you simply add a singleton implementation of ITrool
 builder.Services.AddSingleton<ITroolioClient>(
     new TroolioClient(new[] { typeof(IAllShoppingListsActor).Assembly }, "Shopping", configurationBuilder));
 ```
+	
+appsettings.json needs to match that of the server for the `"{appName}:Clustering"` section. 
 
 ## Tracing
 Tracing allows you to see all the commands and events that have been issued to the system.  It can be enabled by issueing an "EnableTracing" command to the Trool.io client:
@@ -256,7 +314,12 @@ await client.Tell(Constants.SingletonActorId, new DisableTracing());
 ```
 
 ## Storage
-Storage is handled by a store.  Configuration of the store could difer between implementations but below is an example of the EventStore store configuration:
+Two types of store are built into Troolio. FileSystemStore writes streams to disk one file per stream and are persisted between app restarts. InMemoryStore uses a Dictionary to hold all stream data and all data is lost when the application exits. These are intended for development only.
+
+A production grade store is provided using the Event Store client in the OSS Troolio.Stores.EventStore included in this repository.
+	
+Configuration of the EventStore could differ between implementations but below is an example of a single node EventStore configuration:
+
 
 ```
 "Shopping:Storage": {
@@ -277,7 +340,7 @@ For local clustering use the following:
 }
 ```
 
-You can also use Azurite to maintain the cluster:
+You can also use Azure Table Storage to maintain the cluster when more than one host node is required:
 
 ```
 "Shopping:Clustering": {

@@ -6,8 +6,12 @@ namespace Sample.Shared.ActorInterfaces;
 
 public interface IAllShoppingListsActor : IStatefulActor { }
 public interface IEmailActor : IActor { }
+public interface IShoppingListActor : ICreatableActor { }
+public interface IShoppingListItemEFProjection : IProjectionActor { }
+public interface IShoppingListEFProjection : IProjectionActor { }
+public interface IShoppingListOrchestrationActor : IOrchestrationActor { }
+public interface IShoppingListProjectionActor : IProjectionActor { }
+public interface IShoppingReadModelOrchestrator : IOrchestrationActor { }
 public interface IUserActor : IStatefulActor { }
-public interface IShoppingListActor : ICreatableActor, IStatefulActor { }
-public interface IShoppingListItemEFProjection : IActor { }
-public interface IShoppingListEFProjection : IActor { }
-public interface IShoppingReadModelOrchestrator : IActor { }
+public interface IUserProjectionActor : IProjectionActor { }
+public interface IUserOrchestrationActor : IOrchestrationActor { }

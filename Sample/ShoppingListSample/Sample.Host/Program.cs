@@ -17,7 +17,8 @@ new ShoppingListsDbContext(configuration)
 
 Action<IServiceCollection> configureServices = (s) =>
 {
-    s.AddDbContext<ShoppingListsDbContext>();
+    s.AddDbContext<ShoppingListsDbContext>()
+    .AddSingleton<F3N.Providers.MessageQueue.IMessageQueueProvider>(new F3N.Providers.MessageQueue.InMemoryMessageQueueProvider());
 };
 
 

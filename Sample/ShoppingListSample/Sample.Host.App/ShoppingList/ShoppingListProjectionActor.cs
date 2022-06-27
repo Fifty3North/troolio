@@ -4,6 +4,8 @@ using Sample.Shared.Events;
 using Sample.Shared.InternalCommands;
 using Sample.Shared.Queries;
 using Troolio.Core;
+using Troolio.Core.Reliable.Interfaces;
+using Troolio.Core.Reliable.Messages;
 
 namespace Sample.Host.App.ShoppingList
 {
@@ -13,7 +15,7 @@ namespace Sample.Host.App.ShoppingList
     /// subsequently fails
     /// </summary>
     [RegexImplicitStreamSubscription("AllShoppingListsActor-.*")]
-    public class ShoppingListProjectionActor : ProjectionActor
+    public class ShoppingListProjectionActor : ProjectionActor, IShoppingListProjectionActor
     {
         async Task On(EventEnvelope<ListJoinedUsingCode> e)
         {
@@ -21,7 +23,12 @@ namespace Sample.Host.App.ShoppingList
 
             ShoppingListQueryResult result = await System.ActorOf<IShoppingListActor>(e.Event.ListId.ToString()).Ask<ShoppingListQueryResult>(new ShoppingListDetails());
 
-            await System.ActorOf<IEmailActor>(Constants.SingletonActorId).Tell(new SendEmailNotification(e.Event.Headers, email, result.Title));
+            var command = new SendEmailNotification(e.Event.Headers, email, result.Title);
+
+            var actorPath = System.ActorOf<IEmailActor>(Constants.SingletonActorId).Path;
+
+            await System.ActorOf<IBatchJobActor>(Constants.SingletonActorId)
+                .Tell(new AddBatchJob(actorPath, command));
         }
     }
 }

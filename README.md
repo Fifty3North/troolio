@@ -3,9 +3,9 @@ This project contains projections, stores and samples to be used with Trool.io. 
 
 ## Concepts
 All functionality is performed by passing immutable messages to actors. Immutable means that messages cannot be modified. There are 3 types of message:-
-* Command e.g. AddToDoItem
-* Event e.g. ToDoItemAdded 
-* Query e.g. GetAllOutstandingToDoItems
+* **Command** e.g. AddToDoItem
+* **Event** e.g. ToDoItemAdded 
+* **Query** e.g. GetAllOutstandingToDoItems
 
 Trool.io is fully tracible and transaction based.  Tracibility is achieved through the use of the header metadata which identifies who performed an action and from which device, they also contain a unique collation ID which can be followed through the system.  
 
@@ -13,11 +13,11 @@ In addition to queries to retrieve information from the system there are also re
 
 ## Actors
 Actors are made up of collections of functionality which handle messages.  Actors can implement one of 5 interfaces:-
-* IActor - This type of actor doesn't have any state so is used as a worker or to project outside the system
-* IStatefulActor - This type of actor maintains its own state so can include validation as to when actions can be performed
-* ICreatableActor - This type of actor maintains its own state but also must have an explicit create command and will raise an exception if other actions are requested before the actor has been created.
-* IOrchestrationActor - This type of actor responds to events raised by other actors.  It doesn't maintain state and an error will cause the transaction to fail
-* IProjectionActor - This type of actor responds to events raised by other actors but only once a transaction has completed successfully
+* **IActor** - This type of actor doesn't have any state so is used as a worker or to project outside the system
+* **IStatefulActor** - This type of actor maintains its own state so can include validation as to when actions can be performed
+* **ICreatableActor** - This type of actor maintains its own state but also must have an explicit create command and will raise an exception if other actions are requested before the actor has been created.
+* **IOrchestrationActor** - This type of actor responds to events raised by other actors.  It doesn't maintain state and an error will cause the transaction to fail
+* **IProjectionActor** - This type of actor responds to events raised by other actors but only once a transaction has completed successfully
 
 Messages from clients can be Commands or Queries. 
 ### Commands
@@ -27,13 +27,13 @@ Let's take a look at how an actor handles a command:
 
 Take the command AddItemToList. 
 
-```
+```c#
 public record AddItemToList(Metadata Headers, string Name, int Quantity) : Command<ShoppingListActor>(Headers);
 ```
 
 and the command handler in the ShoppingListActor:
 
-```
+```c#
 public IEnumerable<Event> Handle(AddItemToList command)
 {
     if (!(this.State.Author == command.Headers.UserId || this.State.Collaborators.Contains(command.Headers.UserId)))
@@ -59,13 +59,13 @@ Events are only ever raised as a result of a command being handled by the actor.
 
 Let's look at an event:
 
-```
+```c#
 public record ItemAddedToList(Metadata Headers, string Name, int Quantity) : Event(Headers);`
 ```
 
 And the event handler:
 
-```
+```c#
 public void On(ItemAddedToList ev) 
 {
     State = State with { Items = State.Items.Add(new ShoppingListItemState(ev.ItemId, ev.Description, ItemState.Pending, ev.Quantity)) };
@@ -74,7 +74,7 @@ public void On(ItemAddedToList ev)
 
 And the State object:
 
-```
+```c#
 public record ShoppingListState(ImmutableList<ShoppingListItemState> Items)
 ```
 
@@ -83,7 +83,7 @@ Each actor has an event stream which is populated from the events raised by the 
 
 An orchestration can look like this:
 
-```
+```c#
 [RegexImplicitStreamSubscription("ShoppingListActor-.*")]
 [Reentrant]
 [StatelessWorker]
@@ -106,7 +106,7 @@ Projections are similar to orchestrations but differ in one major way.  Projecti
 
 A projection looks like this:
 
-```
+```c#
 [RegexImplicitStreamSubscription("AllShoppingListsActor-.*")]
 public class ShoppingListProjectionActor : ProjectionActor
 {
@@ -126,7 +126,7 @@ As mentioned previously, read models allow the user to retrieve data from the sy
 
 Lets take a look at a read model:
 
-```
+```c#
 public record ShoppingList : TroolioReadModel
 {
     public ShoppingList(Guid id)
@@ -151,7 +151,7 @@ public record ShoppingList : TroolioReadModel
 
 And the orchestrator. This maps from a property of the source event to the primary key of the read model:
 
-```
+```c#
 [RegexImplicitStreamSubscription("ShoppingListActor-.*")]
 [RegexImplicitStreamSubscription("AllShoppingListsActor-.*")]
 public class ShoppingReadModelOrchestrator 
@@ -178,7 +178,7 @@ In order to run a Trool.io project you first need to create a server.  An exampl
 
 To run locally (without docker) you can configure the host as:
 
-```
+```c#
     var host = Host
         .CreateDefaultBuilder(args)
         .TroolioServer(appName, new[] {
@@ -190,7 +190,7 @@ To run locally (without docker) you can configure the host as:
 ```
 
 appsettings.json needs the following:
-```
+```json
 {
   "{appName}:Clustering": {
     "Storage": "Local"
@@ -220,7 +220,7 @@ From the command line type: `docker-compose -f "Sample/ShoppingListSample/docker
 
 This uses the EventStore shortcut to start the server using the "StartWithDefaults" passing in the application name, the list of assemblies and the service delegates:
 
-```
+```c#
 await Startup.StartWithDefaults("Shopping",
     new[] {
         typeof(IShoppingListActor).Assembly,    // Sample.Shared
@@ -230,7 +230,7 @@ await Startup.StartWithDefaults("Shopping",
 ```
 
 appsettings.json requires more information:
-```
+```json
 {
   "{appName}:Clustering": {
     "ConnectionString": "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;TableEndpoint=http://azurite:10002/devstoreaccount1",
@@ -249,7 +249,7 @@ You can configure services by passing in an Action<IServiceCollection> to the St
 
 This is how to specify a database context:
 
-```
+```c#
 Action<IServiceCollection> configureServices = (s) =>
 {
     s.AddDbContext<ShoppingListsDbContext>();
@@ -258,7 +258,7 @@ Action<IServiceCollection> configureServices = (s) =>
 
 And then a singleton:
 
-```
+```c#
 Action<IServiceCollection> configureServices = (s) =>
 {
     s.AddSingleton<IAllShoppingListsActor, DummyAllShoppingListsActor>();
@@ -271,7 +271,7 @@ In order to use the server you need a client.  A client can be a command line ap
 ### Command Line Client
 To create a command line client you need to create a host builder:
 
-```
+```c#
 var hostBuilder = Host.CreateDefaultBuilder(args);
 hostBuilder.ConfigureServices(services => services.AddTroolioClient("Shopping", new[] { typeof(IShoppingListActor).Assembly }));
 var host = hostBuilder.Build();
@@ -280,14 +280,14 @@ host.Start();
 
 Once you have a host you need to attach to it to get the client:
 
-```
+```c#
 var client = host.Services.GetRequiredService<ITroolioClient>();
 ```
 
 ### API Client
 To add the client to the API you simply add a singleton implementation of ITroolioClient:
 
-```
+```c#
 builder.Services.AddSingleton<ITroolioClient>(
     new TroolioClient(new[] { typeof(IAllShoppingListsActor).Assembly }, "Shopping", configurationBuilder));
 ```
@@ -297,19 +297,19 @@ appsettings.json needs to match that of the server for the `"{appName}:Clusterin
 ## Tracing
 Tracing allows you to see all the commands and events that have been issued to the system.  It can be enabled by issueing an "EnableTracing" command to the Trool.io client:
 
-```
+```c#
 await client.Tell(Constants.SingletonActorId, new EnableTracing());
 ```
 
 And once enabled you can access it by issuing a Flush query:
 
-```
+```c#
 var tracingLog = await _client.Ask(Constants.SingletonActorId, new Flush());
 ```
 
 An example of using the trace to write out to a file is in the Sample.Api.  Should you wish to switch it off you can issue a "DisableTracing" command:
 
-```
+```c#
 await client.Tell(Constants.SingletonActorId, new DisableTracing());
 ```
 
@@ -321,7 +321,7 @@ A production grade store is provided using the Event Store client in the OSS Tro
 Configuration of the EventStore could differ between implementations but below is an example of a single node EventStore configuration:
 
 
-```
+```json
 "Shopping:Storage": {
     "EventStoreCluster": "false",
     "EventStorePort": "1113",
@@ -334,7 +334,7 @@ You can use clustering to improve robustness by configuring the clustering setti
 
 For local clustering use the following:
 
-```
+```json
 "Shopping:Clustering": {
     "Storage": "Local",
 }
@@ -342,7 +342,7 @@ For local clustering use the following:
 
 You can also use Azure Table Storage to maintain the cluster when more than one host node is required:
 
-```
+```json
 "Shopping:Clustering": {
     "ConnectionString": "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;TableEndpoint=http://azurite:10002/devstoreaccount1",
     "ClusterId": "shopping-dev",
@@ -357,7 +357,7 @@ You can also use Azure Table Storage to maintain the cluster when more than one 
 ## Snapshots
 When actors become idle they get shut down to reduce memory usage, when next called they need to read events to get back to their latest state.  To reduce the number of events that need to be used to repopulate the actor Trool.io uses snapshots.  A snapshot is a point in time representation of the actors state which will be loaded and only events after the snapshot was taken will be actioned.  Snapshots will be taken every 100 events by default but this can be changed by specifying a SnapshotThreshhold in appsettings.json:
 
-```
+```json
 {
   "snapshotThreshold": 5
 }
@@ -367,7 +367,7 @@ When actors become idle they get shut down to reduce memory usage, when next cal
 Batch commands are out of process commands backed up by a message queue.  They will be actioned and if failed will be retried a certain number of times (default is 3 times).
 To add batch jobs you first need to configure the queue.  To do this you need to dependancy inject an F3N.Providers.MessageQueue.IMessageQueueProvider, e.g.
 
-```
+```c#
 Action<IServiceCollection> configureServices = (s) =>
 {
     s.AddSingleton<F3N.Providers.MessageQueue.IMessageQueueProvider>(new F3N.Providers.MessageQueue.InMemoryMessageQueueProvider());
@@ -377,17 +377,17 @@ This example uses the InMemoryMessageQueueProvider but it shouldn't be used in p
 Once the message queue is setup you can then add batch jobs by:
 
 Create a command you want to execute:
-```
+```c#
 var command = new SendEmailNotification(e.Event.Headers, "someone@somewhere.com", "test email");
 ```
 
 Retrieve the path to the actor that needs to execute the command:
-```
+```c#
 var actorPath = System.ActorOf<IEmailActor>(Constants.SingletonActorId).Path;
 ```
 
 And finally tell the batch job actor the actor path and command to execute:
-```
+```c#
 await System.ActorOf<IBatchJobActor>(Constants.SingletonActorId)
 	.Tell(new AddBatchJob(actorPath, command));
 ```

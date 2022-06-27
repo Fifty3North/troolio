@@ -16,7 +16,7 @@
     <PackageReference Include="EventStore.Client" Version="21.2.2" />
     <PackageReference Include="EventStore.Client.Grpc.Streams" Version="21.2.0" />
     <PackageReference Include="Microsoft.Orleans.Runtime.Abstractions" Version="3.6.0" />
-    <PackageReference Include="Troolio.Core" Version="1.0.0.49-prerelease" />
+    <PackageReference Include="Troolio.Core" Version="1.0.0.50-prerelease" />
   </ItemGroup>
 
 </Project>

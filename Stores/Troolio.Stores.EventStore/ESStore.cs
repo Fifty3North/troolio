@@ -29,62 +29,6 @@ namespace Troolio.Stores
             return await ReadStreamFromEvent(streamName, StreamPosition.Start);
         }
 
-        private static bool TryGetMetadataId(Dictionary<string, object> metadata, string key, out Guid id)
-        {
-            if (metadata != null && metadata.TryGetValue(key, out object? value) && value != null && Guid.TryParse(value.ToString(), out id))
-            {
-                return true;
-            }
-
-            id = Guid.Empty;
-
-            return false;
-        }
-
-        internal Dictionary<string, object> DeserializeMetadata(byte[] metadata)
-        {
-            try
-            {
-                return (Dictionary<string, object>)Serializer.Deserialize(metadata, typeof(Dictionary<string, object>));
-            }
-            catch (SerializationException)
-            {
-                _logger?.Error($"Couldn't deserialize metadata. Are you missing an assembly reference, chaged an event or deleted it?");
-                var original = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Couldn't deserialize metadata. Are you missing an assembly reference, chaged an event or deleted it?");
-                Console.ForegroundColor = original;
-                return null!;
-            }
-        }
-
-        internal Event? DeserializeStoredEvent(RecordedEvent @event)
-        {
-            try
-            {
-                Type eventType = Type.GetType(@event.EventType)!;
-
-                if (eventType != null)
-                {
-                    return (Event)Serializer.Deserialize(@event.Data, eventType);
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            catch (SerializationException)
-            {
-                _logger?.Error($"Couldn't deserialize type '{@event.EventType}'. Are you missing an assembly reference, chaged an event or deleted it?");
-                //Debug.Assert(false, $"Couldn't deserialize type '{@event.EventType}'. Are you missing an assembly reference, chaged an event or deleted it?");
-                var original = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Couldn't deserialize type '{@event.EventType}'. Are you missing an assembly reference, chaged an event or deleted it?");
-                Console.ForegroundColor = original;
-                return null;
-            }
-        }
-
         //TODO: Class to hook up to EventStore, as a database
         public async Task<StoreWriteResponse> Write(string streamName, ulong evVersion, ICollection<IEvent> events)
         {
@@ -108,42 +52,6 @@ namespace Troolio.Stores
             {
                 throw new InvalidOperationException($"Duplicate activation of actor '{streamName}' detected");
             }
-        }
-
-        private EventData ToEventData(Guid eventId, object @event, IDictionary<string, object> headers)
-        {
-            // remove metadata from event body as they get inserted into metadata
-            byte[] data = Serializer.Serialize(@event, new Dictionary<string, Type> { 
-                { nameof(Event.Headers), typeof(Message) } 
-            });
-
-            byte[] metadata = Serializer.Serialize(headers);
-
-            if (@event is LinkEvent l)
-            {
-                return new EventData(eventId, "$>", Serializer.IsJson, UTF8Encoding.ASCII.GetBytes(l.data), metadata);
-            } 
-            else
-            {
-                string eventTypeName = @event.GetType().AssemblyQualifiedName!;
-                return new EventData(eventId, eventTypeName, Serializer.IsJson, data, metadata);
-            }
-            
-        }
-
-        protected internal EventData ToEventData(Event @event)
-        {
-            IDictionary<string, object> headers = new Dictionary<string, object>()
-            {
-                { nameof(Metadata.CorrelationId), @event.Headers.CorrelationId },
-                { nameof(Metadata.UserId), @event.Headers.UserId },
-                { nameof(Metadata.DeviceId), @event.Headers.DeviceId },
-                { nameof(Metadata.MessageId), @event.Headers.MessageId },
-                { nameof(Metadata.TransactionId), @event.Headers.TransactionId! },
-                { nameof(Metadata.CausationId), @event.Headers.CausationId! }
-            };
-
-            return ToEventData(@event.Headers.MessageId, @event, headers);
         }
 
         public async Task<IEvent[]> ReadStreamFromEvent(string streamName, ulong evVersion)
@@ -180,17 +88,21 @@ namespace Troolio.Stores
             return events.ToArray();
         }
 
-        public async Task<IEvent?> ReadLastEvent(string streamName)
+        public async Task<(IEvent? Event, ulong Version)> ReadLastEvent(string streamName)
         {
             EventReadResult? eventReadResult = await ES.Connection!.ReadEventAsync(streamName, StreamPosition.End, true);
 
-            if (eventReadResult != null)
+            if (eventReadResult?.Event != null)
             {
-                return ConvertResolvedEventToIEvent(eventReadResult.Event.Value);
+                IEvent @event = ConvertResolvedEventToIEvent(eventReadResult.Event.Value);
+
+                ulong version = (ulong)eventReadResult.EventNumber;
+
+                return (@event, version);
             }
             else
             {
-                return null;
+                return (null, 0);
             }
         }
 
@@ -198,7 +110,7 @@ namespace Troolio.Stores
         {
             EventReadResult? eventReadResult = await ES.Connection!.ReadEventAsync(streamName, (long)evVersion, true);
 
-            if (eventReadResult != null)
+            if (eventReadResult?.Event != null)
             {
                 return ConvertResolvedEventToIEvent(eventReadResult.Event.Value);
             }
@@ -208,8 +120,84 @@ namespace Troolio.Stores
             }
         }
 
+        private Dictionary<string, object> DeserializeMetadata(byte[] metadata)
+        {
+            try
+            {
+                return (Dictionary<string, object>)Serializer.Deserialize(metadata, typeof(Dictionary<string, object>));
+            }
+            catch (SerializationException)
+            {
+                _logger?.Error($"Couldn't deserialize metadata. Are you missing an assembly reference, chaged an event or deleted it?");
+                var original = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Couldn't deserialize metadata. Are you missing an assembly reference, chaged an event or deleted it?");
+                Console.ForegroundColor = original;
+                return null!;
+            }
+        }
 
+        private Event? DeserializeStoredEvent(RecordedEvent @event)
+        {
+            try
+            {
+                Type eventType = Type.GetType(@event.EventType)!;
 
+                if (eventType != null)
+                {
+                    return (Event)Serializer.Deserialize(@event.Data, eventType);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (SerializationException)
+            {
+                _logger?.Error($"Couldn't deserialize type '{@event.EventType}'. Are you missing an assembly reference, chaged an event or deleted it?");
+                //Debug.Assert(false, $"Couldn't deserialize type '{@event.EventType}'. Are you missing an assembly reference, chaged an event or deleted it?");
+                var original = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Couldn't deserialize type '{@event.EventType}'. Are you missing an assembly reference, chaged an event or deleted it?");
+                Console.ForegroundColor = original;
+                return null;
+            }
+        }
+
+        private EventData ToEventData(Guid eventId, object @event, IDictionary<string, object> headers)
+        {
+            // remove metadata from event body as they get inserted into metadata
+            byte[] data = Serializer.Serialize(@event, new Dictionary<string, Type> {
+                { nameof(Event.Headers), typeof(Message) }
+            });
+
+            byte[] metadata = Serializer.Serialize(headers);
+
+            if (@event is LinkEvent l)
+            {
+                return new EventData(eventId, "$>", Serializer.IsJson, UTF8Encoding.ASCII.GetBytes(l.data), metadata);
+            }
+            else
+            {
+                string eventTypeName = @event.GetType().AssemblyQualifiedName!;
+                return new EventData(eventId, eventTypeName, Serializer.IsJson, data, metadata);
+            }
+        }
+
+        private EventData ToEventData(Event @event)
+        {
+            IDictionary<string, object> headers = new Dictionary<string, object>()
+            {
+                { nameof(Metadata.CorrelationId), @event.Headers.CorrelationId },
+                { nameof(Metadata.UserId), @event.Headers.UserId },
+                { nameof(Metadata.DeviceId), @event.Headers.DeviceId },
+                { nameof(Metadata.MessageId), @event.Headers.MessageId },
+                { nameof(Metadata.TransactionId), @event.Headers.TransactionId! },
+                { nameof(Metadata.CausationId), @event.Headers.CausationId! }
+            };
+
+            return ToEventData(@event.Headers.MessageId, @event, headers);
+        }
 
         private IEvent ConvertResolvedEventToIEvent(ResolvedEvent resolvedEvent)
         {
@@ -248,6 +236,18 @@ namespace Troolio.Stores
             }
 
             return @event;
+        }
+
+        private static bool TryGetMetadataId(Dictionary<string, object> metadata, string key, out Guid id)
+        {
+            if (metadata != null && metadata.TryGetValue(key, out object? value) && value != null && Guid.TryParse(value.ToString(), out id))
+            {
+                return true;
+            }
+
+            id = Guid.Empty;
+
+            return false;
         }
     }
 }

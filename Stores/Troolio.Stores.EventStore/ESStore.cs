@@ -32,6 +32,9 @@ namespace Troolio.Stores
         //TODO: Class to hook up to EventStore, as a database
         public async Task<StoreWriteResponse> Write(string streamName, ulong evVersion, ICollection<IEvent> events)
         {
+            // First event version (number) in EventStore is 0. Within Actor implementation is 1.
+            long expectedVersion = (long)evVersion - 1;
+
             events = events.ToList();
             if (events.Count == 0)
             {
@@ -45,7 +48,7 @@ namespace Troolio.Stores
 
             try
             {
-                WriteResult result =  await ES.Connection!.AppendToStreamAsync(streamName, (long)evVersion - 1, serialized);
+                WriteResult result =  await ES.Connection!.AppendToStreamAsync(streamName, expectedVersion, serialized);
                 return new StoreWriteResponse((ulong)events.Count);
             }
             catch (WrongExpectedVersionException)
@@ -57,7 +60,9 @@ namespace Troolio.Stores
         public async Task<IEvent[]> ReadStreamFromEvent(string streamName, ulong evVersion)
         {
             StreamEventsSlice? currentSlice;
-            long startEventNumber = (long)evVersion;
+
+            // First event version (number) in EventStore is 0. Within Actor implementation is 1.
+            long startEventNumber = (long)evVersion -1;
 
             List<IEvent> events = new List<IEvent>();
 
@@ -96,7 +101,8 @@ namespace Troolio.Stores
             {
                 IEvent @event = ConvertResolvedEventToIEvent(eventReadResult.Event.Value);
 
-                ulong version = (ulong)eventReadResult.EventNumber;
+                // First event version (number) in EventStore is 0. Within Actor implementation is 1.
+                ulong version = (ulong)eventReadResult.EventNumber + 1;
 
                 return (@event, version);
             }
@@ -108,7 +114,10 @@ namespace Troolio.Stores
 
         public async Task<IEvent?> ReadStreamEvent(string streamName, ulong evVersion)
         {
-            EventReadResult? eventReadResult = await ES.Connection!.ReadEventAsync(streamName, (long)evVersion, true);
+            // First event version (number) in EventStore is 0. Within Actor implementation is 1.
+            long eventNumber = (long)evVersion - 1;
+
+            EventReadResult? eventReadResult = await ES.Connection!.ReadEventAsync(streamName, eventNumber, true);
 
             if (eventReadResult?.Event != null)
             {
@@ -175,7 +184,7 @@ namespace Troolio.Stores
 
             if (@event is LinkEvent l)
             {
-                return new EventData(eventId, "$>", Serializer.IsJson, UTF8Encoding.ASCII.GetBytes(l.data), metadata);
+                return new EventData(eventId, "$>", Serializer.IsJson, Encoding.ASCII.GetBytes(l.data), metadata);
             }
             else
             {

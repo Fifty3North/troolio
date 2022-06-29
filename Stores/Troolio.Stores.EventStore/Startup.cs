@@ -11,7 +11,33 @@ namespace Troolio.Stores.EventStore
 {
     public static class Startup
     {
+        /// <summary>
+        /// This will run the TroolioServer using defaults.  Running will block until the server is shutdown.
+        /// </summary>
+        /// <param name="appName"></param>
+        /// <param name="registerAssemblies"></param>
+        /// <param name="additionalServices"></param>
+        /// <returns></returns>
+        public static Task RunWithDefaults(string appName, Assembly[] registerAssemblies, Action<IServiceCollection> additionalServices)
+        {
+            return StartupHost(appName, registerAssemblies, additionalServices)
+                .RunAsync();
+        }
+
+        /// <summary>
+        /// This will start the TroolioServer using defaults.  Starting will not block while the server is running.
+        /// </summary>
+        /// <param name="appName"></param>
+        /// <param name="registerAssemblies"></param>
+        /// <param name="additionalServices"></param>
+        /// <returns></returns>
         public static Task StartWithDefaults(string appName, Assembly[] registerAssemblies, Action<IServiceCollection> additionalServices)
+        {
+            return StartupHost(appName, registerAssemblies, additionalServices)
+                .StartAsync();
+        }
+
+        private static IHost StartupHost(string appName, Assembly[] registerAssemblies, Action<IServiceCollection> additionalServices)
         {
             IConfiguration configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
@@ -33,10 +59,8 @@ namespace Troolio.Stores.EventStore
                 b.AddStartupTask<Troolio.Stores.EventStore.InitialiseEventStore>();
             };
 
-            var host = Host.CreateDefaultBuilder()
+            return Host.CreateDefaultBuilder()
                 .TroolioServer<Troolio.Stores.ESStore>(appName, registerAssemblies, configureDelegates, builderDelegates);
-
-            return host.RunAsync();
         }
     }
 }

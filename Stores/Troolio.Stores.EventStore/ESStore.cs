@@ -30,15 +30,15 @@ namespace Troolio.Stores
         }
 
         //TODO: Class to hook up to EventStore, as a database
-        public async Task<StoreWriteResponse> Write(string streamName, ulong evVersion, ICollection<IEvent> events)
+        public async Task<ulong> Append(string streamName, ulong expectedEvVersion, ICollection<IEvent> events)
         {
             // First event version (number) in EventStore is 0. Within Actor implementation is 1.
-            long expectedVersion = (long)evVersion - 1;
+            long expectedVersion = (long)expectedEvVersion - 1;
 
             events = events.ToList();
             if (events.Count == 0)
             {
-                return new StoreWriteResponse(0);
+                return 0;
             }
 
             EventData[] serialized = events.Select(e => e is LinkEvent le ? 
@@ -49,7 +49,7 @@ namespace Troolio.Stores
             try
             {
                 WriteResult result =  await ES.Connection!.AppendToStreamAsync(streamName, expectedVersion, serialized);
-                return new StoreWriteResponse((ulong)events.Count);
+                return (ulong)events.Count;
             }
             catch (WrongExpectedVersionException)
             {

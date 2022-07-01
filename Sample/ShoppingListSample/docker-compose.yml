@@ -65,7 +65,7 @@ services:
       - MYSQL_ROOT_PASSWORD=secret
       - MYSQL_ROOT_HOST=%
     ports:
-      - "3306:3306"
+      - "13306:3306"
     networks:
       - Shopping-Net
 networks: 

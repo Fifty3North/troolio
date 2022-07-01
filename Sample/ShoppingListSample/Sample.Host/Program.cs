@@ -22,7 +22,7 @@ Action<IServiceCollection> configureServices = (s) =>
 };
 
 
-await Startup.StartWithDefaults("Shopping",
+await Startup.RunWithDefaults("Shopping",
     new[] {
         typeof(IShoppingListActor).Assembly,    // Sample.Shared
         typeof(ShoppingListActor).Assembly      // Sample.Host.App

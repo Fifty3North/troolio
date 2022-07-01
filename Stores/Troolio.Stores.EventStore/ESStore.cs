@@ -191,9 +191,13 @@ namespace Troolio.Stores
 
             byte[] metadata = Serializer.Serialize(headers);
 
-            if (@event is LinkEvent l)
+            if (@event is LinkEvent linkEvent)
             {
-                return new EventData(eventId, "$>", Serializer.IsJson, Encoding.ASCII.GetBytes(l.data), metadata);
+                // First event version (number) in EventStore is 0. Within Actor implementation is 1.
+                long eventNumber = (long)linkEvent.EventVersion - 1;
+                string linkData = $"{eventNumber}@{linkEvent.StreamName}";
+
+                return new EventData(eventId, "$>", Serializer.IsJson, Encoding.ASCII.GetBytes(linkData), metadata);
             }
             else
             {

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
-
-namespace Troolio.Core.Projection
+﻿namespace Troolio.Core.Projection
 {
 
     public class EventEntityUpdate<TEntity>

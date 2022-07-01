@@ -1,7 +1,4 @@
 ﻿using NUnit.Framework;
-using Orleankka;
-using Orleankka.Client;
-using Sample.Shared.ActorInterfaces;
 using Sample.Shared.Commands;
 using Sample.Shared.Enums;
 using Sample.Shared.Exceptions;

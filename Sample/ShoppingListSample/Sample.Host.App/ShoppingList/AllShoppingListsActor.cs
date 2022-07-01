@@ -4,7 +4,6 @@ using Sample.Shared.Commands;
 using Sample.Shared.Events;
 using Sample.Shared.Exceptions;
 using Sample.Shared.InternalCommands;
-using Sample.Shared.Queries;
 using System.Collections.Immutable;
 using Troolio.Core;
 using Troolio.Core.Stateful;

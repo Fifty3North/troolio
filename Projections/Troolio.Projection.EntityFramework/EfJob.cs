@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-
-namespace Troolio.Core.Projection
+﻿namespace Troolio.Core.Projection
 {
     internal class EfJob
     {

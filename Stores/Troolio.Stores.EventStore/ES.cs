@@ -2,7 +2,6 @@
 using EventStore.ClientAPI.SystemData;
 using Orleans.Runtime;
 using System.Net;
-using System.Text;
 
 namespace Troolio.Stores.EventStore
 {

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Troolio.Core.Projection
+﻿namespace Troolio.Core.Projection
 {
     public class EventEntityDelete<TEntity>
         where TEntity : class

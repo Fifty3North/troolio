@@ -35,7 +35,6 @@ namespace Troolio.Stores
             // First event version (number) in EventStore is 0. Within Actor implementation is 1.
             long expectedVersion = (long)expectedEvVersion - 1;
 
-            events = events.ToList();
             if (events.Count == 0)
             {
                 return 0;
@@ -62,7 +61,12 @@ namespace Troolio.Stores
             StreamEventsSlice? currentSlice;
 
             // First event version (number) in EventStore is 0. Within Actor implementation is 1.
-            long startEventNumber = (long)evVersion -1;
+            long startEventNumber = (long)evVersion - 1;
+
+            if (startEventNumber < StreamPosition.Start)
+            {
+                startEventNumber = StreamPosition.Start;
+            }
 
             List<IEvent> events = new List<IEvent>();
 
@@ -116,6 +120,11 @@ namespace Troolio.Stores
         {
             // First event version (number) in EventStore is 0. Within Actor implementation is 1.
             long eventNumber = (long)evVersion - 1;
+
+            if (eventNumber < StreamPosition.Start)
+            {
+                return null;
+            }
 
             EventReadResult? eventReadResult = await ES.Connection!.ReadEventAsync(streamName, eventNumber, true);
 

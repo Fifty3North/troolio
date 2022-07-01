@@ -1,5 +1,4 @@
 ﻿using Orleans.Runtime;
-using System;
 using System.Runtime.Serialization;
 
 namespace Troolio.Core.Projection.Exceptions

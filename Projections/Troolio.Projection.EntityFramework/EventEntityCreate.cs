@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Troolio.Core.Projection
+﻿namespace Troolio.Core.Projection
 {
     public class EventEntityCreate<TEntity>
         where TEntity : class

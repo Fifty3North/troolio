@@ -1,6 +1,5 @@
 using Sample.Api;
 using Sample.Shared.ActorInterfaces;
-using Troolio.Core;
 using Troolio.Core.Client;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,7 +33,7 @@ if (client is not null)
     await apiTracing.EnableTracing(client);
 }
 
-apiTracing.StartTracingToFile("test.trace");
+_ = apiTracing.StartTracingToFile("test.trace");
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsProduction())

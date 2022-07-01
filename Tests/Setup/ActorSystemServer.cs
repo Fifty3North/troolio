@@ -17,11 +17,11 @@ namespace Troolio.Tests.Setup
         {
             Action<IServiceCollection> configureServices = (s) =>
             {
-                
+                s.AddTransient<F3N.Providers.MessageQueue.IMessageQueueProvider, F3N.Providers.MessageQueue.InMemoryMessageQueueProvider>();
             };            
             
             _host = Host.CreateDefaultBuilder()
-               .TroolioServer(AppName, 
+               .TroolioServer<Troolio.Stores.InMemoryStore>(AppName, 
                    new[] { 
                        typeof(ShoppingListActor).Assembly,
                        typeof(IShoppingListActor).Assembly

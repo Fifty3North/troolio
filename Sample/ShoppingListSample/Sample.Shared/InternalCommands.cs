@@ -11,5 +11,5 @@ public record JoinList(Metadata Headers)
 public record RecordListId(Metadata Headers, Guid ListId) 
     : InternalCommand<IUserActor>(Headers);
 
-public record SendEmailNotification(Metadata Headers, string email, string description)
+public record SendEmailNotification(Metadata Headers, string Email, string Description)
     : InternalCommand<IEmailActor>(Headers);

@@ -7,7 +7,7 @@ using Troolio.Core;
 
 namespace Sample.Host.App.ShoppingList;
 
-[RegexImplicitStreamSubscription("AllShoppingListsActor-.*")]
+[RegexImplicitStreamSubscription($"{nameof(AllShoppingListsActor)}-.*")]
 [Reentrant]
 [StatelessWorker]
 public class ShoppingListOrchestrationActor : OrchestrationActor, IShoppingListOrchestrationActor

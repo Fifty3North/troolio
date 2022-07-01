@@ -14,7 +14,7 @@ namespace Sample.Host.App.ShoppingList
     /// to be used for external systems as otherwise the external system can be notified of a command but the command 
     /// subsequently fails
     /// </summary>
-    [RegexImplicitStreamSubscription("AllShoppingListsActor-.*")]
+    [RegexImplicitStreamSubscription($"{nameof(AllShoppingListsActor)}-.*")]
     public class ShoppingListProjectionActor : ProjectionActor, IShoppingListProjectionActor
     {
         async Task On(EventEnvelope<ListJoinedUsingCode> e)

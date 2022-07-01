@@ -29,5 +29,5 @@ public record ShoppingList : TroolioReadModel
     public ShoppingList On(EventEnvelope<ListJoinedUsingCode> _) 
         => this;
     public ShoppingList On(EventEnvelope<ShoppingListAdded> ev) 
-        => this with { JoinCode = ev.Event.joinCode };
+        => this with { JoinCode = ev.Event.JoinCode };
 }

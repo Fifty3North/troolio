@@ -9,4 +9,4 @@ public record ListIdRecorded(Guid ListId, Metadata Headers) : Event(Headers);
 public record ListJoined(Metadata Headers) : Event(Headers);
 public record ListJoinedUsingCode(Guid ListId, Metadata Headers) : Event(Headers);
 public record NewListCreated(string Title, Metadata Headers) : Event(Headers);
-public record ShoppingListAdded(Guid ListId, string joinCode, Metadata Headers) : Event(Headers);
+public record ShoppingListAdded(Guid ListId, string JoinCode, Metadata Headers) : Event(Headers);

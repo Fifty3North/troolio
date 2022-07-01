@@ -9,7 +9,7 @@ using Troolio.Core.Reliable.Messages;
 
 namespace Sample.Host.App.ShoppingList;
 
-[RegexImplicitStreamSubscription("ShoppingListActor-.*")]
+[RegexImplicitStreamSubscription($"{nameof(ShoppingListActor)}-.*")]
 [Reentrant]
 [StatelessWorker]
 public class UserProjectionActor : ProjectionActor, IUserProjectionActor

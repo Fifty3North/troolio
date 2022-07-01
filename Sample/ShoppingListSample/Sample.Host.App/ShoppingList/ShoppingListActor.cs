@@ -26,26 +26,26 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
         }
 
         // check
-        if (this.State.Items.Any(i => i.Name == command.payload.Description))
+        if (this.State.Items.Any(i => i.Name == command.Payload.Description))
         {
             throw new ItemAlreadyExistsException();
         }
 
-        return new[] { new ItemAddedToList(Guid.NewGuid(), command.payload.Description, command.payload.Quantity, command.Headers) };
+        return new[] { new ItemAddedToList(Guid.NewGuid(), command.Payload.Description, command.Payload.Quantity, command.Headers) };
     }
-    public IEnumerable<Event> Handle(CreateNewList command) => new[] { new NewListCreated(command.payload.Title, command.Headers) };
+    public IEnumerable<Event> Handle(CreateNewList command) => new[] { new NewListCreated(command.Payload.Title, command.Headers) };
     public IEnumerable<Event> Handle(CrossItemOffList command)
     {
         if (!(this.State.Author == command.Headers.UserId || this.State.Collaborators.Contains(command.Headers.UserId)))
         {
             throw new UnauthorizedAccessException();
         }
-        else if (!this.State.Items.Any((i) => i.Id == command.payload.ItemId))
+        else if (!this.State.Items.Any((i) => i.Id == command.Payload.ItemId))
         {
             throw new ItemDoesNotExistException();
         }
 
-        yield return new ItemCrossedOffList(command.payload.ItemId, command.Headers);
+        yield return new ItemCrossedOffList(command.Payload.ItemId, command.Headers);
     }
     public IEnumerable<Event> Handle(JoinList command)
     {
@@ -71,12 +71,12 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
             throw new CollaboratorCannotRemoveItemFromListException();
         }
 
-        if (!this.State.Items.Any((i) => i.Id == command.payload.ItemId))
+        if (!this.State.Items.Any((i) => i.Id == command.Payload.ItemId))
         {
             throw new ItemDoesNotExistException();
         }
 
-        yield return new ItemRemovedFromList(command.payload.ItemId, command.Headers);
+        yield return new ItemRemovedFromList(command.Payload.ItemId, command.Headers);
     }
     #endregion
 
@@ -99,7 +99,7 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
     #endregion
 
     #region Queries ...
-    public ShoppingListQueryResult Handle(ShoppingListDetails query)
+    public ShoppingListQueryResult Handle(ShoppingListDetails _)
     {
         return new ShoppingListQueryResult(
             Guid.Parse(this.GrainReference.GrainIdentity.PrimaryKeyString),

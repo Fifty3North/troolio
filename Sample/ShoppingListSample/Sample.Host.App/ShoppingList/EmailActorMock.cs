@@ -15,9 +15,9 @@ namespace Sample.Host.App.ShoppingList
         {
             try
             {
-                string email = command.email;
+                string email = command.Email;
                 //string subject = "New Shopping list user.";
-                string content = $"The {command.description} shopping list had a new contributor join.";
+                string content = $"The {command.Description} shopping list had a new contributor join.";
 
                 // Send the email to the provider (Not implemented for this sample)
                 // await _emailProvider.SendEmail(email, subject, content);

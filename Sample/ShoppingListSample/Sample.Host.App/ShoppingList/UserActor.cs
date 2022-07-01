@@ -12,7 +12,10 @@ namespace Sample.Host.App.ShoppingList;
 
 public class UserActor : StatefulActor<UserState>, IUserActor
 {
-    public UserActor(IStore store, IConfiguration configuration) : base(store, configuration) { State = new UserState(ImmutableList<Guid>.Empty); }
+    public UserActor(IStore store, IConfiguration configuration) : base(store, configuration) 
+    { 
+        State = new UserState(ImmutableList<Guid>.Empty); 
+    }
 
     #region Commands ...
     public IEnumerable<Event> Handle(RecordListId command) => new[] { new ListIdRecorded(command.ListId, command.Headers) };

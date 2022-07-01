@@ -53,7 +53,7 @@ namespace Troolio.Stores
             }
             catch (WrongExpectedVersionException)
             {
-                throw new InvalidOperationException($"Duplicate activation of actor '{streamName}' detected");
+                throw new InvalidOperationException($"Wrong Expected EventStore Event Version - Possible duplicate activation of actor '{streamName}' detected");
             }
         }
 

@@ -25,6 +25,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Troolio.Projection.EntityFr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Troolio.Stores.EventStore", "Stores\Troolio.Stores.EventStore\Troolio.Stores.EventStore.csproj", "{18706139-E0FF-4F63-A682-A0759536DF48}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.LoadTest", "Sample\ShoppingListSample\Sample.LoadTest\Sample.LoadTest.csproj", "{6A279014-8AD8-437B-9F2B-3C6BBB95298F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -67,6 +69,10 @@ Global
 		{18706139-E0FF-4F63-A682-A0759536DF48}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{18706139-E0FF-4F63-A682-A0759536DF48}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{18706139-E0FF-4F63-A682-A0759536DF48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A279014-8AD8-437B-9F2B-3C6BBB95298F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A279014-8AD8-437B-9F2B-3C6BBB95298F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A279014-8AD8-437B-9F2B-3C6BBB95298F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A279014-8AD8-437B-9F2B-3C6BBB95298F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -79,6 +85,7 @@ Global
 		{A4FBC061-8DE7-4F3B-AD0C-B0D92DE37D25} = {89409134-C4D3-40F1-B980-19B77780D0AB}
 		{B0342A59-C761-415E-B08E-9AD69BF336FA} = {89409134-C4D3-40F1-B980-19B77780D0AB}
 		{ACC27214-6FE6-4773-932E-C9FED64DFFC1} = {89409134-C4D3-40F1-B980-19B77780D0AB}
+		{6A279014-8AD8-437B-9F2B-3C6BBB95298F} = {89409134-C4D3-40F1-B980-19B77780D0AB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4C267E9-6239-451C-85BC-10F0E07F6926}

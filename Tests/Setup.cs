@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using Troolio.Core.Serialization;
 using Troolio.Stores;
 
 namespace Troolio.Tests
@@ -9,7 +10,8 @@ namespace Troolio.Tests
         [OneTimeSetUp]
         public async Task Setup()
         {
-            IStore store = new FileSystemStore();
+            IEventSerializer eventSerializer = new JsonEventSerializer(null);
+            IStore store = new FileSystemStore(eventSerializer);
             await store.Clear();
             await Troolio.Tests.Setup.ActorSystemServer.Start();
         }

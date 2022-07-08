@@ -4,6 +4,8 @@ using Sample.Shared.ActorInterfaces;
 using Sample.Database.Model;
 using Sample.Host.App.ShoppingList;
 using Troolio.Stores.EventStore;
+using Microsoft.Extensions.Hosting;
+using Troolio.Core;
 
 Console.WriteLine("Running sample. Booting cluster might take some time ...\n");
 
@@ -22,9 +24,27 @@ Action<IServiceCollection> configureServices = (s) =>
 };
 
 
-await Startup.RunWithDefaults("Shopping",
+if (configuration["Shopping:Clustering:Storage"] != null && configuration["Shopping:Clustering:Storage"] == "Local")
+{
+    var host = Host.CreateDefaultBuilder(args)
+        .TroolioServer("Shopping", new[] {
+            typeof(IShoppingListActor).Assembly,    // Sample.Shared
+            typeof(ShoppingListActor).Assembly      // Sample.Host.App
+        }, configureServices,
+        disableActors: new[] {
+            "Sample.Database.Projection.ShoppingListEFProjection",
+            "Sample.Database.Projection.ShoppingListItemEFProjection"
+        });
+
+    await host.RunAsync();
+}
+else
+{
+    await Startup.RunWithDefaults("Shopping",
     new[] {
         typeof(IShoppingListActor).Assembly,    // Sample.Shared
         typeof(ShoppingListActor).Assembly      // Sample.Host.App
     },
     configureServices);
+}
+

@@ -5,8 +5,8 @@ services:
     container_name: shopping-api
     image: ${DOCKER_REGISTRY-}shopping-api
     build:
-      context: .
-      dockerfile: Sample.Api/Dockerfile
+      context: ../../
+      dockerfile: Sample/ShoppingListSample/Sample.Api/Dockerfile
     depends_on: 
       - "shopping-host"
     environment:
@@ -23,8 +23,8 @@ services:
       - "9000"
       - "9001"
     build:
-      context: .
-      dockerfile: Sample.Host/Dockerfile
+      context: ../../
+      dockerfile: Sample/ShoppingListSample/Sample.Host/Dockerfile
     depends_on: 
       - "azurite"
       - "db"
@@ -65,7 +65,7 @@ services:
       - MYSQL_ROOT_PASSWORD=secret
       - MYSQL_ROOT_HOST=%
     ports:
-      - "13306:3306"
+      - "3306:3306"
     networks:
       - Shopping-Net
 networks: 

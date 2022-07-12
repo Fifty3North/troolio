@@ -33,15 +33,16 @@ namespace Troolio.Deployment.LoadTest
                 execute: async context =>
                 {
                     var listId = Guid.NewGuid().ToString();
-
                     var listPrefix = "/ShoppingList/" + listId;
 
                     var requestPath = serverPath + listPrefix + "/CreateNewList";
+                    //var requestPath = serverPath + "/ShoppingList/ping";
                     var request = Http.CreateRequest("POST", requestPath)
                         .WithHeader("Accept", "*/*")
                         .WithHeader("userId", Guid.NewGuid().ToString())
                         .WithHeader("deviceId", deviceId)
-                        .WithBody(new StringContent(JsonConvert.SerializeObject(new ListTitle { Title = "testlist"}), Encoding.UTF8, "application/json"));
+                        //.WithBody(new StringContent("", Encoding.UTF8, "application/json"));//JsonConvert.SerializeObject(new ListTitle { Title = "testlist"})
+                        .WithBody(new StringContent(JsonConvert.SerializeObject(new ListTitle { Title = "testlist" }), Encoding.UTF8, "application/json"));
 
                     //System.Console.WriteLine(requestPath);
                     context.Logger.Debug($"Creating new list: {requestPath}");
@@ -57,7 +58,11 @@ namespace Troolio.Deployment.LoadTest
                     Simulation.InjectPerSec(rate: 1, during: TimeSpan.FromSeconds(5)),
                     Simulation.InjectPerSec(rate: 5, during: TimeSpan.FromSeconds(5)),
                     Simulation.InjectPerSec(rate: 10, during: TimeSpan.FromSeconds(5)),
-                    Simulation.InjectPerSec(rate: 15, during: TimeSpan.FromSeconds(10))
+                    Simulation.InjectPerSec(rate: 15, during: TimeSpan.FromSeconds(10)),
+                    Simulation.InjectPerSec(rate: 30, during: TimeSpan.FromSeconds(10)),
+                    Simulation.InjectPerSec(rate: 60, during: TimeSpan.FromSeconds(10)),
+                    Simulation.InjectPerSec(rate: 120, during: TimeSpan.FromSeconds(10)),
+                    Simulation.InjectPerSec(rate: 240, during: TimeSpan.FromSeconds(10))
                 );;
 
             NBomberRunner

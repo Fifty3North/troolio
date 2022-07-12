@@ -15,3 +15,4 @@ public interface IShoppingReadModelOrchestrator : IOrchestrationActor { }
 public interface IUserActor : IStatefulActor { }
 public interface IUserProjectionActor : IProjectionActor { }
 public interface IUserOrchestrationActor : IOrchestrationActor { }
+public interface IPingActor : IActor { }

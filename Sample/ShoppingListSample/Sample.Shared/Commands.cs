@@ -23,3 +23,5 @@ public record RemoveItemFromList(Metadata Headers, RemoveItemFromListPayload Pay
 public record JoinListUsingCodePayload(string Code);
 public record JoinListUsingCode(Metadata Headers, JoinListUsingCodePayload Payload) 
     : Command<IAllShoppingListsActor>(Headers);
+
+public record Ping(Metadata Headers) : Command<IPingActor>(Headers);

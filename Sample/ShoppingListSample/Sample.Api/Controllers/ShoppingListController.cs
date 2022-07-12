@@ -72,6 +72,13 @@ public class ShoppingListController : BaseController
 
     #endregion
 
+    [HttpPost]
+    [Route("ping")]
+    public async Task<IActionResult> Ping([FromHeader] Guid userId, [FromHeader] Guid deviceId)
+    {
+        await _troolioClient.Tell(Guid.NewGuid().ToString(), new Ping(new Metadata(Guid.NewGuid(), userId, deviceId)));
+        return Ok();
+    }
 
 
     [HttpPost]

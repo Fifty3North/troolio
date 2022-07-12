@@ -16,7 +16,7 @@ public class ApiTracing
             try
             {
                 Console.WriteLine("enabling tracing");
-                await _client.Tell(Constants.SingletonActorId, new EnableTracing());
+                await _client.Tell(Constants.SingletonActorId, new EnableTracing(TraceLevel.Error));
 
                 Console.WriteLine("Tracing enabled... ");
             }
@@ -36,7 +36,7 @@ public class ApiTracing
             {
                 using (StreamWriter headerFile = new(filename, true))
                 {
-                    var header = "Item:Id:Version:Silo:MessageType:CorrelationId:CausationId:MessageId:UserId:DeviceId:MessageBody";
+                    var header = "Action;Status;Item;Id;Version;Silo;MessageType;TransactionId;CorrelationId;CausationId;MessageId;UserId;DeviceId;MessageBody;Elapsed";
                     Console.WriteLine(header);
                     await headerFile.WriteLineAsync(header);
                 }
@@ -48,13 +48,13 @@ public class ApiTracing
                     {
                         foreach (var line in tracingLog)
                         {
-                            var debug = $"{line.Stream}:{line.Id}:{line.Version}:{line.SiloId}:{line.Message.GetType().FullName}:{line.Message.Headers.CorrelationId}:{line.Message.Headers.CausationId}:{line.Message.Headers.MessageId}:{line.Message.Headers.UserId}:{line.Message.Headers.UserId}:{line.Message.ToString()}";
+                            var debug = $"{line.Action.ToString().ToUpper()};{line.Status.ToString().ToUpper()};{line.Stream};{line.Id};{line.Version};{line.SiloId};{line.Message?.GetType().FullName};{line.Message?.Headers.TransactionId};{line.Message?.Headers.CorrelationId};{line.Message?.Headers.CausationId};{line.Message?.Headers.MessageId};{line.Message?.Headers.UserId};{line.Message?.Headers.DeviceId};{line.Message?.ToString()};{line.Elapsed}";
                             Console.WriteLine(debug);
                             await file.WriteLineAsync(debug);
                         }
                     }
 
-                    await Task.Delay(1000);
+                    await Task.Delay(10000);
                 }
             }
             catch (Exception ex)

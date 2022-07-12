@@ -25,9 +25,9 @@ namespace Sample.Host.App.ShoppingList
 
             var command = new SendEmailNotification(e.Event.Headers, email, result.Title);
 
-            var actorPath = System.ActorOf<IEmailActor>(Constants.SingletonActorId).Path;
+            var actorPath = System.Worker<IEmailActor>().Path;
 
-            await System.ActorOf<IBatchJobActor>(Constants.SingletonActorId)
+            await System.Worker<IBatchJobActor>()  
                 .Tell(new AddBatchJob(actorPath, command));
         }
     }

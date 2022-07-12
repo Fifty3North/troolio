@@ -20,9 +20,9 @@ public class UserProjectionActor : ProjectionActor, IUserProjectionActor
 
         var command = new SendEmailNotification(e.Event.Headers, email, "Example");
 
-        var actorPath = System.ActorOf<IEmailActor>(Constants.SingletonActorId).Path;
+        var actorPath = System.Worker<IEmailActor>().Path;
 
-        await System.ActorOf<IBatchJobActor>(Constants.SingletonActorId)
+        await System.Worker<IBatchJobActor>()
             .Tell(new AddBatchJob(actorPath, command));
     }
 }

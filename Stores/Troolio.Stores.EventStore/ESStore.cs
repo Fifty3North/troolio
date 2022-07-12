@@ -40,10 +40,12 @@ namespace Troolio.Stores
                 return 0;
             }
 
-            EventData[] serialized = events.Select(e => e is LinkEvent le ? 
-                ToEventData(le.EventId, le, new Dictionary<string,object>()) : 
-                ToEventData((Event)e)
-            ).ToArray();
+            //EventData[] serialized = events.Select(e => e is LinkEvent le ? 
+            //    ToEventData(le.EventId, le, new Dictionary<string,object>()) : 
+            //    ToEventData((Event)e)
+            //).ToArray();
+
+            EventData[] serialized = events.Select(e => ToEventData(e)).ToArray();
 
             try
             {
@@ -138,22 +140,128 @@ namespace Troolio.Stores
             }
         }
 
-        private Dictionary<string, object> DeserializeMetadata(byte[] metadata)
+        private EventData ToEventData(IEvent @event)
         {
-            try
+            IDictionary<string, object> headers = new Dictionary<string, object>();
+
+            if (@event is Event ev)
             {
-                return (Dictionary<string, object>)Serializer.Deserialize(metadata, typeof(Dictionary<string, object>));
+                Guid eventId = ev.Headers.MessageId;
+
+                string eventTypeName = ev.GetType().AssemblyQualifiedName!;
+
+                byte[] eventData = Serializer.Serialize(ev);
+
+                headers.Add(nameof(Metadata.CorrelationId), ev.Headers.CorrelationId);
+
+                byte[] metadata = Serializer.Serialize(headers);
+
+                return new EventData(eventId, eventTypeName, Serializer.IsJson, eventData, metadata);
             }
-            catch (SerializationException)
+            else if (@event is LinkEvent linkEvent)
             {
-                _logger?.Error($"Couldn't deserialize metadata. Are you missing an assembly reference, chaged an event or deleted it?");
-                var original = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Couldn't deserialize metadata. Are you missing an assembly reference, chaged an event or deleted it?");
-                Console.ForegroundColor = original;
-                return null!;
+                Guid eventId = linkEvent.EventId;
+
+                // First event version (number) in EventStore is 0. Within Actor implementation is 1.
+                long eventNumber = (long)linkEvent.EventVersion - 1;
+
+                string linkData = $"{eventNumber}@{linkEvent.StreamName}";
+
+                byte[] metadata = Serializer.Serialize(headers);
+
+                return new EventData(eventId, "$>", Serializer.IsJson, Encoding.ASCII.GetBytes(linkData), metadata);
+            }
+            else
+            {
+                throw new ArgumentException("Unsupported IEvent type", nameof(@event));
             }
         }
+
+        //private EventData ToEventData(Guid eventId, object @event, IDictionary<string, object> headers)
+        //{
+        //    // remove metadata from event body as they get inserted into metadata
+        //    byte[] data = Serializer.Serialize(@event, new Dictionary<string, Type> {
+        //        { nameof(Event.Headers), typeof(Message) }
+        //    });
+
+        //    byte[] metadata = Serializer.Serialize(headers);
+
+        //    if (@event is LinkEvent linkEvent)
+        //    {
+        //        // First event version (number) in EventStore is 0. Within Actor implementation is 1.
+        //        long eventNumber = (long)linkEvent.EventVersion - 1;
+        //        string linkData = $"{eventNumber}@{linkEvent.StreamName}";
+
+        //        return new EventData(eventId, "$>", Serializer.IsJson, Encoding.ASCII.GetBytes(linkData), metadata);
+        //    }
+        //    else
+        //    {
+        //        string eventTypeName = @event.GetType().AssemblyQualifiedName!;
+        //        return new EventData(eventId, eventTypeName, Serializer.IsJson, data, metadata);
+        //    }
+        //}
+
+        //private EventData ToEventData(Event @event)
+        //{
+        //    IDictionary<string, object> headers = new Dictionary<string, object>()
+        //    {
+        //        { nameof(Metadata.CorrelationId), @event.Headers.CorrelationId },
+        //        { nameof(Metadata.UserId), @event.Headers.UserId },
+        //        { nameof(Metadata.DeviceId), @event.Headers.DeviceId },
+        //        { nameof(Metadata.MessageId), @event.Headers.MessageId },
+        //        { nameof(Metadata.TransactionId), @event.Headers.TransactionId! },
+        //        { nameof(Metadata.CausationId), @event.Headers.CausationId! }
+        //    };
+
+        //    return ToEventData(@event.Headers.MessageId, @event, headers);
+        //}
+
+        private IEvent ConvertResolvedEventToIEvent(ResolvedEvent resolvedEvent)
+        {
+            Event @event = DeserializeStoredEvent(resolvedEvent.Event)!;
+
+            return @event;
+        }
+
+        //private IEvent ConvertResolvedEventToIEvent(ResolvedEvent resolvedEvent)
+        //{
+        //    Event @event = DeserializeStoredEvent(resolvedEvent.Event)!;
+
+        //    @event = @event with { Headers = new Metadata(Guid.Empty, Guid.Empty, Guid.Empty) };
+        //    Dictionary<string, object> metadata = DeserializeMetadata(resolvedEvent.Event.Metadata);
+
+        //    if (TryGetMetadataId(metadata, nameof(Metadata.CorrelationId), out Guid correlationId))
+        //    {
+        //        @event = @event with { Headers = @event.Headers with { CorrelationId = correlationId } };
+        //    }
+
+        //    if (TryGetMetadataId(metadata, nameof(Metadata.UserId), out Guid userId))
+        //    {
+        //        @event = @event with { Headers = @event.Headers with { UserId = userId } };
+        //    }
+
+        //    if (TryGetMetadataId(metadata, nameof(Metadata.DeviceId), out Guid deviceId))
+        //    {
+        //        @event = @event with { Headers = @event.Headers with { DeviceId = deviceId } };
+        //    }
+
+        //    if (TryGetMetadataId(metadata, nameof(Metadata.MessageId), out Guid messageId))
+        //    {
+        //        @event = @event with { Headers = @event.Headers with { MessageId = messageId } };
+        //    }
+
+        //    if (TryGetMetadataId(metadata, nameof(Metadata.TransactionId), out Guid transactionId))
+        //    {
+        //        @event = @event with { Headers = @event.Headers with { TransactionId = transactionId } };
+        //    }
+
+        //    if (TryGetMetadataId(metadata, nameof(Metadata.CausationId), out Guid causationId))
+        //    {
+        //        @event = @event with { Headers = @event.Headers with { CausationId = causationId } };
+        //    }
+
+        //    return @event;
+        //}
 
         private Event? DeserializeStoredEvent(RecordedEvent @event)
         {
@@ -182,94 +290,33 @@ namespace Troolio.Stores
             }
         }
 
-        private EventData ToEventData(Guid eventId, object @event, IDictionary<string, object> headers)
-        {
-            // remove metadata from event body as they get inserted into metadata
-            byte[] data = Serializer.Serialize(@event, new Dictionary<string, Type> {
-                { nameof(Event.Headers), typeof(Message) }
-            });
+        //private Dictionary<string, object> DeserializeMetadata(byte[] metadata)
+        //{
+        //    try
+        //    {
+        //        return (Dictionary<string, object>)Serializer.Deserialize(metadata, typeof(Dictionary<string, object>));
+        //    }
+        //    catch (SerializationException)
+        //    {
+        //        _logger?.Error($"Couldn't deserialize metadata. Are you missing an assembly reference, chaged an event or deleted it?");
+        //        var original = Console.ForegroundColor;
+        //        Console.ForegroundColor = ConsoleColor.Red;
+        //        Console.WriteLine($"Couldn't deserialize metadata. Are you missing an assembly reference, chaged an event or deleted it?");
+        //        Console.ForegroundColor = original;
+        //        return null!;
+        //    }
+        //}
 
-            byte[] metadata = Serializer.Serialize(headers);
+        //private static bool TryGetMetadataId(Dictionary<string, object> metadata, string key, out Guid id)
+        //{
+        //    if (metadata != null && metadata.TryGetValue(key, out object? value) && value != null && Guid.TryParse(value.ToString(), out id))
+        //    {
+        //        return true;
+        //    }
 
-            if (@event is LinkEvent linkEvent)
-            {
-                // First event version (number) in EventStore is 0. Within Actor implementation is 1.
-                long eventNumber = (long)linkEvent.EventVersion - 1;
-                string linkData = $"{eventNumber}@{linkEvent.StreamName}";
+        //    id = Guid.Empty;
 
-                return new EventData(eventId, "$>", Serializer.IsJson, Encoding.ASCII.GetBytes(linkData), metadata);
-            }
-            else
-            {
-                string eventTypeName = @event.GetType().AssemblyQualifiedName!;
-                return new EventData(eventId, eventTypeName, Serializer.IsJson, data, metadata);
-            }
-        }
-
-        private EventData ToEventData(Event @event)
-        {
-            IDictionary<string, object> headers = new Dictionary<string, object>()
-            {
-                { nameof(Metadata.CorrelationId), @event.Headers.CorrelationId },
-                { nameof(Metadata.UserId), @event.Headers.UserId },
-                { nameof(Metadata.DeviceId), @event.Headers.DeviceId },
-                { nameof(Metadata.MessageId), @event.Headers.MessageId },
-                { nameof(Metadata.TransactionId), @event.Headers.TransactionId! },
-                { nameof(Metadata.CausationId), @event.Headers.CausationId! }
-            };
-
-            return ToEventData(@event.Headers.MessageId, @event, headers);
-        }
-
-        private IEvent ConvertResolvedEventToIEvent(ResolvedEvent resolvedEvent)
-        {
-            Event @event = DeserializeStoredEvent(resolvedEvent.Event)!;
-            @event = @event with { Headers = new Metadata(Guid.Empty, Guid.Empty, Guid.Empty) };
-            Dictionary<string, object> metadata = DeserializeMetadata(resolvedEvent.Event.Metadata);
-
-            if (TryGetMetadataId(metadata, nameof(Metadata.CorrelationId), out Guid correlationId))
-            {
-                @event = @event with { Headers = @event.Headers with { CorrelationId = correlationId } };
-            }
-
-            if (TryGetMetadataId(metadata, nameof(Metadata.UserId), out Guid userId))
-            {
-                @event = @event with { Headers = @event.Headers with { UserId = userId } };
-            }
-
-            if (TryGetMetadataId(metadata, nameof(Metadata.DeviceId), out Guid deviceId))
-            {
-                @event = @event with { Headers = @event.Headers with { DeviceId = deviceId } };
-            }
-
-            if (TryGetMetadataId(metadata, nameof(Metadata.MessageId), out Guid messageId))
-            {
-                @event = @event with { Headers = @event.Headers with { MessageId = messageId } };
-            }
-
-            if (TryGetMetadataId(metadata, nameof(Metadata.TransactionId), out Guid transactionId))
-            {
-                @event = @event with { Headers = @event.Headers with { TransactionId = transactionId } };
-            }
-
-            if (TryGetMetadataId(metadata, nameof(Metadata.CausationId), out Guid causationId))
-            {
-                @event = @event with { Headers = @event.Headers with { CausationId = causationId } };
-            }
-
-            return @event;
-        }
-
-        private static bool TryGetMetadataId(Dictionary<string, object> metadata, string key, out Guid id)
-        {
-            if (metadata != null && metadata.TryGetValue(key, out object? value) && value != null && Guid.TryParse(value.ToString(), out id))
-            {
-                return true;
-            }
-
-            id = Guid.Empty;
-
-            return false;
-        }
+        //    return false;
+        //}
     }
 }

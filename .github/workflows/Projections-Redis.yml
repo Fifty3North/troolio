@@ -1,0 +1,46 @@
+# This will build a release version of troolio.projection.redis and publish the nuget package to github
+name: Troolio_Redis_Publish
+
+# Controls when the workflow will run
+on:
+    push:
+        branches: 
+            - main
+        paths: 
+            - "Projections/Troolio.Projection.Redis/**"
+    # Allows you to run this workflow manually from the Actions tab
+    workflow_dispatch:
+
+jobs:
+    build-and-push:
+        runs-on: ubuntu-latest
+        steps:
+        # checkout the repo
+        - name: 'Checkout GitHub Action'
+          uses: actions/checkout@main
+
+        - name: Ensure GitHub NuGet Source
+          run: |
+            dotnet nuget add source ${{ secrets.NUGET_URL }} \
+              -n f3n \
+              -u ${{ secrets.NUGET_READONLY_USER }} \
+              -p ${{ secrets.NUGET_READONLY_USER_PAT }} \
+              --store-password-in-clear-text
+          
+        - name: Install dependencies
+          run: dotnet restore Projections/Troolio.Projection.Redis/Troolio.Projection.Redis.csproj
+      
+        - name: Build
+          run: dotnet build --configuration Release --no-restore Projections/Troolio.Projection.Redis/Troolio.Projection.Redis.csproj
+
+        - name: Create NuGet Package
+          run: dotnet pack --configuration Release Projections/Troolio.Projection.Redis/Troolio.Projection.Redis.csproj --no-build -p:PackageVersion=1.0.0.${{ github.run_number }}-prerelease
+
+        - name: Publish the package to GitHub packages
+          run: dotnet nuget push Projections/Troolio.Projection.Redis/*/**/*.nupkg --source ${{ secrets.NUGET_URL }} --api-key ${{secrets.GITHUB_TOKEN}} --skip-duplicate --no-symbols
+
+        - name: Cleanup
+          if: always()
+          continue-on-error: true
+          run: |
+            dotnet nuget remove source f3n

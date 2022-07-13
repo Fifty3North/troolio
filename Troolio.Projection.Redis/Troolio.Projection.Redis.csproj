@@ -4,6 +4,12 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Authors>Fifty3North (F3N Limited)</Authors>
+    <Description>trool.io projection to redis</Description>
+    <Copyright>F3N Limited 2022</Copyright>
+    <PackageProjectUrl>https://github.com/Fifty3North/troolio</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Fifty3North/troolio.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>

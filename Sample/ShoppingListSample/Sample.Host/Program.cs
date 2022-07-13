@@ -53,6 +53,12 @@ else
         typeof(IShoppingListActor).Assembly,    // Sample.Shared
         typeof(ShoppingListActor).Assembly      // Sample.Host.App
     },
-    configureServices);
+    configureServices
+    //,
+    //disableActors: new[] {
+    //    //"Sample.Database.Projection.ShoppingListEFProjection",
+    //    //"Sample.Database.Projection.ShoppingListItemEFProjection"
+    //}
+    );
 }
 

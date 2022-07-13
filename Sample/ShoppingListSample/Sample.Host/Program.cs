@@ -39,8 +39,8 @@ if (configuration["Shopping:Clustering:Storage"] != null && configuration["Shopp
         }, configureServices
         //,
         //disableActors: new[] {
-        //    //"Sample.Database.Projection.ShoppingListEFProjection",
-        //    //"Sample.Database.Projection.ShoppingListItemEFProjection"
+        //    "Sample.Database.Projection.ShoppingListEFProjection",
+        //    "Sample.Database.Projection.ShoppingListItemEFProjection"
         //}
         );
 
@@ -56,8 +56,8 @@ else
     configureServices
     //,
     //disableActors: new[] {
-    //    //"Sample.Database.Projection.ShoppingListEFProjection",
-    //    //"Sample.Database.Projection.ShoppingListItemEFProjection"
+    //    "Sample.Database.Projection.ShoppingListEFProjection",
+    //    "Sample.Database.Projection.ShoppingListItemEFProjection"
     //}
     );
 }

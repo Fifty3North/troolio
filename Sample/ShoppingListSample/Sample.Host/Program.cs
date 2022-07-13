@@ -17,15 +17,16 @@ IConfiguration configuration = new ConfigurationBuilder()
     .Build();
 
 // create db and run any pending migrations
-//new ShoppingListsDbContext(configuration)
-//    .RunMigrations();
+new ShoppingListsDbContext(configuration)
+    .RunMigrations();
 
 Action<IServiceCollection> configureServices = (s) =>
 {
     s
-    //.AddDbContext<ShoppingListsDbContext>()
+    .AddDbContext<ShoppingListsDbContext>()
     .AddSingleton<F3N.Providers.MessageQueue.IMessageQueueProvider>(new F3N.Providers.MessageQueue.InMemoryMessageQueueProvider())
-    .AddSingleton<IIncomingGrainCallFilter, LoggingCallFilter>();
+    //.AddSingleton<IIncomingGrainCallFilter, LoggingCallFilter>()
+    ;
 };
 
 

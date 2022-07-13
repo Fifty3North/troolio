@@ -31,13 +31,13 @@ namespace Troolio.Stores.EventStore
         /// <param name="registerAssemblies"></param>
         /// <param name="additionalServices"></param>
         /// <returns></returns>
-        public static Task StartWithDefaults(string appName, Assembly[] registerAssemblies, Action<IServiceCollection> additionalServices)
+        public static Task StartWithDefaults(string appName, Assembly[] registerAssemblies, Action<IServiceCollection> additionalServices, string[]? disableActors = null)
         {
-            return StartupHost(appName, registerAssemblies, additionalServices)
+            return StartupHost(appName, registerAssemblies, additionalServices, disableActors)
                 .StartAsync();
         }
 
-        private static IHost StartupHost(string appName, Assembly[] registerAssemblies, Action<IServiceCollection> additionalServices)
+        private static IHost StartupHost(string appName, Assembly[] registerAssemblies, Action<IServiceCollection> additionalServices, string[]? disableActors = null)
         {
             IConfiguration configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
@@ -60,7 +60,7 @@ namespace Troolio.Stores.EventStore
             };
 
             return Host.CreateDefaultBuilder()
-                .TroolioServer<Troolio.Stores.ESStore>(appName, registerAssemblies, configureDelegates, builderDelegates);
+                .TroolioServer<Troolio.Stores.ESStore>(appName, registerAssemblies, configureDelegates, builderDelegates, disableActors: disableActors);
         }
     }
 }

@@ -17,8 +17,7 @@ IConfiguration configuration = new ConfigurationBuilder()
     .Build();
 
 // create db and run any pending migrations
-new ShoppingListsDbContext(configuration)
-    .RunMigrations();
+await new ShoppingListsDbContext(configuration).RunMigrations();
 
 Action<IServiceCollection> configureServices = (s) =>
 {

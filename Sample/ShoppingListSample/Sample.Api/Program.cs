@@ -14,26 +14,14 @@ builder.Services.AddSwaggerGen();
 IConfigurationBuilder cb = new ConfigurationBuilder();
 cb.AddUserSecrets(typeof(IAllShoppingListsActor).Assembly);
 
-builder.Services.AddSingleton<ITroolioClient>(
-    new TroolioClient(new[] { typeof(IAllShoppingListsActor).Assembly }, "Shopping", cb));
+builder.Services
+    .AddSingleton<ITroolioClient>(
+        new TroolioClient(new[] { typeof(IAllShoppingListsActor).Assembly }, "Shopping", cb))
+    .AddSingleton<ApiTracing>();
 
 builder.Logging.AddConsole();
 
 var app = builder.Build();
-
-// get the client
-var client = app.Services.GetRequiredService<ITroolioClient>();
-
-// Start the tracing but don't await
-ApiTracing apiTracing = new ApiTracing();
-
-// Enable tracing
-if (client is not null)
-{
-    await apiTracing.EnableTracing(client);
-}
-
-_ = apiTracing.StartTracingToFile("test.trace");
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsProduction())

@@ -33,7 +33,7 @@ services:
       - Shopping-Net
   azurite:
     container_name: shopping-azurite
-    image: mcr.microsoft.com/azure-storage/azurite
+    image: mcr.microsoft.com/azure-storage/azurite:3.17.1
     restart: always
     ports:
       - 10000:10000

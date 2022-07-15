@@ -28,6 +28,12 @@ if (!app.Environment.IsProduction())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    app.UseCors((cpb) =>
+      cpb.AllowAnyOrigin()
+          .AllowAnyHeader()
+          .AllowAnyMethod()
+  );
 }
 
 app.UseAuthorization();

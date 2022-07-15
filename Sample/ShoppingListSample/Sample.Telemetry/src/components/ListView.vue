@@ -6,174 +6,146 @@
             .visualiser__header
                 a.visualiser__logo(title="Trool.io")
                     img(src="../images/troolio-logo.svg", alt="Trool.io")
-                    span.h5 Trool.io
-            .visualiser__name
-                h3 Data Visualiser
-                span.subtitle Lorem ipsum dolor sit amet consectetur adipisicing elit. Deserunt, aspernatur.
+                    span.h5 Trool.io 
+                h6 flush status = {{flushing}}
+                .disabled(v-if="!canFlush")
+                  select.form-select( aria-label="Field" v-model="selectedTraceLevel")
+                    option(v-for="level in traceLevels" :value="level") {{level}}
+                  button.btn.btn-primary(v-on:click="enableLogging")
+                    | Enable Logging  
+                .enabled(v-else)
+                  h6  {{selectedTraceLevel}}
+                  button.btn.btn-primary(v-on:click="disableLogging" style="margin-right:10px;  ")
+                    | Disable Logging
+
+                  button.btn.btn-primary(v-on:click="flush")
+                    span(v-if="!flushing")
+                      | Flush
+                    span(v-else)
+                      | Cancel
+            //- .visualiser__name
+            //-     h3 Data Visualiser
+            //-     span.subtitle Lorem ipsum dolor sit amet consectetur adipisicing elit. Deserunt, aspernatur.
         .visualiser__content
-            form.visualiser__form            
-                .form-group.mb-3
-                    label.form-label(for="name") Trace File
-                    input(type="file" ref="doc" @change="readFile()")
-                //- button.btn.btn-primary(v-on:click="renderEntities")
-                //- | Render
-                i.ms-2(data-feather="arrow-right")
-                ul.messages(v-if="messagesToShow != null && messagesToShow.length > 0")  
-                    li(v-for="message in messagesToShow")
-                        .row.g-2(v-if="message && message.correlationId")
-                            .col.col-md-6
-                                .form-floating
-                                    span.subtitle {{ titleFromCorrelationId(message.correlationId) }}
-                            .col.col-md-2
-                                button.btn.btn-secondary()
-                                    i.ms-2(data-feather="eye")
+          //- .data {{data}}
+            //- form.visualiser__form            
+            //-     .form-group.mb-3
+            //-         label.form-label(for="name") Trace File
+            //-         input(type="file" ref="doc" @change="readFile()")
+            //-     i.ms-2(data-feather="arrow-right")
+          //- .data {{data}}
+          ul.messages(v-if="data != null && data.length > 0")  
+            li(v-for="message in data" )
+                .row.g-2(v-if="message && message.correlationId")
+                    .col.col-md-6
+                        .form-floating
+                            span.subtitle {{ titleFromMessage(message) }}
+                    .col.col-md-2
+                        //- button.btn.btn-secondary()
+                        //-     i.ms-2(data-feather="eye")
 </template>
 <script setup lang="ts">
 import { computed, onMounted, onUpdated, ref} from "vue";
 import { Guid } from 'typescript-guid'
 import feather from "feather-icons";
-enum Action {
-  HANDLECOMMAND= "HANDLECOMMAND",
-  DISPATCHEVENT = "DISPATCHEVENT",
-  ORCHESTRATION = "ORCHESTRATION",
-  HANDLEORCHESTRATEDCOMMAND = "HANDLEORCHESTRATEDCOMMAND",
-  PROJECTION = "PROJECTION"
-}
-enum ActionStatus{
-  STARTED = "STARTED",
-  COMPLETED = "COMPLETED"
-}
+import * as Interfaces from '../Interfaces'
+import * as Enums from '../Enums'
+import {metaEnv} from "../globals";
+import axios, { AxiosError } from 'axios'
 
-interface MessageLog {
-    Action:any,
-    Status:any,
-    Item:any,
-    Id:any,
-    Version:any,
-    Silo:any,
-    MessageType:any,
-    TransactionId:any,
-    CorrelationId:any,
-    CausationId?:any,
-    MessageId:any,
-    UserId:any,
-    DeviceId:any,
-    MessageBody:any,
-    Elapsed:any
-}
-interface MessageLogListEntity extends MessageLog{
-    children: MessageLogListEntity[]
-}
-interface MessageCorrelationEntity {
-    correlationId: Guid|string
-    children : MessageLogListEntity[]
-}
-const file = ref(null);
-const content = ref([]);
-
-const doc = ref(null);
-const messagesToShow = ref<MessageCorrelationEntity[]>([]);
+const traceLevels = ref<any[]>([]);
+const selectedTraceLevel = ref<Enums.TraceLevel>(Enums.TraceLevel.Tracing);
+const canFlush = ref(false);
+const messagesToShow = ref<Interfaces.MessageCorrelationEntity[]>([]);
 const entitiesToShow = ref([]);
-    function readFile() {
-      file.value = (doc.value as any).files[0];
-      const reader = new FileReader();
-      if ((file.value  as any).name.includes(".trace")) {
-        reader.onload = (res) => {
-          console.log('loaded',res)
-          formatData((res.target as any).result);
-        };
-        reader.onerror = (err) => console.log(err);
-        reader.readAsText((file.value as any));
-      } else {
-        reader.onload = (res) => {
-          console.log((res.target as any).result);
-        };
-        reader.onerror = (err) => console.log(err);
-        reader.readAsArrayBuffer(file.value  as any);
+
+const flushing = ref<any>('');
+
+const data = ref<Interfaces.MessageCorrelationEntity[]>([])
+
+function enableLogging(){
+  axios.post(`${metaEnv.VITE_API_URL}Telemetry/enablelogging?logLevel=`+selectedTraceLevel.value).then((response: any) => {
+      if(response && response.status === 200){
+          canFlush.value = true;
       }
-      console.log('content',content.value)
-    }
-    //todo set delimiter
-    function formatData(data:any){
-        let parsed = JSON.parse(JSON.stringify(data))
-        let split = parsed?.split(/\r?\n/).map((temp:any)=>{
-        let  _split =temp.split([';']);
-        let toReturn:MessageLog = {
-            Action:_split[0],
-            Status:_split[1],
-            Item:_split[2],
-            Id:_split[3],
-            Version:_split[4],
-            Silo:_split[5],
-            MessageType:_split[6],
-            TransactionId:_split[7],
-            CorrelationId:_split[8],
-            CausationId:_split[9],
-            MessageId:_split[10],
-            UserId:_split[11],
-            DeviceId:_split[12],
-            MessageBody:_split[13],
-            Elapsed:_split[14],
-          } 
-          return toReturn;
-        })
-
-          let test:MessageCorrelationEntity[] = list_to_tree(split);
-        console.log('test',test)
-        console.log('split ',split[0])
-        let toPush = split;
-        if(split.length > 100){
-          toPush = split.slice(0,99);
+  },(error) => {
+      console.log('error',error)
+  })
+}
+function disableLogging(){
+  axios.post(`${metaEnv.VITE_API_URL}Telemetry/disablelogging`,selectedTraceLevel.value).then((response: any) => {
+      if(response && response.status === 200){
+        canFlush.value = false;
+      }
+  },(error) => {
+      console.log('error',error)
+  })
+}
+function flush(){
+  if(!flushing.value && canFlush.value){
+    flushing.value = setInterval(()=>{
+      axios.get(`${metaEnv.VITE_API_URL}Telemetry/flush`).then((response: any) => {
+        if(response && response.status === 200){
+          console.log('response',response)
+          data.value = [...data.value,...pushToList(response?.data)]
         }
-        console.log('toPush',toPush)
-        messagesToShow.value = test;
+      },(error) => {
+        console.log('error',error)
+      })
+    },5000);
+  }else{
+    clearInterval(flushing.value);
+    flushing.value = null;
+  }
+}
 
-        content.value = split;
-        console.log('messages',messagesToShow.value)
-        let messages: MessageLog[] = <MessageLog[]>split;
-    }
+function pushToList(data:Interfaces.MessageLogListEntity[]){
+  let newList:Interfaces.MessageCorrelationEntity[] = [];
 
-    function list_to_tree(list:MessageLogListEntity[]):MessageCorrelationEntity[] {
-      let newList:MessageCorrelationEntity[] = [];
-      let map:any = {}, node:MessageLogListEntity, roots = [], i;
+  let map:any = {}, node:Interfaces.MessageLogListEntity, roots = [], i;
   
-      for (i = 0; i < list.length; i += 1) {
-        map[list[i].MessageId] = i;
-        list[i].children = [];
-      }
-      for (i = 0; i < list.length; i += 1) {
-        node = list[i];
-        if (node.CausationId && node.CausationId != 'CausationId')   {
-          list[map[node.CausationId]].children.push(node);
-        } else {
-          roots.push(node);
-        }
-      }
-
-      roots.forEach((root:MessageLogListEntity) =>{
-        let correlationList = newList.find( li => li.correlationId == root.CorrelationId)
-        if(!correlationList){
-          correlationList = {
-            correlationId:root.CorrelationId,
-            children: [],
-          };
-          newList.push(correlationList);
-        }
-        newList?.find((li:MessageCorrelationEntity)=>li.correlationId == root.CorrelationId)?.children.push(root);
-      });
-
-
-      return newList;
+  for (i = 0; i < data.length; i += 1) {
+    map[data[i].message.headers.messageId.toString()] = i;
+    data[i].children = [];
+  }
+  for (i = 0; i < data.length; i += 1) {
+    node = data[i];
+    if (node.message.headers.causationId)   {
+      data[map[node.message.headers.causationId.toString()]].children.push(node);
+    } else {
+      roots.push(node);
     }
-    const titleFromCorrelationId = computed(()=>{
-      return function(correlationId:Guid|string){
-        const details = (messagesToShow.value as MessageCorrelationEntity[]).find(li => li.correlationId == correlationId);
-        let firstCommand = details?.children.find(x=>x.Action == Action.HANDLECOMMAND && x.Status == ActionStatus.STARTED);
-        return firstCommand?.MessageType;
+  }
 
-      }
-    });
+  roots.forEach((root:Interfaces.MessageLogListEntity) =>{
+    let correlationList = newList.find( li => li.correlationId == root.message.headers.correlationId)
+    if(!correlationList){
+      correlationList = {
+        correlationId:root.message.headers.correlationId,
+        children: [],
+      };
+      newList.push(correlationList);
+    }
+    newList?.find((li:Interfaces.MessageCorrelationEntity)=>li.correlationId == root.message.headers.correlationId)?.children.push(root);
+  });
 
+
+  return newList;
+}
+
+function titleFromMessage(message:Interfaces.MessageCorrelationEntity){
+  let toReturn:any = 'Not found';
+  let firstCommand = message?.children.find(x=>x.action == Enums.MessageLogAction.HandleCommand && x.status == Enums.MessageLogStatus.Started);
+  if(firstCommand){
+    toReturn = Enums.MessageLogAction[firstCommand?.action].toString();
+  }
+  return toReturn;
+}
+
+onMounted(()=>{
+  //getting trace levels from enum
+  traceLevels.value =  Object.keys(Enums.TraceLevel).filter(k => isNaN(Number(k)));
+});
 </script>
 
 <style lang="scss" scoped>

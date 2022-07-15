@@ -33,6 +33,7 @@ services:
       - Shopping-Net
   azurite:
     container_name: shopping-azurite
+    # bug in Azurite version 3.18.0 means upserts fail with 404 error
     image: mcr.microsoft.com/azure-storage/azurite:3.17.1
     restart: always
     ports:

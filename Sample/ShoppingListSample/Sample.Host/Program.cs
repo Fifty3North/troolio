@@ -16,7 +16,7 @@ IConfiguration configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
     .Build();
 
-// create db and run any pending migrations
+// Create MySQL db and run any pending migrations
 await new ShoppingListsDbContext(configuration).RunMigrations();
 
 Action<IServiceCollection> configureServices = (s) =>
@@ -24,11 +24,12 @@ Action<IServiceCollection> configureServices = (s) =>
     s
     .AddDbContext<ShoppingListsDbContext>()
     .AddSingleton<F3N.Providers.MessageQueue.IMessageQueueProvider>(new F3N.Providers.MessageQueue.InMemoryMessageQueueProvider())
+    // Orleans incoming call fiulter to log messages
     //.AddSingleton<IIncomingGrainCallFilter, LoggingCallFilter>()
     ;
 };
 
-
+// For non-docker debugging using in-memory event database and actor registry
 if (configuration["Shopping:Clustering:Storage"] != null && configuration["Shopping:Clustering:Storage"] == "Local")
 {
     var host = Host.CreateDefaultBuilder(args)
@@ -36,6 +37,7 @@ if (configuration["Shopping:Clustering:Storage"] != null && configuration["Shopp
             typeof(IShoppingListActor).Assembly,    // Sample.Shared
             typeof(ShoppingListActor).Assembly      // Sample.Host.App
         }, configureServices
+        // Lines below will disable MySQL projections if uncommented
         //,
         //disableActors: new[] {
         //    "Sample.Database.Projection.ShoppingListEFProjection",
@@ -45,6 +47,7 @@ if (configuration["Shopping:Clustering:Storage"] != null && configuration["Shopp
 
     await host.RunAsync();
 }
+// Docker using Event Store and Azure table storage for actor registry
 else
 {
     await Startup.RunWithDefaults("Shopping",
@@ -53,6 +56,7 @@ else
         typeof(ShoppingListActor).Assembly      // Sample.Host.App
     },
     configureServices
+    // Lines below will disable MySQL projections if uncommented
     //,
     //disableActors: new[] {
     //    "Sample.Database.Projection.ShoppingListEFProjection",

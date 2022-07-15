@@ -7,7 +7,7 @@ namespace Sample.Database.Model;
 public class ShoppingListsDbContext : DbContext
 {
     protected readonly IConfiguration Configuration;
-    private string _connectionString = "Server=localhost;Database=shopping;User=root;Password=secret;Connection Timeout=30";
+    private string _connectionString = "Server=db;port=3306;Database=shopping;User=root;Password=secret;Connection Timeout=30";
 
     // empty constructor for use with command line migrations
     public ShoppingListsDbContext() { }

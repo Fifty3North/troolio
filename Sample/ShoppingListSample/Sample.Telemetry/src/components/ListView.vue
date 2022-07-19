@@ -1,7 +1,6 @@
 <template lang="pug">
 .visualiser
     .visualiser__left
-
         .visualiser-wrapper
             .visualiser__header
                 a.visualiser__logo(title="Trool.io")
@@ -33,16 +32,18 @@
             //-         label.form-label(for="name") Trace File
             //-         input(type="file" ref="doc" @change="readFile()")
             //-     i.ms-2(data-feather="arrow-right")
-          //- .data {{data}}
           ul.messages(v-if="data != null && data.length > 0")  
-            li(v-for="message in data" )
-                .row.g-2(v-if="message && message.correlationId")
+            li(v-for="message in data" v-on:click="selectMessage(message)")
+                .row.g-2(v-if="message")
                     .col.col-md-6
                         .form-floating
-                            span.subtitle {{ titleFromMessage(message) }}
+                            span.subtitle {{ message.action }}
                     .col.col-md-2
                         //- button.btn.btn-secondary()
                         //-     i.ms-2(data-feather="eye")
+          //- .data {{data}}
+    .visualiser__right(ref="dragContainer" v-if="selectedMessage != null")
+      EntityNode(:message="selectedMessage")
 </template>
 <script setup lang="ts">
 import { computed, onMounted, onUpdated, ref} from "vue";
@@ -52,16 +53,52 @@ import * as Interfaces from '../Interfaces'
 import * as Enums from '../Enums'
 import {metaEnv} from "../globals";
 import axios, { AxiosError } from 'axios'
-
+import {NodeAttributes} from '../nodeAttributes'
+import '../scss/general.scss';
+import EntityNode from '../components/EntityNode.vue'
 const traceLevels = ref<any[]>([]);
 const selectedTraceLevel = ref<Enums.TraceLevel>(Enums.TraceLevel.Tracing);
 const canFlush = ref(false);
 const messagesToShow = ref<Interfaces.MessageCorrelationEntity[]>([]);
-const entitiesToShow = ref([]);
-
+const entitiesToShow = ref<Interfaces.Entity[]>([]);
+const selectedMessage = ref<Interfaces.MessageLogListEntity>()
 const flushing = ref<any>('');
 
-const data = ref<Interfaces.MessageCorrelationEntity[]>([])
+const data = ref<Interfaces.MessageLogListEntity[]>([])
+function selectMessage(msg:Interfaces.MessageLogListEntity){
+  selectedMessage.value = formatNodeAndChildren(msg);
+
+  console.log('select msg',selectedMessage.value)
+  // selectedMessage.value = entitiesFromChildren(message.children);
+  // setTimeout(()=>{
+  //         drawLines();
+
+  // },2000)
+}
+function formatNodeAndChildren(msg:Interfaces.MessageLogListEntity){
+  let toReturn:Interfaces.MessageLogListEntity = msg;
+  //if error
+  let attrId:any = msg.action;
+  if(msg.error || (msg.elapsed == -1 && msg.status != Enums.MessageLogStatus.Completed)){
+    attrId = Enums.EntityType.Error;
+  }
+  let attr = NodeAttributes.find(attr=>attr.Id == attrId)
+  if(attr != null){
+    toReturn.entity = {
+      id:msg.message.headers.messageId,
+      name: 'todo name '+msg.action ,
+      iconOfNode:attr.IconOfNode as string,
+      typeOfNode:attr.TypeOfNode as string,
+      iconColor:attr.IconColor as string,
+      subTitle:attr.subTitle,
+      type:attr.Type as Enums.EntityType
+    }
+  }
+  toReturn.children?.forEach((child)=>{
+    child = formatNodeAndChildren(child);
+  })
+  return toReturn;
+}
 
 function enableLogging(){
   axios.post(`${metaEnv.VITE_API_URL}Telemetry/enablelogging?logLevel=`+selectedTraceLevel.value).then((response: any) => {
@@ -86,8 +123,8 @@ function flush(){
     flushing.value = setInterval(()=>{
       axios.get(`${metaEnv.VITE_API_URL}Telemetry/flush`).then((response: any) => {
         if(response && response.status === 200){
-          console.log('response',response)
-          data.value = [...data.value,...pushToList(response?.data)]
+         console.log('response',response)
+          data.value = [...data.value,...pushToList(JSON.parse(JSON.stringify(response?.data)))]
         }
       },(error) => {
         console.log('error',error)
@@ -101,46 +138,54 @@ function flush(){
 
 function pushToList(data:Interfaces.MessageLogListEntity[]){
   let newList:Interfaces.MessageCorrelationEntity[] = [];
-
-  let map:any = {}, node:Interfaces.MessageLogListEntity, roots = [], i;
+  console.log('data',data)
+  let map:any = {}, node:Interfaces.MessageLogListEntity, roots:Interfaces.MessageLogListEntity[] = [], i;
   
+  //init nodes
   for (i = 0; i < data.length; i += 1) {
     map[data[i].message.headers.messageId.toString()] = i;
+    if(data[i].children){
+      console.log('already has children', data[i])
+    }
     data[i].children = [];
   }
+  //set roots and children
   for (i = 0; i < data.length; i += 1) {
     node = data[i];
+    let toPushTo:Interfaces.MessageLogListEntity[] = roots;
+    
     if (node.message.headers.causationId)   {
-      data[map[node.message.headers.causationId.toString()]].children.push(node);
-    } else {
-      roots.push(node);
+
+      let parent = data[map[node.message.headers.causationId.toString()]];
+      console.log('parent',node.message.headers.causationId,parent)
+      toPushTo = parent.children;
+    }
+
+    let existingMessage = toPushTo.find(x=> node.message.headers.messageId == x.message.headers.messageId)
+
+    //if duplicate message merge the two
+    console.log('existingMessage',node,existingMessage)
+    if(existingMessage != null && node.actor == existingMessage.actor){
+      existingMessage.elapsed = node.elapsed;
+      existingMessage.status = node.status;
+      existingMessage.error = node.error;
+      existingMessage.stackTrace = node.stackTrace;
+    }else{
+      toPushTo.push(node);
     }
   }
-
-  roots.forEach((root:Interfaces.MessageLogListEntity) =>{
-    let correlationList = newList.find( li => li.correlationId == root.message.headers.correlationId)
-    if(!correlationList){
-      correlationList = {
-        correlationId:root.message.headers.correlationId,
-        children: [],
-      };
-      newList.push(correlationList);
-    }
-    newList?.find((li:Interfaces.MessageCorrelationEntity)=>li.correlationId == root.message.headers.correlationId)?.children.push(root);
+  
+  //get children from data
+  roots.forEach(root => {
+    root.children.push(...data[map[root.message.headers.messageId.toString()]].children)
   });
 
-
-  return newList;
+  console.log('roots',roots)
+  return roots;
 }
 
-function titleFromMessage(message:Interfaces.MessageCorrelationEntity){
-  let toReturn:any = 'Not found';
-  let firstCommand = message?.children.find(x=>x.action == Enums.MessageLogAction.HandleCommand && x.status == Enums.MessageLogStatus.Started);
-  if(firstCommand){
-    toReturn = Enums.MessageLogAction[firstCommand?.action].toString();
-  }
-  return toReturn;
-}
+const leaderLineList = ref([])
+// const linesToCreate
 
 onMounted(()=>{
   //getting trace levels from enum
@@ -480,6 +525,9 @@ input[type=number] {
     background-image: url('../images/light-pattern-bg.jpg');
     background-repeat: repeat;
     background-size: 10px 10px;
+
+    overflow:auto;
+    
   }
   .visualiser__form {
     width: 350px;

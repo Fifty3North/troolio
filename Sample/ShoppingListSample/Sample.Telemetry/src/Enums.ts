@@ -23,3 +23,20 @@ export enum TraceLevel
   Information,
   Tracing
 }
+
+export enum EntityType {
+    Actor,
+    Command,
+    Event,
+    Query,
+    UI,
+    State,
+    Constraint,
+    Error,
+    DbProjection,
+    WebProjection,
+    Webhook,
+    Timer,
+    Check,
+    RESTAPI
+  };

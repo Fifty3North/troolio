@@ -17,17 +17,32 @@ export interface Message{
     headers:Headers
 }
 export interface Headers{
-    correlationId:Guid, 
-    userId:Guid,
-    deviceId:Guid,
-    messageId:Guid,
-    transactionId?:Guid,
-    causationId?:Guid|string,
+    correlationId:string, 
+    userId:string,
+    deviceId:string,
+    messageId:string,
+    transactionId?:string,
+    causationId?:string,
 }
 export interface MessageLogListEntity extends MessageLog{
-    children: MessageLogListEntity[]
+    children: MessageLogListEntity[],
+    entity?:Entity
 }
 export interface MessageCorrelationEntity {
-    correlationId: Guid|string
+    correlationId: string
     children : MessageLogListEntity[]
+}
+
+
+export interface Entity {
+    id: string,
+    name: string,
+    // x: number,
+    // y: number,
+
+    iconOfNode: string,
+    typeOfNode: string,
+    iconColor: string,
+    subTitle: string,
+    type:Enums.EntityType
 }

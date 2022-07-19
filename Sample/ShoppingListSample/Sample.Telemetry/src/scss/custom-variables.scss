@@ -1,0 +1,182 @@
+// Options
+$enable-reduced-motion: false;
+
+$border-radius: 0.5rem;
+
+// Colors
+$white: #ffffff;
+$gray-100: #f5f7fa;
+$gray-200: #f0f2f5;
+$gray-300: #d6dbe1;
+$gray-400: #a5b1c2;
+$gray-500: #8795a8;
+$gray-600: #69778c;
+$gray-700: #526175;
+$gray-800: #32445c;
+$gray-900: #182942;
+$black: #0f1a2a;
+
+$grays: (
+  '100': $gray-100,
+  '200': $gray-200,
+  '300': $gray-300,
+  '400': $gray-400,
+  '500': $gray-500,
+  '600': $gray-600,
+  '700': $gray-700,
+  '800': $gray-800,
+  '900': $gray-900,
+);
+
+// darker pastel colors for icons and borders both light and dark theme. Node styling.
+
+$blue: #73a7e5;
+$purple: #9773e5;
+$red: #e57373;
+$orange: #e59c73;
+$yellow: #e5b773;
+$green: #8ae573;
+$cyan: #a8d9e0;
+$silver: #8fa5bf;
+
+$primary: #0c69f4;
+$secondary: $gray-600;
+$success: $green;
+$info: $cyan;
+$warning: $yellow;
+$danger: $red;
+$white: $white;
+$light: $gray-300;
+$dark: $gray-700;
+
+$colors: (
+  'blue': $blue,
+  'purple': $purple,
+  'red': $red,
+  'orange': $orange,
+  'yellow': $yellow,
+  'cyan': $cyan,
+  'silver': $silver,
+  'white': $white,
+);
+
+$theme-colors: (
+  'primary': $primary,
+  'secondary': $secondary,
+  'success': $success,
+  'info': $info,
+  'warning': $warning,
+  'danger': $danger,
+  'white': $white,
+  'light': $light,
+  'dark': $dark,
+  'black': $black,
+);
+
+$dark-theme-colors: (
+  'primary': red,
+  'secondary': $secondary,
+  'success': $success,
+  'info': $info,
+  'warning': $warning,
+  'danger': $danger,
+  'white': $white,
+  'light': $light,
+  'dark': $dark,
+  'black': $black,
+);
+
+$light-theme-node-border-colors: (
+  'node-border-color-blue': $blue,
+  // command
+  'node-border-color-green': $green,
+  // event
+  'node-border-color-cyan': $cyan,
+  // webhook
+  'node-border-color-purple': $purple,
+  //db & api
+  'node-border-color-red': $red,
+  // check, error
+  'node-border-color-orange': $orange,
+  // query
+  'node-border-color-yellow': $yellow,
+  // ui
+  'node-border-color-silver': $silver // state,,
+);
+
+$light-theme-node-header-backgrounds: (
+  'node-header-bg-blue': #f0f7ff,
+  'node-header-bg-green': #f3fff0,
+  'node-header-bg-cyan': #effdff,
+  'node-header-bg-purple': #f5f0ff,
+  'node-header-bg-red': #fff0f0,
+  'node-header-bg-orange': #fff5f0,
+  'node-header-bg-yellow': #fff9f0,
+  'node-header-bg-silver': #e4eaf2,
+);
+$light-theme-node-icon-colors: (
+  'node-header-icon-color-blue': #80baff,
+  'node-header-icon-color-green': #99ff80,
+  'node-header-icon-color-cyan': #80efff,
+  'node-header-icon-color-purple': #a880ff,
+  'node-header-icon-color-red': #ff8080,
+  'node-header-icon-color-orange': #ffad80,
+  'node-header-icon-color-yellow': #ffcc80,
+  'node-header-icon-color-silver': #8fa3bf,
+);
+$light-theme-node-icon-backgrounds: (
+  'node-header-icon-bg-blue': #bfddff,
+  'node-header-icon-bg-green': #ccffbf,
+  'node-header-icon-bg-cyan': #bff7ff,
+  'node-header-icon-bg-purple': #d3bfff,
+  'node-header-icon-bg-red': #ffbfbf,
+  'node-header-icon-bg-orange': #ffd6bf,
+  'node-header-icon-bg-yellow': #ffe5bf,
+  'node-header-icon-bg-silver': #d6dbe1,
+);
+
+$dark-theme-node-icon-backgrounds: (
+  'node-header-icon-bg-blue': #405e80,
+  'node-header-icon-bg-green': #4c8040,
+  'node-header-icon-bg-cyan': #407880,
+  'node-header-icon-bg-purple': #544080,
+  'node-header-icon-bg-red': #804040,
+  'node-header-icon-bg-orange': #805740,
+  'node-header-icon-bg-yellow': #806640,
+  'node-header-icon-bg-silver': #536580,
+);
+
+// Prefix for :root CSS variables
+$variable-prefix: tr-;
+
+$font-size-base: 1rem;
+$font-size-sm: $font-size-base * 0.875;
+$font-size-xs: $font-size-base * 0.75;
+$font-size-lg: $font-size-base * 1.125;
+
+$font-weight-normal: 400;
+$line-height-base: 1.5;
+$body-color: $gray-700;
+$border-color: $gray-300;
+$headings-color: $black;
+$subheadings-color: $gray-700;
+
+$btn-font-weight: 500;
+$btn-font-size: $font-size-base * 0.875;
+
+$body-bg: $white;
+$body-color: $gray-700;
+
+$canvas-light-bg: $gray-100 url(images/light-pattern-bg.png);
+$canvas-dark-bg: $gray-100 url(images/dark-pattern-bg.png);
+
+$breadcrumb-divider: quote('→');
+$breadcrumb-font-size: $font-size-sm;
+
+$border-radius-sm: 0.5rem;
+$border-radius-xs: 0.25rem;
+
+$input-btn-focus-width: 0;
+$input-btn-focus-color-opacity: 0;
+
+$tooltip-bg: $gray-900;

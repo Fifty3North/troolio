@@ -1,0 +1,60 @@
+.modal {
+    
+    $modal-parent: &;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: none;
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    outline: 0;
+    background-color: var(--#{tr-}faded-bg-colour);
+    &.show{
+        display: block;
+    }
+    &-header {
+        align-items: center;
+        background-color: var(--#{$variable-prefix}dark-bg);
+        border-bottom: 1px solid var(--#{$variable-prefix}border-color);
+        &__icon {
+            flex: 0 0 2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            svg {
+                stroke: $primary;
+                width: 1.5rem;
+                height: 1.5rem;
+            }
+        }
+        .btn-round {
+            margin-left: auto;
+        }
+    }
+    &-body {
+        // border-bottom: 1px solid var(--#{$variable-prefix}border-color);
+    }
+
+    &--has-background {
+        #{$modal-parent}-header {
+            background: url("../images/light-pattern-bg.jpg") repeat;
+
+            background: var(--#{$variable-prefix}normal-bg);
+            border-bottom: 1px solid var(--#{$variable-prefix}border-color);
+        }
+        #{$modal-parent}-body {
+            background-image: var(--#{$variable-prefix}canvas-img-bg);
+            background-repeat: repeat;
+            background-size: 10px 10px;
+        }
+        #{$modal-parent}-footer {
+            border-top: 1px solid var(--#{$variable-prefix}border-color);
+        }
+    }
+    &.show{
+        display: block!important;
+    }
+}

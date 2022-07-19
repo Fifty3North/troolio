@@ -1,0 +1,29 @@
+[data-theme='dark'] {
+  &:root {
+    //text
+    --#{$variable-prefix}body-color: #{$gray-100};
+    --#{$variable-prefix}headings-color: #{$gray-100};
+    --#{$variable-prefix}subheadings-color: #{$gray-400};
+    --#{$variable-prefix}hover-color: #{$gray-400};
+    --#{$variable-prefix}active-color: #{$gray-400};
+
+    // borders
+    --#{$variable-prefix}body-bg: #{$gray-900};
+    --#{$variable-prefix}border-color: #{$gray-800};
+    --#{$variable-prefix}border-color-alternative: #{$gray-700};
+
+    // backgrounds
+    --#{$variable-prefix}actor-bg: #{$white};
+    --#{$variable-prefix}node-bg: #{$gray-800};
+    --#{$variable-prefix}navbar-bg: #{$gray-900};
+    --#{$variable-prefix}canvas-img-bg: url(/images/dark-pattern-bg.jpg);
+
+    --#{$variable-prefix}hover-bg: #{rgba($gray-900, 0.4)};
+    --#{$variable-prefix}active-bg: #{$gray-900};
+
+    //renders bs theme pastel colors
+    @each $color, $value in $dark-theme-node-icon-backgrounds {
+      --#{$variable-prefix}#{$color}: #{$value};
+    }
+  } //root ends
+}

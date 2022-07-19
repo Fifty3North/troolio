@@ -1,0 +1,82 @@
+.navigation {
+  position: relative;
+  width: 100%;
+  // margin-bottom: 1rem;
+  z-index: 10;
+
+  &-top {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 4rem;
+    width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    background: var(--#{$variable-prefix}navbar-bg);
+    border-bottom: 1px solid var(--#{$variable-prefix}border-color);
+  }
+  &-bottom {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+    width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    height: 3.5rem;
+
+    //set as vars
+    background: var(--#{$variable-prefix}navbar-bg);
+    border-bottom: 1px solid var(--#{$variable-prefix}border-color);
+
+    &__left {
+      .breadcrumb {
+        margin-bottom: 0;
+      }
+    }
+  }
+  &-user {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+
+    &__avatar {
+      margin-right: 0.5rem;
+    }
+    &__data {
+      display: flex;
+      flex-flow: column wrap;
+      align-items: flex-start;
+      justify-content: center;
+
+      &.dropdown-toggle {
+        text-decoration: none;
+        &::after {
+          display: none;
+        }
+      }
+    }
+    &__name {
+      font-weight: $font-weight-bold;
+      font-size: $font-size-sm;
+      color: var(--#{$variable-prefix}headings-color);
+    }
+    &__company {
+      font-size: $font-size-xs;
+      color: var(--#{$variable-prefix}subheadings-color);
+    }
+    &__toggler {
+      margin-left: 1rem;
+    }
+  }
+
+  @include media-breakpoint-down(md) {
+    &-bottom {
+      .breadcrumb {
+        display: none;
+      }
+    }
+  }
+}

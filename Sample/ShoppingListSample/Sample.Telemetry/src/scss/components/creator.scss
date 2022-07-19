@@ -1,0 +1,106 @@
+.creator {
+    position: relative;
+    width: 800px;
+    border: 1px solid var(--#{$variable-prefix}border-color);
+    background-color: var(--#{$variable-prefix}normal-bg);
+    border-radius: $border-radius;
+    margin: 0 auto;
+
+    h5 {
+        margin-bottom: 0;
+    }
+    h6 {
+        margin-bottom: 0.25rem;
+    }
+
+    &-wrapper {
+        position: relative;
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        padding: 1rem;
+        background-image: var(--#{$variable-prefix}canvas-img-bg);
+        background-repeat: repeat;
+        background-size: 10px 10px;
+    }
+
+    &__header {
+        border-bottom: 1px solid var(--#{$variable-prefix}border-color);
+        background-color: var(--#{$variable-prefix}dark-bg);
+        border-top-left-radius: $border-radius;
+        border-top-right-radius: $border-radius;
+        padding: 2rem 1.5rem;
+    }
+    &__content {
+        width: 100%;
+        padding: 1.5rem 1.5rem 0 1.5rem;
+    }
+    &__footer {
+        padding: 0 1.5rem 1.5rem 1.5rem;
+        display: flex;
+        width: 100%;
+        justify-content: flex-end;
+        align-items: center;
+        & > * {
+            &:not(:last-child) {
+                margin-right: 0.5rem;
+            }
+        }
+    }
+    &__section {
+        padding-bottom: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid var(--#{$variable-prefix}border-color);
+    }
+    &__accordion {
+
+        .accordion-item {
+            border-radius: $border-radius;
+            border: 1px solid var(--#{$variable-prefix}border-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .accordion-button {
+
+            border-radius: $border-radius;
+            h6 {
+                margin-bottom: 0;
+                margin-left: 0.5rem;
+            }
+            &::after {
+                background-color: $primary;
+                border-radius: 10rem;
+                width: 2rem;
+                height: 2rem;
+                background-position: center center;
+                
+            }
+            &.collapsed {
+                border-radius: $border-radius;
+            }
+
+            &:not(.collapsed) {
+                border-bottom-left-radius: 0;
+                border-bottom-right-radius: 0;
+                background-color: var(--#{$variable-prefix}dark-bg);
+            }
+        }
+    }
+    &__name {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: flex-start;
+
+        &:not(:last-child) {
+            margin-bottom: 1.5rem;
+        }
+
+        svg {
+            margin-right: 0.5rem;
+            stroke: var(--#{$variable-prefix}primary);
+        }
+    }
+}

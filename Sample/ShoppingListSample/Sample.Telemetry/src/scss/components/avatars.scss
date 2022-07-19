@@ -1,0 +1,21 @@
+.avatar {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
+    width: 2rem;
+    height: 2rem;
+    background-color: $gray-700;
+    color: $white;
+    text-align: center;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    font-size: $font-size-xs;
+    border-radius: $border-radius;
+
+    @each $color, $value in $colors {
+        &--#{$color} {
+            background-color: #{$value};
+        }
+    }
+}

@@ -1,0 +1,46 @@
+@import "navigation";
+// @import "layouts";
+@import "buttons";
+@import "round-icons";
+@import "nodes";
+@import "avatars";
+@import "panels";
+@import "canvas";
+@import "creator";
+@import "customRoot";
+@import "modals";
+@import "levels";
+
+
+#app {
+    // background-image: var(--#{$variable-prefix}canvas-bg-img);
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    flex-flow: column wrap;
+}
+
+// body {
+//     // color: var(--#{$variable-prefix}container-text-color);
+// }
+.content {
+    width: 100%;
+    flex: 1;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: var(--#{$variable-prefix}container-dark-bg);
+
+    &-inner {
+        padding: 1rem;
+    }
+}
+.leader-line{
+    pointer-events: all!important;
+      &-line-path{
+        pointer-events: all!important;
+      }
+  }

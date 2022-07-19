@@ -1,0 +1,39 @@
+.btn-sm {
+    font-weight: 500;
+
+    svg {
+        width: 1rem;
+        height: 1rem;
+        stroke-width: 2.5;
+        vertical-align: middle;
+        padding-bottom: 0.125rem;
+        margin-right: 0.125rem;
+        margin-left: 0.125rem;
+    }
+}
+
+.btn-outline-light {
+    color: var(--#{$variable-prefix}dark);
+}
+
+.btn-round {
+
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+
+    color: var(--#{$variable-prefix}subheadings-color);
+
+    &:hover {
+        background:var(--#{$variable-prefix}hover-bg);
+        color: var(--#{$variable-prefix}hover-color);
+    }
+
+    svg,
+    i {
+        flex: 1 0 auto;
+    }
+}

@@ -1,0 +1,110 @@
+.rule-group,
+.rules,
+.children-group,
+.rule-row {
+    position: relative;
+}
+
+.rule-group {
+    .properties-panel-box__form-element {
+        position: relative;
+        &::before {
+            content: "";
+            position: absolute;
+            top: 70px;
+            left: 26px;
+            width: 20px;
+            height: 2px;
+            background-color: transparent;
+            border-top: 2px dotted $border-color;
+        }
+    }
+    &.no-children{
+        & > .rules::before{
+            top: -15px;
+            left: -24px;
+            width: 2px;
+            height: 35px;
+        }
+    }
+    &:not(.no-children){
+        & > .rules::before{
+            top: -15px;
+            bottom: -36px;
+            left: -24px;
+            width: 3px;
+        }
+    }
+    & > .rules {
+        position: relative;
+        &::before {
+            content: "";
+            position: absolute;
+            background-color: transparent;
+            border-right: 2px dotted $border-color;
+        }
+        &::after {
+            content: "";
+            position: absolute;
+            bottom: -37px;
+            left: -20px;
+            width: 16px;
+            height: 3px;
+            background-color: transparent;
+            border-top: 2px dotted $border-color;
+        }
+    }
+    &:first-of-type{
+        .children-groups {
+            
+            .rule-group {
+                    & > .properties-panel-box__form-element {
+                    position: relative;
+                    &::after {
+                        content: "";
+                        position: absolute;
+                        top: 37px;
+                        left: 26px;
+                        width: 2px;
+                        height: 35px;
+                        background-color: transparent;
+                        border-left: 2px dotted  $border-color;
+                    }
+                }
+                &:not(:last-of-type){
+                    &::before{
+                        content: "";
+                        position: absolute;
+                        top: -15px;
+                        bottom: -36px;
+                        left: -24px;
+                        width: 3px;
+                        background-color: transparent;
+                        border-right: 2px dotted $border-color;
+                    }
+                    &::after {
+                        content: "";
+                        position: absolute;
+                        bottom: -37px;
+                        left: -20px;
+                        width: 16px;
+                        height: 3px;
+                        background-color: transparent;
+                        border-top: 2px dotted $border-color;
+                    }
+                }
+                &.no-children{
+                    .rules {
+                        &::before,
+                        &::after {
+                            display: none;
+                        }
+                    }
+                }
+            }
+        }   
+    
+    }
+}
+
+

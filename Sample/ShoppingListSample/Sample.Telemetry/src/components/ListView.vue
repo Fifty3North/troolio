@@ -22,25 +22,17 @@
                       | Flush
                     span(v-else)
                       | Cancel
-            //- .visualiser__name
-            //-     h3 Data Visualiser
-            //-     span.subtitle Lorem ipsum dolor sit amet consectetur adipisicing elit. Deserunt, aspernatur.
         .visualiser__content
-          //- .data {{data}}
-            //- form.visualiser__form            
-            //-     .form-group.mb-3
-            //-         label.form-label(for="name") Trace File
-            //-         input(type="file" ref="doc" @change="readFile()")
-            //-     i.ms-2(data-feather="arrow-right")
           ul.messages(v-if="data != null && data.length > 0")  
             li(v-for="message in data" v-on:click="selectMessage(message)")
                 .row.g-2(v-if="message")
                     .col.col-md-6
                         .form-floating
-                            span.subtitle {{ message.action }}
-                    .col.col-md-2
-                        //- button.btn.btn-secondary()
-                        //-     i.ms-2(data-feather="eye")
+                            span.subtitle {{  message.action }}
+                    //- .col.col-md-2
+                    //-     button.btn.btn-secondary()
+                    //-         i.ms-2(data-feather="eye")
+                            
           //- .data {{data}}
     .visualiser__right(ref="dragContainer" v-if="selectedMessage != null")
       EntityNode(:message="selectedMessage")
@@ -56,6 +48,7 @@ import axios, { AxiosError } from 'axios'
 import {NodeAttributes} from '../nodeAttributes'
 import '../scss/general.scss';
 import EntityNode from '../components/EntityNode.vue'
+import LeaderLine from 'vue3-leaderline';
 const traceLevels = ref<any[]>([]);
 const selectedTraceLevel = ref<Enums.TraceLevel>(Enums.TraceLevel.Tracing);
 const canFlush = ref(false);
@@ -65,20 +58,73 @@ const selectedMessage = ref<Interfaces.MessageLogListEntity>()
 const flushing = ref<any>('');
 
 const data = ref<Interfaces.MessageLogListEntity[]>([])
+const linesToCreate = ref<Interfaces.LinesToCreate[]>([]);
+const leaderLineList = ref<Interfaces.LeaderLineListEntity[]>([])
+
 function selectMessage(msg:Interfaces.MessageLogListEntity){
-  selectedMessage.value = formatNodeAndChildren(msg);
+  linesToCreate.value = [];
+  leaderLineList.value.forEach(element => {
+    element?.LeaderLine.remove();
+  });
+  leaderLineList.value = [];
+  selectedMessage.value = mapAndformatNodeAndChildren(msg);
 
   console.log('select msg',selectedMessage.value)
   // selectedMessage.value = entitiesFromChildren(message.children);
-  // setTimeout(()=>{
-  //         drawLines();
+  setTimeout(()=>{
+    drawLines();
 
-  // },2000)
+  },2000)
 }
-function formatNodeAndChildren(msg:Interfaces.MessageLogListEntity){
+function drawLines(){
+  linesToCreate.value?.forEach((edge:Interfaces.LinesToCreate) => {
+    let existingLine = leaderLineList.value.find(line=> line.To == edge.To && line.From == edge.From);
+    if(existingLine && existingLine.LeaderLine){
+      existingLine?.LeaderLine?.position();
+      return;
+    }
+
+    let from = document.getElementById(edge.From.toString());
+    let to = document.getElementById(edge.To.toString());
+
+    if(!to || !from){
+      return;
+    }
+    // let id = edge?.Id;
+    
+    var tempLine = new LeaderLine(
+      from,
+      to, {
+      startSocket: 'bottom',
+      endSocket: 'left',
+      endPlug: 'arrow2',
+      color: '#69778C',
+      size: 2,
+      startSocketGravity: 40,
+      endSocketGravity: 40,
+      path:'grid'
+      // middleLabel:'*'
+    });
+    let payload:Interfaces.LeaderLineListEntity = {
+      Id :'id',
+      To:edge.To,
+      From: edge.From,
+      LeaderLine: tempLine
+    };
+    leaderLineList.value.push(payload);
+
+  });
+
+}
+function mapAndformatNodeAndChildren(msg:Interfaces.MessageLogListEntity){
   let toReturn:Interfaces.MessageLogListEntity = msg;
-  //if error
+  console.log('msg',msg.message.headers.causationId)
+  if(msg.message.headers.causationId != null)
+  {
+    linesToCreate.value.push({From:msg.message.headers.causationId, To: msg.message.headers.messageId} as Interfaces.LinesToCreate)
+  }
   let attrId:any = msg.action;
+  //if error
   if(msg.error || (msg.elapsed == -1 && msg.status != Enums.MessageLogStatus.Completed)){
     attrId = Enums.EntityType.Error;
   }
@@ -86,7 +132,7 @@ function formatNodeAndChildren(msg:Interfaces.MessageLogListEntity){
   if(attr != null){
     toReturn.entity = {
       id:msg.message.headers.messageId,
-      name: 'todo name '+msg.action ,
+      name: Enums.MessageLogAction[msg.action].toString() ,
       iconOfNode:attr.IconOfNode as string,
       typeOfNode:attr.TypeOfNode as string,
       iconColor:attr.IconColor as string,
@@ -95,11 +141,10 @@ function formatNodeAndChildren(msg:Interfaces.MessageLogListEntity){
     }
   }
   toReturn.children?.forEach((child)=>{
-    child = formatNodeAndChildren(child);
+    child = mapAndformatNodeAndChildren(child);
   })
   return toReturn;
 }
-
 function enableLogging(){
   axios.post(`${metaEnv.VITE_API_URL}Telemetry/enablelogging?logLevel=`+selectedTraceLevel.value).then((response: any) => {
       if(response && response.status === 200){
@@ -184,8 +229,6 @@ function pushToList(data:Interfaces.MessageLogListEntity[]){
   return roots;
 }
 
-const leaderLineList = ref([])
-// const linesToCreate
 
 onMounted(()=>{
   //getting trace levels from enum
@@ -239,6 +282,9 @@ onMounted(()=>{
     -webkit-box-pack: center;
     -ms-flex-pack: center;
     justify-content: center;
+    .visualiser__content{
+      text-align: center;
+    }
   }
   &__right {
     display: flex !important;

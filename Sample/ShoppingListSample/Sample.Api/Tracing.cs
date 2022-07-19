@@ -5,14 +5,12 @@ namespace Sample.Api;
 
 public class ApiTracing
 {
-    private ITroolioClient _client;
-    private bool _headerReturned = false;
+    private readonly ITroolioClient _client;
+
     public ApiTracing(ITroolioClient client)
     {
         _client = client;
     }
-
-
 
     public async Task DisableTracing()
     {

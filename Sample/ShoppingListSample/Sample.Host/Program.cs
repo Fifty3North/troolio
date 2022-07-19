@@ -6,9 +6,6 @@ using Sample.Host.App.ShoppingList;
 using Troolio.Stores.EventStore;
 using Microsoft.Extensions.Hosting;
 using Troolio.Core;
-using Orleans;
-using Sample.Host.App;
-using Orleans.Configuration;
 
 Console.WriteLine("Running sample. Booting cluster might take some time ...\n");
 

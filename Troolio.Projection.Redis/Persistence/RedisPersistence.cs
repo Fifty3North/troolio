@@ -9,7 +9,7 @@ using Troolio.Projection.Redis.Providers;
 
 namespace Troolio.Projection.Persistence
 {
-    internal class RedisPersistence<TEntity> : Troolio.Core.DispatchActor
+    public abstract class RedisPersistence<TEntity> : DispatchActor
         where TEntity : class, new()
     {
         protected readonly IRedisWriteProvider<TEntity> _redisWriteProvider;

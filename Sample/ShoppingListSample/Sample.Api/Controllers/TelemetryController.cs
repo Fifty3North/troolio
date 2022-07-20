@@ -63,7 +63,9 @@ public class TelemetryController : Controller
     {
         try
         {
-            return Ok(await _tracing.Flush());
+            IList<MessageLog> messages = await _tracing.Flush();
+
+            return Ok(messages);
         }
         catch (Exception ex)
         {

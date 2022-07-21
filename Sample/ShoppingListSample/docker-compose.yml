@@ -22,6 +22,8 @@ services:
     expose: 
       - "9000"
       - "9001"
+    ports:
+      - "8888:8888"
     build:
       context: ../../
       dockerfile: Sample/ShoppingListSample/Sample.Host/Dockerfile

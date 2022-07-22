@@ -10,7 +10,7 @@ namespace Sample.Database.Projection
 {
     [RegexImplicitStreamSubscription($"{nameof(ShoppingListActor)}-.*")]
     [Reentrant]
-    public class ShoppingListEFProjection : EntityFrameworkBatchedProjection<Model.ShoppingList, Model.ShoppingListsDbContext>
+    public class ShoppingListEFProjection : EntityFrameworkBatchedProjection<Model.ShoppingList, Model.ShoppingListsDbContext>, Shared.ActorInterfaces.IShoppingListEFProjection
     {
         protected override void SetupMappings()
         {

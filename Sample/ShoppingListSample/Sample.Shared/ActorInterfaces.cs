@@ -9,3 +9,6 @@ public interface IEmailActor : IActor { }
 public interface IShoppingListActor : ICreatableActor { }
 public interface IUserActor : IStatefulActor { }
 public interface IPingActor : IActor { }
+
+public interface IShoppingListEFProjection : IActor { }
+public interface IShoppingListItemEFProjection : IActor { }

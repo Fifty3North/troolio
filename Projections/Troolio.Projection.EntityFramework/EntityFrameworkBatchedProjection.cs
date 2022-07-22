@@ -3,7 +3,7 @@ using Orleans;
 
 namespace Troolio.Core.Projection
 {
-    public abstract class EntityFrameworkBatchedProjection<TEntity, TDbContext> : EntityFrameworkBatched<TEntity, TDbContext>, IGrainWithGuidCompoundKey
+    public abstract class EntityFrameworkBatchedProjection<TEntity, TDbContext> : EntityFrameworkBatched<TEntity, TDbContext>, IGrainWithGuidCompoundKey, IEntityFrameworkBatchedProjection
             where TEntity : class
             where TDbContext : DbContext
     {
@@ -12,6 +12,7 @@ namespace Troolio.Core.Projection
             SetupMappings();
             return base.OnActivateAsync();
         }
+
         protected abstract void SetupMappings();
 
         /// <summary>
@@ -31,6 +32,5 @@ namespace Troolio.Core.Projection
                 return Task.CompletedTask;
             }
         }
-
     }
 }

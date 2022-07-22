@@ -4,18 +4,18 @@ using Troolio.Core.ReadModels;
 
 namespace Sample.Shared.ReadModels;
 
-public record ShoppingListItem : TroolioReadModel
+public record ShoppingListItemReadModel : TroolioReadModel
 {
-    public ShoppingListItem(Guid id)
+    public ShoppingListItemReadModel(Guid id)
         => Id = id;
     public Guid Id { get; }
     public string Description { get; private set; }
     public ushort Quantity { get; private set; }
     public bool CrossedOff { get; private set; }
 
-    public ShoppingListItem On(EventEnvelope<ItemCrossedOffList> _) 
+    public ShoppingListItemReadModel On(EventEnvelope<ItemCrossedOffList> _) 
         => this with { CrossedOff = true };
-    public ShoppingListItem On(EventEnvelope<ItemAddedToList> ev) 
+    public ShoppingListItemReadModel On(EventEnvelope<ItemAddedToList> ev) 
         => this with { Description = ev.Event.Description, Quantity = ev.Event.Quantity };
         
 }

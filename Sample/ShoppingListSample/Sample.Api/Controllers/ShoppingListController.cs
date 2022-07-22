@@ -129,15 +129,15 @@ public class ShoppingListController : BaseController
 
     [HttpGet]
     [Route("{ShoppingListId}/ShoppingListReadModel")]
-    public async Task<ActionResult<ShoppingList>> ShoppingListReadModel([FromHeader] Guid userId, [FromHeader] Guid deviceId, [FromRoute] Guid ShoppingListId)
+    public async Task<ActionResult<ShoppingListReadModel>> ShoppingListReadModel([FromHeader] Guid userId, [FromHeader] Guid deviceId, [FromRoute] Guid ShoppingListId)
     {
-        ShoppingList result;
+        ShoppingListReadModel result;
 
         try
         {
-            result = await _troolioClient.Get<ShoppingList>(ShoppingListId.ToString());
+            result = await _troolioClient.Get<ShoppingListReadModel>(ShoppingListId.ToString());
 
-            if(result.Title == null)
+            if (result.Title == null)
             {
                 throw new ApplicationException("Shopping list has not been created");
             }
@@ -147,6 +147,13 @@ public class ShoppingListController : BaseController
             return BadRequest(ex.Message);
         }
 
-        return Ok(result);
+        if (result.Authorized(new Metadata(Guid.Empty, userId, deviceId)))
+        {
+            return Ok(result);
+        } 
+        else
+        {
+            return Unauthorized();
+        }
     }
 }

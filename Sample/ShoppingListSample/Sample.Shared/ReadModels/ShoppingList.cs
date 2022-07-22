@@ -6,28 +6,29 @@ using Troolio.Core.Utilities;
 
 namespace Sample.Shared.ReadModels;
 
-public record ShoppingList : TroolioReadModel
+public record ShoppingListReadModel : TroolioReadModel
 {
-    public ShoppingList(Guid id)
+    public ShoppingListReadModel(Guid id)
         => Id = id;
 
+    public override Func<Metadata, bool> Authorized => (metadata) => metadata.UserId == OwnerId || Collaborators.Contains(metadata.UserId);
     public Guid Id { get; }
     public string Title { get; private set; }
     public Guid OwnerId { get; private set; }
     public ImmutableArray<Guid> Collaborators { get; private set; } = ImmutableArray<Guid>.Empty;
-    public ImmutableArray<ShoppingListItem> Items { get; private set; } = ImmutableArray<ShoppingListItem>.Empty;
+    public ImmutableArray<ShoppingListItemReadModel> Items { get; private set; } = ImmutableArray<ShoppingListItemReadModel>.Empty;
     public string JoinCode { get; private set; }
     
-    public ShoppingList On(EventEnvelope<NewListCreated> ev) 
+    public ShoppingListReadModel On(EventEnvelope<NewListCreated> ev) 
         => this with { Title = ev.Event.Title, OwnerId = ev.Event.Headers.UserId };
-    public ShoppingList On(EventEnvelope<ItemAddedToList> ev) 
-        => this with { Items = Items.Add(new ShoppingListItem(ev.Event.ItemId).On(ev)) };
-    public ShoppingList On(EventEnvelope<ItemRemovedFromList> ev) 
+    public ShoppingListReadModel On(EventEnvelope<ItemAddedToList> ev) 
+        => this with { Items = Items.Add(new ShoppingListItemReadModel(ev.Event.ItemId).On(ev)) };
+    public ShoppingListReadModel On(EventEnvelope<ItemRemovedFromList> ev) 
         => this with { Items = Items.RemoveAt( Items.FindIndex((i) => i.Id == ev.Event.ItemId)) };
-    public ShoppingList On(EventEnvelope<ListJoined> ev) 
+    public ShoppingListReadModel On(EventEnvelope<ListJoined> ev) 
         => this with { Collaborators = Collaborators.Add(ev.Event.Headers.UserId) };
-    public ShoppingList On(EventEnvelope<ListJoinedUsingCode> _) 
+    public ShoppingListReadModel On(EventEnvelope<ListJoinedUsingCode> _) 
         => this;
-    public ShoppingList On(EventEnvelope<ShoppingListAdded> ev) 
+    public ShoppingListReadModel On(EventEnvelope<ShoppingListAdded> ev) 
         => this with { JoinCode = ev.Event.JoinCode };
 }

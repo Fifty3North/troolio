@@ -205,7 +205,7 @@ internal class ShoppingListTests
         Guid shoppingListId = await HavingCreatedShoppingListForUser(user);
         string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListId, user);
 
-        var readModel = await _client.Get<Sample.Shared.ReadModels.ShoppingList>(shoppingListId.ToString());
+        var readModel = await _client.Get<Sample.Shared.ReadModels.ShoppingListReadModel>(shoppingListId.ToString());
         Assert.AreEqual(1, readModel.Items.Count());
         Assert.AreEqual(itemDescription, readModel.Items.First().Description);
     }

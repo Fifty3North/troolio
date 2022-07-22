@@ -105,17 +105,19 @@ namespace Troolio.Stores
 
             if (eventReadResult?.Event != null)
             {
-                IEvent @event = ConvertResolvedEventToIEvent(eventReadResult.Event.Value);
+                ResolvedEvent resolvedEvent = eventReadResult.Event.Value;
+
+                IEvent @event = ConvertResolvedEventToIEvent(resolvedEvent);
 
                 // First event version (number) in EventStore is 0. Within Actor implementation is 1.
-                ulong version = (ulong)eventReadResult.EventNumber + 1;
+                // N.B.: for a link event, eventReadResult.EventNumber = -1 regardless of how many events written to the stream
+                //ulong version = (ulong)eventReadResult.EventNumber + 1;
+                ulong version = (ulong)resolvedEvent.OriginalEventNumber + 1;
 
                 return (@event, version);
             }
-            else
-            {
-                return (null, 0);
-            }
+
+            return (null, 0);
         }
 
         public async Task<IEvent?> ReadStreamEvent(string streamName, ulong evVersion)

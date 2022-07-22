@@ -2,7 +2,6 @@
 using Orleans;
 using Orleans.Concurrency;
 using Sample.Host.App.ShoppingList;
-using Sample.Shared.ActorInterfaces;
 using Sample.Shared.Events;
 using Troolio.Core;
 using Troolio.Core.Projection;
@@ -11,7 +10,7 @@ namespace Sample.Database.Projection
 {
     [RegexImplicitStreamSubscription($"{nameof(ShoppingListActor)}-.*")]
     [Reentrant]
-    public class ShoppingListEFProjection : EntityFrameworkBatchedProjection<Model.ShoppingList, Model.ShoppingListsDbContext>, IShoppingListEFProjection
+    public class ShoppingListEFProjection : EntityFrameworkBatchedProjection<Model.ShoppingList, Model.ShoppingListsDbContext>
     {
         protected override void SetupMappings()
         {

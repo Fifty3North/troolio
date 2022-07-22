@@ -12,7 +12,7 @@ namespace Sample.Host.App.ShoppingList;
 [RegexImplicitStreamSubscription($"{nameof(ShoppingListActor)}-.*")]
 [Reentrant]
 [StatelessWorker]
-public class UserProjectionActor : ProjectionActor, IUserProjectionActor
+public class UserProjectionActor : ProjectionActor
 {
     public async Task On(EventEnvelope<NewListCreated> e)
     {

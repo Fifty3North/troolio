@@ -15,7 +15,7 @@ namespace Sample.Host.App.ShoppingList
     /// subsequently fails
     /// </summary>
     [RegexImplicitStreamSubscription($"{nameof(AllShoppingListsActor)}-.*")]
-    public class ShoppingListProjectionActor : ProjectionActor, IShoppingListProjectionActor
+    public class ShoppingListProjectionActor : ProjectionActor
     {
         async Task On(EventEnvelope<ListJoinedUsingCode> e)
         {

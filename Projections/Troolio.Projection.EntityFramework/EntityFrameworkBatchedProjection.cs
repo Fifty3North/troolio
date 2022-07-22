@@ -3,7 +3,7 @@ using Orleans;
 
 namespace Troolio.Core.Projection
 {
-    public abstract class EntityFrameworkBatchedProjection<TEntity, TDbContext> : EntityFrameworkBatched<TEntity, TDbContext>, IGrainWithGuidCompoundKey, IEntityFrameworkBatchedProjection
+    public abstract class EntityFrameworkBatchedProjection<TEntity, TDbContext> : EntityFrameworkBatched<TEntity, TDbContext>, IGrainWithGuidCompoundKey
             where TEntity : class
             where TDbContext : DbContext
     {

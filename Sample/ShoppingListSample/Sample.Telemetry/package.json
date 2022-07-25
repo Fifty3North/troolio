@@ -15,8 +15,7 @@
     "plain-draggable": "^2.5.14",
     "pug": "^3.0.2",
     "typescript-guid": "^1.0.3",
-    "vue": "^3.2.37",
-    "vue3-leaderline": "^1.2.11"
+    "vue": "^3.2.37"
   },
   "devDependencies": {
     "@types/feather-icons": "^4.7.0",

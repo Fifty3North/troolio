@@ -1,5 +1,4 @@
 import { Guid } from "typescript-guid"
-import LeaderLine from "vue3-leaderline";
 import  * as Enums from './Enums';
 export interface MessageLog {
     id: string,
@@ -12,7 +11,8 @@ export interface MessageLog {
     siloId:string,
     error:string,
     stackTrace:string,
-    elapsed:number
+    elapsed:number,
+    messageType:string
 }
 export interface Message{
     headers:Headers
@@ -46,13 +46,4 @@ export interface Entity {
     iconColor: string,
     subTitle: string,
     type:Enums.EntityType
-}
-
-export interface LinesToCreate{
-    From:string,
-    To:string
-}
-export interface LeaderLineListEntity extends LinesToCreate{
-    Id:string|Guid,
-    LeaderLine:LeaderLine
 }

@@ -6,36 +6,34 @@
                 a.visualiser__logo(title="Trool.io")
                     img(src="../images/troolio-logo.svg", alt="Trool.io")
                     span.h5 Trool.io 
-                h6 flush status = {{flushing}}
-                .disabled(v-if="!canFlush")
-                  select.form-select( aria-label="Field" v-model="selectedTraceLevel")
-                    option(v-for="level in traceLevels" :value="level") {{level}}
-                  button.btn.btn-primary(v-on:click="enableLogging")
-                    | Enable Logging  
-                .enabled(v-else)
-                  h6  {{selectedTraceLevel}}
-                  button.btn.btn-primary(v-on:click="disableLogging" style="margin-right:10px;  ")
-                    | Disable Logging
+                //- h6 flush status = {{flushing}}
+                .visualiser__controls
+                select.form-select( aria-label="Field" v-model="selectedTraceLevel")
+                  option(v-for="level in traceLevels" :value="level") {{level}}
+                    
+                button.btn.btn-primary.w-100.flush(v-on:click="flush")
+                  i.me-2(data-feather="life-buoy")
+                  span(v-if="!flushing")
+                    | Flush
+                  span(v-else)
+                    | Cancel
 
-                  button.btn.btn-primary(v-on:click="flush")
-                    span(v-if="!flushing")
-                      | Flush
-                    span(v-else)
-                      | Cancel
         .visualiser__content
           ul.messages(v-if="data != null && data.length > 0")  
             li(v-for="message in data" v-on:click="selectMessage(message)")
                 .row.g-2(v-if="message")
                     .col.col-md-6
                         .form-floating
-                            span.subtitle {{  message.action }}
-                    //- .col.col-md-2
-                    //-     button.btn.btn-secondary()
-                    //-         i.ms-2(data-feather="eye")
+                          span.subtitle {{  message.messageType }}
+                    .col.col-md-2
+                        button.btn.btn-sm.btn-outline-light()
+                            i.ms-2(data-feather="eye")
                             
           //- .data {{data}}
     .visualiser__right(ref="dragContainer" v-if="selectedMessage != null")
-      EntityNode(:message="selectedMessage")
+      ul.tree.root
+        li
+          EntityNode(:message="selectedMessage")
 </template>
 <script setup lang="ts">
 import { computed, onMounted, onUpdated, ref} from "vue";
@@ -48,81 +46,20 @@ import axios, { AxiosError } from 'axios'
 import {NodeAttributes} from '../nodeAttributes'
 import '../scss/general.scss';
 import EntityNode from '../components/EntityNode.vue'
-import LeaderLine from 'vue3-leaderline';
 const traceLevels = ref<any[]>([]);
 const selectedTraceLevel = ref<Enums.TraceLevel>(Enums.TraceLevel.Tracing);
 const canFlush = ref(false);
-const messagesToShow = ref<Interfaces.MessageCorrelationEntity[]>([]);
-const entitiesToShow = ref<Interfaces.Entity[]>([]);
 const selectedMessage = ref<Interfaces.MessageLogListEntity>()
 const flushing = ref<any>('');
 
 const data = ref<Interfaces.MessageLogListEntity[]>([])
-const linesToCreate = ref<Interfaces.LinesToCreate[]>([]);
-const leaderLineList = ref<Interfaces.LeaderLineListEntity[]>([])
 
 function selectMessage(msg:Interfaces.MessageLogListEntity){
-  linesToCreate.value = [];
-  leaderLineList.value.forEach(element => {
-    element?.LeaderLine.remove();
-  });
-  leaderLineList.value = [];
   selectedMessage.value = mapAndformatNodeAndChildren(msg);
-
-  console.log('select msg',selectedMessage.value)
-  // selectedMessage.value = entitiesFromChildren(message.children);
-  setTimeout(()=>{
-    drawLines();
-
-  },2000)
 }
-function drawLines(){
-  linesToCreate.value?.forEach((edge:Interfaces.LinesToCreate) => {
-    let existingLine = leaderLineList.value.find(line=> line.To == edge.To && line.From == edge.From);
-    if(existingLine && existingLine.LeaderLine){
-      existingLine?.LeaderLine?.position();
-      return;
-    }
 
-    let from = document.getElementById(edge.From.toString());
-    let to = document.getElementById(edge.To.toString());
-
-    if(!to || !from){
-      return;
-    }
-    // let id = edge?.Id;
-    
-    var tempLine = new LeaderLine(
-      from,
-      to, {
-      startSocket: 'bottom',
-      endSocket: 'left',
-      endPlug: 'arrow2',
-      color: '#69778C',
-      size: 2,
-      startSocketGravity: 40,
-      endSocketGravity: 40,
-      path:'grid'
-      // middleLabel:'*'
-    });
-    let payload:Interfaces.LeaderLineListEntity = {
-      Id :'id',
-      To:edge.To,
-      From: edge.From,
-      LeaderLine: tempLine
-    };
-    leaderLineList.value.push(payload);
-
-  });
-
-}
 function mapAndformatNodeAndChildren(msg:Interfaces.MessageLogListEntity){
   let toReturn:Interfaces.MessageLogListEntity = msg;
-  console.log('msg',msg.message.headers.causationId)
-  if(msg.message.headers.causationId != null)
-  {
-    linesToCreate.value.push({From:msg.message.headers.causationId, To: msg.message.headers.messageId} as Interfaces.LinesToCreate)
-  }
   let attrId:any = msg.action;
   //if error
   if(msg.error || (msg.elapsed == -1 && msg.status != Enums.MessageLogStatus.Completed)){
@@ -132,7 +69,7 @@ function mapAndformatNodeAndChildren(msg:Interfaces.MessageLogListEntity){
   if(attr != null){
     toReturn.entity = {
       id:msg.message.headers.messageId,
-      name: Enums.MessageLogAction[msg.action].toString() ,
+      name: msg.messageType,
       iconOfNode:attr.IconOfNode as string,
       typeOfNode:attr.TypeOfNode as string,
       iconColor:attr.IconColor as string,
@@ -145,98 +82,112 @@ function mapAndformatNodeAndChildren(msg:Interfaces.MessageLogListEntity){
   })
   return toReturn;
 }
-function enableLogging(){
-  axios.post(`${metaEnv.VITE_API_URL}Telemetry/enablelogging?logLevel=`+selectedTraceLevel.value).then((response: any) => {
-      if(response && response.status === 200){
-          canFlush.value = true;
-      }
-  },(error) => {
-      console.log('error',error)
-  })
-}
-function disableLogging(){
-  axios.post(`${metaEnv.VITE_API_URL}Telemetry/disablelogging`,selectedTraceLevel.value).then((response: any) => {
-      if(response && response.status === 200){
-        canFlush.value = false;
-      }
-  },(error) => {
-      console.log('error',error)
-  })
-}
+
 function flush(){
-  if(!flushing.value && canFlush.value){
-    flushing.value = setInterval(()=>{
-      axios.get(`${metaEnv.VITE_API_URL}Telemetry/flush`).then((response: any) => {
-        if(response && response.status === 200){
-         console.log('response',response)
-          data.value = [...data.value,...pushToList(JSON.parse(JSON.stringify(response?.data)))]
-        }
-      },(error) => {
-        console.log('error',error)
-      })
-    },5000);
+  if(!flushing.value){
+    axios.post(`${metaEnv.VITE_API_URL}Telemetry/enablelogging?logLevel=`+selectedTraceLevel.value).then((response: any) => {
+      if(response && response.status === 200){
+          flushing.value = setInterval(()=>{
+            axios.get(`${metaEnv.VITE_API_URL}Telemetry/flush`).then((response: any) => {
+              if(response && response.status === 200){
+                console.log('response',response)
+                data.value = [...data.value,...pushToList(JSON.parse(JSON.stringify(response?.data)))]
+              }
+            },(error) => {
+              console.log('error',error)
+            })
+          },5000);
+      }
+    },(error) => {
+      console.log('error',error)
+    })
   }else{
-    clearInterval(flushing.value);
-    flushing.value = null;
+    axios.post(`${metaEnv.VITE_API_URL}Telemetry/disablelogging`,selectedTraceLevel.value).then((response: any) => {
+      if(response && response.status === 200){
+        clearInterval(flushing.value);
+        flushing.value = null;
+      }
+    },(error) => {
+      console.log('error',error)
+    })
   }
 }
 
 function pushToList(data:Interfaces.MessageLogListEntity[]){
-  let newList:Interfaces.MessageCorrelationEntity[] = [];
-  console.log('data',data)
-  let map:any = {}, node:Interfaces.MessageLogListEntity, roots:Interfaces.MessageLogListEntity[] = [], i;
+  let map:any = {}, i, roots:Interfaces.MessageLogListEntity[] = [];
   
   //init nodes
   for (i = 0; i < data.length; i += 1) {
     map[data[i].message.headers.messageId.toString()] = i;
-    if(data[i].children){
+    let msgRef = data[i];
+    if(msgRef.children){
       console.log('already has children', data[i])
     }
     data[i].children = [];
+    if(msgRef.messageType){
+        let split1 = msgRef.messageType.split(','),
+        split2 = split1[0].split('.');
+        if(split2 && split2.length > 0){
+          msgRef.messageType = split2[split2.length-1];
+        }
+      }
   }
+
   //set roots and children
   for (i = 0; i < data.length; i += 1) {
-    node = data[i];
-    let toPushTo:Interfaces.MessageLogListEntity[] = roots;
+    let messageRef = data[i];
+    let toPushToRef:Interfaces.MessageLogListEntity[] = roots;
+    //pushing to roots and data, choose one
     
-    if (node.message.headers.causationId)   {
-
-      let parent = data[map[node.message.headers.causationId.toString()]];
-      console.log('parent',node.message.headers.causationId,parent)
-      toPushTo = parent.children;
+    if (messageRef.message.headers.causationId != null)   {
+      let parentRef = data[map[messageRef.message.headers.causationId.toString()]];
+      console.log('causation and ind',messageRef.message.headers.causationId, map[messageRef.message.headers.causationId.toString()])
+      console.log('set parent',parentRef)
+      toPushToRef = parentRef.children;
     }
-
-    let existingMessage = toPushTo.find(x=> node.message.headers.messageId == x.message.headers.messageId)
+    //children are pushed to last of msg
+    let existingMessage = toPushToRef.find(x=> messageRef.message.headers.messageId == x.message.headers.messageId)
 
     //if duplicate message merge the two
-    console.log('existingMessage',node,existingMessage)
-    if(existingMessage != null && node.actor == existingMessage.actor){
-      existingMessage.elapsed = node.elapsed;
-      existingMessage.status = node.status;
-      existingMessage.error = node.error;
-      existingMessage.stackTrace = node.stackTrace;
+    if(existingMessage != null && messageRef.actor == existingMessage.actor){
+      console.log('existingMessage',existingMessage)
+      existingMessage.elapsed = messageRef.elapsed;
+      existingMessage.status = messageRef.status;
+      existingMessage.error = messageRef.error;
+      existingMessage.stackTrace = messageRef.stackTrace;
+      console.log('children', existingMessage.children, messageRef.children)
+      existingMessage.children = messageRef.children;
     }else{
-      toPushTo.push(node);
+      toPushToRef.push(messageRef);
     }
   }
   
-  //get children from data
-  roots.forEach(root => {
-    root.children.push(...data[map[root.message.headers.messageId.toString()]].children)
-  });
-
-  console.log('roots',roots)
-  return roots;
+  //return as value type
+  return JSON.parse(JSON.stringify(roots));
 }
 
-
 onMounted(()=>{
+  feather.replace();
   //getting trace levels from enum
   traceLevels.value =  Object.keys(Enums.TraceLevel).filter(k => isNaN(Number(k)));
 });
+onUpdated(()=>{
+  feather.replace();
+})
 </script>
 
 <style lang="scss" scoped>
+.btn{
+  &.flush{
+    justify-content:center;
+    svg{
+      justify-self: start;
+    }
+    // svg{
+    //   margin-right: 10px;
+    // }
+  }
+}
 .messages{
   overflow-x:auto;
   li{
@@ -256,6 +207,12 @@ onMounted(()=>{
     }
     &.STARTED{
       background-color:yellow;
+    }
+  }
+  &__controls{
+    display: inline-flex;
+    select{
+      margin-right:10px;
     }
   }
 //   position: absolute !important;
@@ -289,8 +246,12 @@ onMounted(()=>{
   &__right {
     display: flex !important;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
+    .root{
+      margin-top: auto;
+      margin-bottom: auto;
+      padding-bottom: 10px;
+    }
   }
   &__logo {
     position: absolute;
@@ -579,4 +540,56 @@ input[type=number] {
     width: 350px;
   }
 }
+</style>
+
+<style lang="scss">
+
+.visualiser__right {
+  ul{
+    &.tree{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        margin-left: 1.0em;
+        &.tree li:before {
+          width: 0.9em;
+          height: 0.6em;
+          margin-right: 0.1em;
+          vertical-align: top;
+          border-bottom: thin solid #000;
+          border-left: thin solid #000;
+          content: "";
+          display: inline-block;
+          position: relative;
+          top: -12px;
+          height: 35px;
+          left: -1px;
+        }
+      }
+      li{
+        margin-left: 12px;
+        border-left: thin solid #000;
+        display: flex;
+        margin-top: 0px;
+        padding-top: 12px;
+        &:last-child {
+          border-left: none;
+          &:before {
+            border-left: thin solid #000;
+          }
+        }
+        &:last-of-type{
+          &::before{
+            left: 0px!important;
+          }
+        }
+      } 
+    }
+  }
+}
+
 </style>

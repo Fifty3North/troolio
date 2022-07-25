@@ -16,20 +16,15 @@
       EntityNode(:message="child")
 </template>
 <script lang="ts">
-import { onMounted } from '@vue/runtime-core';
-import feather from 'feather-icons'
 export default{
   name:'EntityNode'
 }
 </script>
 <script setup lang="ts">
 import * as Interfaces from '../Interfaces';
+
 const props = defineProps({
     message: {required: true, type: Object as ()=> Interfaces.MessageLogListEntity},
-});
-
-onMounted(()=>{
-    feather.replace();
 });
 
 </script>
@@ -41,6 +36,7 @@ onMounted(()=>{
   border-radius: 0.5rem;
   border: 1px solid var(--#{tr-}border-color);
   margin-right: 0.25rem;
+  margin-bottom: unset;
   cursor: grab;
   transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
   &--active{

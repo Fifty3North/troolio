@@ -7,36 +7,41 @@
                     img(src="../images/troolio-logo.svg", alt="Trool.io")
                     span.h5 Trool.io 
                 //- h6 flush status = {{flushing}}
-                .visualiser__controls
-                select.form-select( aria-label="Field" v-model="selectedTraceLevel")
-                  option(v-for="level in traceLevels" :value="level") {{level}}
-                    
-                button.btn.btn-primary.w-100.flush(v-on:click="flush")
-                  i.me-2(data-feather="life-buoy")
-                  span(v-if="!flushing")
-                    | Flush
-                  span(v-else)
-                    | Cancel
 
-        .visualiser__content
+
+        .visualiser__content       
+          .visualiser__controls
+            select.form-select( aria-label="Field" v-model="selectedTraceLevel")
+              option(:value="null" disabled) Select a trace level
+              option(v-for="level in traceLevels" :value="level") {{level}}
+            .disabled(v-if="!canFlush")
+                button.btn.btn-primary(v-on:click="enableLogging")
+                  | Enable Logging  
+            .enabled(v-else)
+              button.btn.btn-primary.me-2.flush(v-on:click="flush")
+                i.me-2(data-feather="life-buoy")
+                span(v-if="!flushing")
+                  | Flush
+                span(v-else)
+                  | Cancel
+              button.btn.btn-primary(v-on:click="disableLogging" style="margin-right:10px;  ")
+                | Disable Logging
+
           ul.messages(v-if="data != null && data.length > 0")  
-            li(v-for="message in data" v-on:click="selectMessage(message)")
+            li(v-for="message in data")
                 .row.g-2(v-if="message")
-                    .col.col-md-6
-                        .form-floating
-                          span.subtitle {{  message.messageType }}
-                    .col.col-md-2
-                        button.btn.btn-sm.btn-outline-light()
-                            i.ms-2(data-feather="eye")
+                    .col.col-md-8.subtitle {{  message.messageType }}
+                    .col.col-md-4
+                        button.btn.btn-sm.btn-outline-light( v-on:click="selectMessage(message)")
+                            i(data-feather="eye")
                             
-          //- .data {{data}}
-    .visualiser__right(ref="dragContainer" v-if="selectedMessage != null")
-      ul.tree.root
+    .visualiser__right
+      ul.tree.root(v-if="selectedMessage != null")
         li
           EntityNode(:message="selectedMessage")
 </template>
 <script setup lang="ts">
-import { computed, onMounted, onUpdated, ref} from "vue";
+import { onMounted, onUpdated, ref} from "vue";
 import { Guid } from 'typescript-guid'
 import feather from "feather-icons";
 import * as Interfaces from '../Interfaces'
@@ -47,13 +52,12 @@ import {NodeAttributes} from '../nodeAttributes'
 import '../scss/general.scss';
 import EntityNode from '../components/EntityNode.vue'
 const traceLevels = ref<any[]>([]);
-const selectedTraceLevel = ref<Enums.TraceLevel>(Enums.TraceLevel.Tracing);
-const canFlush = ref(false);
+const selectedTraceLevel = ref<Enums.TraceLevel|null>(null);
 const selectedMessage = ref<Interfaces.MessageLogListEntity>()
 const flushing = ref<any>('');
 
 const data = ref<Interfaces.MessageLogListEntity[]>([])
-
+const canFlush = ref(false);
 function selectMessage(msg:Interfaces.MessageLogListEntity){
   selectedMessage.value = mapAndformatNodeAndChildren(msg);
 }
@@ -83,33 +87,46 @@ function mapAndformatNodeAndChildren(msg:Interfaces.MessageLogListEntity){
   return toReturn;
 }
 
-function flush(){
-  if(!flushing.value){
+function enableLogging(){
     axios.post(`${metaEnv.VITE_API_URL}Telemetry/enablelogging?logLevel=`+selectedTraceLevel.value).then((response: any) => {
       if(response && response.status === 200){
-          flushing.value = setInterval(()=>{
-            axios.get(`${metaEnv.VITE_API_URL}Telemetry/flush`).then((response: any) => {
-              if(response && response.status === 200){
-                console.log('response',response)
-                data.value = [...data.value,...pushToList(JSON.parse(JSON.stringify(response?.data)))]
-              }
-            },(error) => {
-              console.log('error',error)
-            })
-          },5000);
+          canFlush.value = true;
       }
-    },(error) => {
+  },(error) => {
       console.log('error',error)
-    })
-  }else{
-    axios.post(`${metaEnv.VITE_API_URL}Telemetry/disablelogging`,selectedTraceLevel.value).then((response: any) => {
+  })
+}
+function disableLogging(){
+  if(flushing.value != null){
+    stopFlush();
+  }
+  axios.post(`${metaEnv.VITE_API_URL}Telemetry/disablelogging`,selectedTraceLevel.value).then((response: any) => {
       if(response && response.status === 200){
-        clearInterval(flushing.value);
-        flushing.value = null;
+        canFlush.value = false;
       }
-    },(error) => {
+  },(error) => {
       console.log('error',error)
-    })
+  })
+}
+function stopFlush(){
+    clearInterval(flushing.value);
+    flushing.value = null;
+}
+
+function flush(){
+  if(!flushing.value){
+    flushing.value = setInterval(()=>{
+      axios.get(`${metaEnv.VITE_API_URL}Telemetry/flush`).then((response: any) => {
+        if(response && response.status === 200){
+          data.value = [...data.value,...pushToList(JSON.parse(JSON.stringify(response?.data)))]
+        }
+      },(error) => {
+        console.log('error',error)
+      })
+    },5000);
+  }
+  else{
+    stopFlush();
   }
 }
 
@@ -120,9 +137,6 @@ function pushToList(data:Interfaces.MessageLogListEntity[]){
   for (i = 0; i < data.length; i += 1) {
     map[data[i].message.headers.messageId.toString()] = i;
     let msgRef = data[i];
-    if(msgRef.children){
-      console.log('already has children', data[i])
-    }
     data[i].children = [];
     if(msgRef.messageType){
         let split1 = msgRef.messageType.split(','),
@@ -141,8 +155,6 @@ function pushToList(data:Interfaces.MessageLogListEntity[]){
     
     if (messageRef.message.headers.causationId != null)   {
       let parentRef = data[map[messageRef.message.headers.causationId.toString()]];
-      console.log('causation and ind',messageRef.message.headers.causationId, map[messageRef.message.headers.causationId.toString()])
-      console.log('set parent',parentRef)
       toPushToRef = parentRef.children;
     }
     //children are pushed to last of msg
@@ -150,12 +162,10 @@ function pushToList(data:Interfaces.MessageLogListEntity[]){
 
     //if duplicate message merge the two
     if(existingMessage != null && messageRef.actor == existingMessage.actor){
-      console.log('existingMessage',existingMessage)
       existingMessage.elapsed = messageRef.elapsed;
       existingMessage.status = messageRef.status;
       existingMessage.error = messageRef.error;
       existingMessage.stackTrace = messageRef.stackTrace;
-      console.log('children', existingMessage.children, messageRef.children)
       existingMessage.children = messageRef.children;
     }else{
       toPushToRef.push(messageRef);
@@ -183,19 +193,20 @@ onUpdated(()=>{
     svg{
       justify-self: start;
     }
-    // svg{
-    //   margin-right: 10px;
-    // }
   }
 }
 .messages{
   overflow-x:auto;
+  width: 100%;
+  margin-bottom: unset;
+  padding-left: unset;
   li{
     -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     display: -webkit-box;
     margin-right: 5px;
     word-break: break-all;
+    margin-bottom: 10px;
   }
 }
 .visualiser {
@@ -210,9 +221,12 @@ onUpdated(()=>{
     }
   }
   &__controls{
+    margin-top: 60px;
+    margin-bottom: 20px;
     display: inline-flex;
     select{
       margin-right:10px;
+      width: fit-content;
     }
   }
 //   position: absolute !important;
@@ -275,6 +289,7 @@ onUpdated(()=>{
   &__content {
     margin-bottom: 50px;
     width: 100%;
+    display: contents;
   }
   .visualiser-wrapper {
     max-width: 600px;
@@ -285,9 +300,7 @@ onUpdated(()=>{
     margin-bottom: 1rem;
   }
   .subtitle {
-    display: block;
-    margin-bottom: 1rem;
-    color: var(--tr-subheadings-color);
+    align-self: center;
   }
   .form-label {
     margin-bottom: 0.5rem;

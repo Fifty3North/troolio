@@ -8,9 +8,9 @@ namespace Sample.Shared.ReadModels;
 
 [RegexImplicitStreamSubscription("ShoppingListActor-.*")]
 [RegexImplicitStreamSubscription("AllShoppingListsActor-.*")]
-public class ShoppingListProjectionActor : ReadModelProjectionActor<ShoppingListReadModel>
+public class ShoppingListReadModelProjectionActor : ReadModelProjectionActor<ShoppingListReadModel>
 {
-    public ShoppingListProjectionActor(IStore store) : base(store) { }
+    public ShoppingListReadModelProjectionActor(IStore store) : base(store) { }
 
     public string Handle(EventEnvelope<NewListCreated> ev) 
         => ev.Id.ToString();

@@ -1,14 +1,6 @@
 <template lang="pug">
 .visualiser
     .visualiser__left
-        .visualiser-wrapper
-            .visualiser__header
-                a.visualiser__logo(title="Trool.io")
-                    img(src="../images/troolio-logo.svg", alt="Trool.io")
-                    span.h5 Trool.io 
-                //- h6 flush status = {{flushing}}
-
-
         .visualiser__content       
           .visualiser__controls
             select.form-select( aria-label="Field" v-model="selectedTraceLevel")
@@ -267,20 +259,7 @@ onUpdated(()=>{
       padding-bottom: 10px;
     }
   }
-  &__logo {
-    position: absolute;
-    top: 2rem;
-    left: 2rem;
-    display: -webkit-box;
-    display: -ms-flexbox;
-    display: flex;
-    margin-bottom: 2rem;
-    text-decoration: none;
-    .h5 {
-      margin-bottom: 0;
-      margin-left: 0.5rem;
-    }
-  }
+
   &__name {
     margin-top: 70px;
     display: block;
@@ -291,14 +270,7 @@ onUpdated(()=>{
     width: 100%;
     display: contents;
   }
-  .visualiser-wrapper {
-    max-width: 600px;
-    margin: 0 auto;
-  }
-  .visualiser__header {
-    width: 100%;
-    margin-bottom: 1rem;
-  }
+
   .subtitle {
     align-self: center;
   }
@@ -558,50 +530,48 @@ input[type=number] {
 <style lang="scss">
 
 .visualiser__right {
-  ul{
-    &.tree{
+  ul.tree {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    ul.tree {
       list-style: none;
       margin: 0;
       padding: 0;
-      ul {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        margin-left: 1.0em;
-        &.tree li:before {
-          width: 0.9em;
-          height: 0.6em;
-          margin-right: 0.1em;
-          vertical-align: top;
-          border-bottom: thin solid #000;
+      margin-left: 1.0em;
+      & > li:before {
+        width: 0.9em;
+        height: 0.6em;
+        margin-right: 0.1em;
+        vertical-align: top;
+        border-bottom: thin solid #000;
+        border-left: thin solid #000;
+        content: "";
+        display: inline-block;
+        position: relative;
+        top: -12px;
+        height: 35px;
+        left: -1px;
+      }
+    }
+    & > li{
+      margin-left: 12px;
+      border-left: thin solid #000;
+      display: flex;
+      margin-top: 0px;
+      padding-top: 12px;
+      &:last-child {
+        border-left: none;
+        &:before {
           border-left: thin solid #000;
-          content: "";
-          display: inline-block;
-          position: relative;
-          top: -12px;
-          height: 35px;
-          left: -1px;
         }
       }
-      li{
-        margin-left: 12px;
-        border-left: thin solid #000;
-        display: flex;
-        margin-top: 0px;
-        padding-top: 12px;
-        &:last-child {
-          border-left: none;
-          &:before {
-            border-left: thin solid #000;
-          }
+      &:last-of-type{
+        &::before{
+          left: 0px!important;
         }
-        &:last-of-type{
-          &::before{
-            left: 0px!important;
-          }
-        }
-      } 
-    }
+      }
+    } 
   }
 }
 

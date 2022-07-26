@@ -16,6 +16,11 @@ export interface MessageLog {
 }
 export interface Message{
     headers:Headers
+    payload:PayloadValue[]
+}
+export interface PayloadValue{
+    name:any,
+    value:any
 }
 export interface Headers{
     correlationId:string, 

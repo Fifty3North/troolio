@@ -5,12 +5,18 @@
           .node__icon.round-icon(:class="message.entity.iconColor")
               i(:data-feather="message.entity.iconOfNode")
           .node__title 
-              .node__name {{message.entity.name}}
+              .node__top
+                .node__name {{message.entity.name}} 
+                .node__elapsed {{message.elapsed}} ms
               .node__type {{message.entity.subTitle}}
           //- .node__actions
               //- .btn.btn-round
               //-     i(data-feather="more-vertical")
-          
+      .node__content(v-if="(payload && payload.length > 0) && nodeContentExpanded")
+        ul.node__attributes
+          li(v-for="property in payload")
+            strong {{property.name}}
+            span {{property.value}}    
   ul.tree(v-if="message.children && message.children.length > 0")
     li(v-for="child in message.children")
       EntityNode(:message="child")
@@ -21,10 +27,31 @@ export default{
 }
 </script>
 <script setup lang="ts">
+import {computed, ref} from 'vue'
 import * as Interfaces from '../Interfaces';
 
+const nodeContentExpanded = ref(true);
 const props = defineProps({
     message: {required: true, type: Object as ()=> Interfaces.MessageLogListEntity},
+});
+function mapPayload(key:any,value:any){
+  if(!key){
+    return;
+  }
+  let toPush:Interfaces.PayloadValue = {
+    name: key,
+    value:value
+  }
+  _payload.push(toPush)
+}
+let _payload:Interfaces.PayloadValue[] = [];
+
+const payload = computed(()=>{
+  _payload = [];
+  if( props.message?.message?.payload != null ){
+    JSON.parse(JSON.stringify(props.message.message.payload),mapPayload)
+  }
+  return _payload;
 });
 
 </script>
@@ -57,22 +84,41 @@ const props = defineProps({
     justify-content: center;
     width: 100%;
   }
-  &__name {
-    font-weight: 550;
-    color: #0f1a2a;
+  &__name,
+  &__elapsed {
     font-size: 1 * 0.775rem;
     white-space: nowrap;
+  }
+  &__name{
+    font-weight: 550;
+    color: #0f1a2a;
   }
   &__type {
     color: var(--#{-tr}subheadings-color);
     font-size: 1 * 0.75rem;
+  }
+  &__top{
+    display:flex;
+  }
+  &__elapsed{
+    margin-left: auto;
   }
   // &__actions {
   //   opacity: 0;
   //   visibility: hidden;
   //   pointer-events: none;
   // }
-
+  &__content {
+    padding: 0.625rem;
+    border-top-width: 1px;
+    border-top-style: solid;
+    border-top-color: var(--#{-tr}border-color);
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+    font-size: 1 * 0.8rem;
+    background: #FFFFFF;
+    text-align: center;
+  }
   &:hover {
     box-shadow: var(--#{-tr}box-shadow);
     border-color: var(--#{tr-}line-colour);

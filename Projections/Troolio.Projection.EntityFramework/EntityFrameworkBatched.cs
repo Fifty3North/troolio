@@ -32,9 +32,14 @@ namespace Troolio.Core.Projection
         private PropertyInfo? _entityPrimaryKeyPropertyInfo;
 
         /// <summary>
+        /// The Id for the timer to instigate a flush
+        /// </summary>
+        private readonly string _flushTimerId = "flush";
+
+        /// <summary>
         /// Interval in which flush of queue should be instigated.
         /// </summary>
-        private readonly TimeSpan flushPeriod = TimeSpan.FromMilliseconds(250);
+        private readonly TimeSpan _flushPeriod = TimeSpan.FromMilliseconds(250);
 
         /// <summary>
         /// Queue of Jobs to process.
@@ -50,8 +55,6 @@ namespace Troolio.Core.Projection
         /// The number of active processes flushing the batch job queue (should only ever be zero or one)
         /// </summary>
         private int _activeFlushCount = 0;
-
-
 
         public virtual async Task On(Activate _)
         {
@@ -69,7 +72,25 @@ namespace Troolio.Core.Projection
 
             await stream.SubscribeAsync((envelope, token) => Receive(envelope));
 
-            Timers.Register("flush", flushPeriod, flushPeriod, () => Self.Tell(new Commands.ProcessNow()));
+            //Timers.Register(_flushTimerId, _flushPeriod, _flushPeriod, () => Self.Tell(new Commands.ProcessNow()));
+
+            RegisterFlushTimer();
+        }
+
+        private void RegisterFlushTimer()
+        {
+            if (!Timers.IsRegistered(_flushTimerId))
+            {
+                Timers.Register(_flushTimerId, _flushPeriod, _flushPeriod, () => Self.Tell(new Commands.Flush(false)));
+            }
+        }
+
+        private void UnregisterFlushTimer()
+        {
+            if (Timers.IsRegistered(_flushTimerId))
+            {
+                Timers.Unregister(_flushTimerId);
+            }
         }
 
         /// <summary>
@@ -78,9 +99,14 @@ namespace Troolio.Core.Projection
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        public async Task On(Commands.ProcessNow message)
+        public async Task On(Commands.ProcessNow _)
         {
             await ProcessNow();
+        }
+
+        public async Task On(Commands.Flush command)
+        {
+            await Flush(command.Force);      
         }
 
         /// <summary>
@@ -95,11 +121,7 @@ namespace Troolio.Core.Projection
 
         private async Task Flush(bool forceFlush = false)
         {
-            if (_jobs.Count == 0)
-            {
-                await Task.CompletedTask;
-            }
-            else
+            if (_jobs.Count != 0)
             {
                 if (_activeFlushCount > 0 && !forceFlush)
                 {
@@ -135,6 +157,11 @@ namespace Troolio.Core.Projection
                     }
                 }
 
+                if (_jobs.Count == 0)
+                {
+                    UnregisterFlushTimer();
+                }
+
                 // release lock
                 _queueProcessLock.Release();
 
@@ -145,6 +172,9 @@ namespace Troolio.Core.Projection
         protected Task AddJobToQueue(Func<Task> job)
         {
             _jobs.Enqueue(new EfJob(job));
+
+            RegisterFlushTimer();
+
             return Task.CompletedTask;
         }
 

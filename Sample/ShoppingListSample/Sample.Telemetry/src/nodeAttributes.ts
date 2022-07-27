@@ -8,7 +8,16 @@ export const NodeAttributes= [
     TypeOfNode: 'node--event',
     IconColor: 'node-icon--event',
     titleContent: 'Event Title',
-    subTitle: 'Event',
+    subTitle: 'DispatchEvent',
+  },
+  {
+    Id:MessageLogAction.StoreEvent,
+    Type: EntityType.Event,
+    IconOfNode: 'mouse-pointer',
+    TypeOfNode: 'node--event',
+    IconColor: 'node-icon--event',
+    titleContent: 'Event Title',
+    subTitle: 'StoreEvent',
   },
   {
     Id: MessageLogAction.HandleCommand,

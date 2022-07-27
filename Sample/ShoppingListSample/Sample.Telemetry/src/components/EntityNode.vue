@@ -6,34 +6,52 @@
               i(:data-feather="message.entity.iconOfNode")
           .node__title 
               .node__top
-                .node__name {{message.entity.name}} 
+                .node__name 
+                  .node__msgType {{message.messageType}} 
                 .node__elapsed {{message.elapsed}} ms
               .node__type {{message.entity.subTitle}}
           //- .node__actions
               //- .btn.btn-round
               //-     i(data-feather="more-vertical")
-      .node__content(v-if="(payload && payload.length > 0) && nodeContentExpanded")
+      .node__actor(:class="message.entity.iconColor, {'bottom-rounded':!showAttributes}") {{message.actor}}
+      .node__content(v-if="showAttributes")
         ul.node__attributes
-          li(v-for="property in payload")
+          li(v-if="showNodeContent" v-for="property in payload")
             strong {{property.name}}
             span {{property.value}}    
+          li(v-if="message.error")
+            .error Error : {{message.error}}
+
   ul.tree(v-if="message.children && message.children.length > 0")
     li(v-for="child in message.children")
       EntityNode(:message="child")
+
 </template>
 <script lang="ts">
-export default{
-  name:'EntityNode'
+export default {
+  name:'EntityNode',
 }
 </script>
 <script setup lang="ts">
 import {computed, ref} from 'vue'
 import * as Interfaces from '../Interfaces';
 
-const nodeContentExpanded = ref(true);
 const props = defineProps({
     message: {required: true, type: Object as ()=> Interfaces.MessageLogListEntity},
+    showNodeContent: {required:true, type:Boolean}
 });
+
+let _payload:Interfaces.PayloadValue[] = [];
+const payload = computed(()=>{
+  _payload = [];
+  if( props.message?.message?.payload != null ){
+    JSON.parse(JSON.stringify(props.message.message.payload),mapPayload)
+  }
+  return _payload;
+});
+const showAttributes = computed(()=>{
+  return ((payload.value && payload.value.length > 0 && props.showNodeContent) || (props.message.error || props.showNodeContent)) 
+})
 function mapPayload(key:any,value:any){
   if(!key){
     return;
@@ -44,15 +62,7 @@ function mapPayload(key:any,value:any){
   }
   _payload.push(toPush)
 }
-let _payload:Interfaces.PayloadValue[] = [];
 
-const payload = computed(()=>{
-  _payload = [];
-  if( props.message?.message?.payload != null ){
-    JSON.parse(JSON.stringify(props.message.message.payload),mapPayload)
-  }
-  return _payload;
-});
 
 </script>
 <style lang="scss" scoped>
@@ -103,6 +113,18 @@ const payload = computed(()=>{
   &__elapsed{
     margin-left: auto;
   }
+  &__actor{
+    color:black !important;
+    font-weight: bold;
+    padding: 0 0.625rem;
+    border-top-width: 1px;
+    border-top-style: solid;
+    font-size: 0.8rem;
+    &.bottom-rounded{
+      border-bottom-right-radius: 0.5rem;
+      border-bottom-left-radius: 0.5rem;
+    }
+  }
   // &__actions {
   //   opacity: 0;
   //   visibility: hidden;
@@ -137,6 +159,11 @@ const payload = computed(()=>{
   &--active {
     border: 1px solid var(--#{-tr}primary) !important;
     box-shadow: var(--#{-tr}box-shadow);
+  }
+  li {
+    .error{
+      text-align: left;
+    }
   }
 }
 </style>

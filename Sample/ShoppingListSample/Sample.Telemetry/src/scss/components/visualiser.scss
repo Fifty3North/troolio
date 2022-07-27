@@ -1,0 +1,133 @@
+.visualiser {
+    &__controls{
+      margin-top: 60px;
+      margin-bottom: 20px;
+      display: inline-flex;
+      select{
+        margin-right:10px;
+        width: fit-content;
+      }
+    }
+  //   position: absolute !important;
+    width: 100%;
+    min-height: 100vh;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    font-weight: 450;
+    &__left{
+      -webkit-box-flex: 1;
+      -ms-flex: 1;
+      flex: 1;
+      display: -webkit-box;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-orient: vertical;
+      -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+      flex-direction: column;
+      -webkit-box-align: center;
+      -ms-flex-align: center;
+      align-items: center;
+      -webkit-box-pack: center;
+      -ms-flex-pack: center;
+      justify-content: center;
+      .visualiser__content{
+        text-align: center;
+      }
+    }
+    &__right {
+      display: flex !important;
+      flex-direction: column;
+      align-items: center;
+      .root{
+        margin-top: auto!important;
+        margin-bottom: auto!important;
+        padding-bottom: 10px!important;
+      }
+        ul.tree {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            ul.tree {
+              list-style: none;
+              margin: 0;
+              padding: 0;
+              margin-left: 1.0em;
+              & > li:before {
+                width: 0.9em;
+                height: 0.6em;
+                margin-right: 0.1em;
+                vertical-align: top;
+                border-bottom: thin solid #000;
+                border-left: thin solid #000;
+                content: "";
+                display: inline-block;
+                position: relative;
+                top: -12px;
+                height: 35px;
+                left: -1px;
+              }
+            }
+            & > li{
+              margin-left: 12px;
+              border-left: thin solid #000;
+              display: flex;
+              margin-top: 0px;
+              padding-top: 12px;
+              &:last-child {
+                border-left: none;
+                &:before {
+                  border-left: thin solid #000;
+                }
+              }
+              &:last-of-type{
+                &::before{
+                  left: 0px!important;
+                }
+              }
+            } 
+        } 
+    }
+  
+    &__name {
+      margin-top: 70px;
+      display: block;
+      max-width: 350px;
+    }
+    &__content {
+      margin-bottom: 50px;
+      width: 100%;
+      display: contents;
+    }
+  
+    .subtitle {
+      align-self: center;
+    }
+    .form-label {
+      margin-bottom: 0.5rem;
+    }
+    .mb-3 {
+      margin-bottom: 1rem !important;
+    }
+
+    @media (min-width: 768px) {
+        .visualiser{
+            &__right {
+                display: block;
+                -webkit-box-flex: 1;
+                -ms-flex: 1;
+                flex: 1;
+                border-left: 1px solid var(--tr-border-color);
+                background-image: url('../images/light-pattern-bg.jpg');
+                background-repeat: repeat;
+                background-size: 10px 10px;
+                
+                overflow:auto;
+            }
+            &__form {
+                width: 350px;
+            }
+        }
+    }
+}

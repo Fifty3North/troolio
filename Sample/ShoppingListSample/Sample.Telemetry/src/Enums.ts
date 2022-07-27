@@ -1,11 +1,12 @@
 export enum MessageLogAction
 {
-    HandleOrchestratedCommand,
-    HandleCommand,
-    DispatchEvent,
-    Orchestration,
-    Projection,
-    ReadModel
+  HandleOrchestratedCommand,
+  HandleCommand,
+  DispatchEvent,
+  Orchestration,
+  Projection,
+  ReadModel,
+  StoreEvent
 }
 
 export enum MessageLogStatus

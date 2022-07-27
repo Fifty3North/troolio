@@ -35,101 +35,117 @@
     border-color: var(--#{$variable-prefix}node-border-color-yellow) !important;
     background-color: var(--#{$variable-prefix}node-header-bg-yellow)!important;
 
-    #{$nodeParent}__content {
-      border-top-color: var(--#{$variable-prefix}node-border-color-yellow);
+    #{$nodeParent} { 
+      &__content, &__actor {
+        border-top-color: var(--#{$variable-prefix}node-border-color-yellow);
+      }
     }
   }
   &--command {
     border-color: var(--#{$variable-prefix}node-border-color-blue)!important;
     background-color: var(--#{$variable-prefix}node-header-bg-blue)!important;
 
-    #{$nodeParent}__content {
-      border-top-color: var(--#{$variable-prefix}node-border-color-blue);
-    }
+    #{$nodeParent} { 
+      &__content, &__actor {
+        border-top-color: var(--#{$variable-prefix}node-border-color-blue);
+      }
     // #{$nodeParent}__icon {
     //     color: var(--#{$variable-prefix}node-header-icon-color-blue);
     //     background-color: var(--#{$variable-prefix}node-header-icon-bg-blue);
     // }
+    }
   }
   &--query {
     border-color: var(--#{$variable-prefix}node-border-color-orange)!important;
     background-color: var(--#{$variable-prefix}node-header-bg-orange)!important;
 
-    #{$nodeParent}__content {
-      border-top-color: var(--#{$variable-prefix}node-border-color-orange);
-    }
+    #{$nodeParent} { 
+      &__content, &__actor {
+        border-top-color: var(--#{$variable-prefix}node-border-color-orange);
+      }
     // #{$nodeParent}__icon {
     //     color: var(--#{$variable-prefix}node-header-icon-color-orange);
     //     background-color: var(--#{$variable-prefix}node-header-icon-bg-orange);
     // }
+    }
   }
   &--check,
   &--error {
     border-color: var(--#{$variable-prefix}node-border-color-red)!important;
     background-color: var(--#{$variable-prefix}node-header-bg-red)!important;
 
-    #{$nodeParent}__content {
-      border-top-color: var(--#{$variable-prefix}node-border-color-red);
-    }
+    #{$nodeParent} { 
+      &__content, &__actor {
+        border-top-color: var(--#{$variable-prefix}node-border-color-red);
+      }
 
     // #{$nodeParent}__icon {
     //     color: var(--#{$variable-prefix}node-header-icon-color-red);
     //     background-color: var(--#{$variable-prefix}node-header-icon-bg-red);
     // }
+    }
   }
   &--event {
     border-color: var(--#{$variable-prefix}node-border-color-green)!important;
     background-color: var(--#{$variable-prefix}node-header-bg-green)!important;
 
-    #{$nodeParent}__content {
-      border-top-color: var(--#{$variable-prefix}node-border-color-green);
-    }
+    #{$nodeParent} { 
+      &__content, &__actor {
+        border-top-color: var(--#{$variable-prefix}node-border-color-green);
+      }
 
     // #{$nodeParent}__icon {
     //     color: var(--#{$variable-prefix}node-header-icon-color-green);
     //     background-color: var(--#{$variable-prefix}node-header-icon-bg-green);
     // }
+    }
   }
   &--timer,
   &--webhook {
     border-color: var(--#{$variable-prefix}node-border-color-cyan)!important;
     background-color: var(--#{$variable-prefix}node-header-bg-cyan)!important;
 
-    #{$nodeParent}__content {
-      border-top-color: var(--#{$variable-prefix}node-border-color-cyan);
-    }
+    #{$nodeParent} { 
+      &__content, &__actor {
+        border-top-color: var(--#{$variable-prefix}node-border-color-cyan);
+      }
 
     // #{$nodeParent}__icon {
     //     color: var(--#{$variable-prefix}node-header-icon-color-cyan);
     //     background-color: var(--#{$variable-prefix}node-header-icon-bg-cyan);
     // }
+    }
   }
   &--db,
   &--api {
     border-color: var(--#{$variable-prefix}node-border-color-purple)!important;
     background-color: var(--#{$variable-prefix}node-header-bg-purple)!important;
 
-    #{$nodeParent}__content {
-      border-top-color: var(--#{$variable-prefix}node-border-color-purple);
-    }
+    #{$nodeParent} { 
+      &__content, &__actor { 
+        border-top-color: var(--#{$variable-prefix}node-border-color-purple);
+      }
 
     // #{$nodeParent}__icon {
     //     color: var(--#{$variable-prefix}node-header-icon-color-purple);
     //     background-color: var(--#{$variable-prefix}node-header-icon-bg-purple);
     // }
+    }
   }
   &--state {
     border-color: var(--#{$variable-prefix}node-border-color-silver)!important;
     background-color: var(--#{$variable-prefix}node-header-bg-silver)!important;
 
-    #{$nodeParent}__content {
-      border-top-color: var(--#{$variable-prefix}node-border-color-silver);
-    }
+    #{$nodeParent} { 
+      &__content, &__actor {
+        border-top-color: var(--#{$variable-prefix}node-border-color-silver);
+      }
 
     // #{$nodeParent}__icon {
     //     color: var(--#{$variable-prefix}node-header-icon-color-silver);
     //     background-color: var(--#{$variable-prefix}node-header-icon-bg-silver);
     // }
+    }
   }
   &--small {
     #{$nodeParent}__header {

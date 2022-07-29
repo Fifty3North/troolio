@@ -219,7 +219,7 @@ internal class ShoppingListTests
     private async Task<string> HavingAddedAnItemToAShoppingList(Guid shoppingListId, Metadata user, string item = null)
     {
         string itemDescription = item == null ? Guid.NewGuid().ToString() : item;
-        await _client.Tell(shoppingListId.ToString(), new AddItemToList(user with { CorrelationId = Guid.NewGuid() }, new AddItemToListPayload(itemDescription, 1)));
+        await _client.Tell(shoppingListId.ToString(), new AddItemToList(user with { CorrelationId = Guid.NewGuid() }, new AddItemToListPayload(itemDescription, 1, Guid.NewGuid())));
 
         return itemDescription;
     }

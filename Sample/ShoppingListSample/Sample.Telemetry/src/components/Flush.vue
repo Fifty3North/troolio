@@ -32,7 +32,7 @@ import feather from "feather-icons";
 import * as Interfaces from '../Interfaces'
 import * as Enums from '../Enums'
 import {metaEnv} from "../globals";
-import axios, { AxiosError } from 'axios'
+import axios from 'axios'
 const traceLevels = ref<any[]>([]);
 const selectedTraceLevel = ref<Enums.TraceLevel|null>(null);
 const data = ref<Interfaces.MessageLogListEntity[]>([])
@@ -44,8 +44,6 @@ const emit = defineEmits(['selectMsg']);
 function selectMessage(msg:Interfaces.MessageLogListEntity){
   emit('selectMsg',msg); 
 }
-
-
 
 function enableLogging(){
     axios.post(`${metaEnv.VITE_API_URL}Telemetry/enablelogging?logLevel=`+selectedTraceLevel.value).then((response: any) => {

@@ -16,6 +16,7 @@
     display: flex;
     font-weight: 450;
     &__left{
+      width: 50%;
       -webkit-box-flex: 1;
       -ms-flex: 1;
       flex: 1;
@@ -31,12 +32,13 @@
       align-items: center;
       -webkit-box-pack: center;
       -ms-flex-pack: center;
-      justify-content: center;
+      // justify-content: center;
       .visualiser__content{
         text-align: center;
       }
     }
     &__right {
+      width: 50%;
       display: flex !important;
       flex-direction: column;
       align-items: center;
@@ -130,4 +132,11 @@
             }
         }
     }
+}
+.truncated{
+  overflow: hidden;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  word-break: break-all;
 }

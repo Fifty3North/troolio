@@ -52,3 +52,26 @@ export interface Entity {
     subTitle: string,
     type:Enums.EntityType
 }
+
+export interface ShoppingList{
+    id:string
+    title:string
+    ownerId:string,
+    collaborators:string[]
+    items:ShoppingListItem[]
+    joinCode?:string
+}
+export interface ShoppingListItem{
+    id:string
+    description?:string
+    crossedOff:Boolean
+    quantity:string
+}
+
+export interface AddToShoppingListEmit{
+    description:string, 
+    quantity:string
+}
+export interface AddToShoppingListPayload extends AddToShoppingListEmit{
+    id:string
+}

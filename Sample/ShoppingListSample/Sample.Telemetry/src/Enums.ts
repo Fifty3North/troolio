@@ -40,4 +40,14 @@ export enum EntityType {
     Timer,
     Check,
     RESTAPI
-  };
+};
+
+export enum LocalVariables{
+  UserId = "UserId",
+  DeviceId = "DeviceId"
+}
+
+export enum Tabs{
+  Debug=2,
+  ShoppingLists=3
+}

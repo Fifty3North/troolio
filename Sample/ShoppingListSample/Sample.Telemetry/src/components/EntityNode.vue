@@ -7,24 +7,24 @@
           .node__title 
               .node__top
                 .node__name 
-                  .node__msgType {{message.messageType}} 
+                  .node__msgType.truncated(:title="message.messageType") {{message.messageType}} 
                 .node__elapsed {{message.elapsed}} ms
               .node__type {{message.entity.subTitle}}
           //- .node__actions
               //- .btn.btn-round
               //-     i(data-feather="more-vertical")
-      .node__actor(:class="message.entity.iconColor, {'bottom-rounded':!showAttributes}") {{message.actor}}
-      .node__content(v-if="showAttributes")
+      .node__actor.truncated(:class="message.entity.iconColor, {'bottom-rounded':!shouldShowNodeContent}", :title="message.actor") {{message.actor}}
+      .node__content(v-if="shouldShowNodeContent")
         ul.node__attributes
-          li(v-if="showNodeContent" v-for="property in payload")
+          li(v-for="property in payload")
             strong {{property.name}}
-            span {{property.value}}    
+            span.truncated(:title="property.value") {{property.value}}    
           li(v-if="message.error")
             .error Error : {{message.error}}
 
   ul.tree(v-if="message.children && message.children.length > 0")
     li(v-for="child in message.children")
-      EntityNode(:message="child")
+      EntityNode(:message="child", :showNodeContent="showNodeContent")
 
 </template>
 <script lang="ts">
@@ -35,10 +35,11 @@ export default {
 <script setup lang="ts">
 import {computed, ref} from 'vue'
 import * as Interfaces from '../Interfaces';
+import * as Enums from '../Enums';
 
 const props = defineProps({
-    message: {required: true, type: Object as ()=> Interfaces.MessageLogListEntity},
-    showNodeContent: {required:true, type:Boolean}
+  message: {required: true, type: Object as ()=> Interfaces.MessageLogListEntity},
+  showNodeContent: {required: true, type:Boolean, default:false}
 });
 
 let _payload:Interfaces.PayloadValue[] = [];
@@ -49,8 +50,8 @@ const payload = computed(()=>{
   }
   return _payload;
 });
-const showAttributes = computed(()=>{
-  return ((payload.value && payload.value.length > 0 && props.showNodeContent) || (props.message.error || props.showNodeContent)) 
+const shouldShowNodeContent = computed(()=>{
+  return props.showNodeContent &&((payload.value && payload.value.length > 0 ) || props.message.error) 
 })
 function mapPayload(key:any,value:any){
   if(!key){
@@ -140,6 +141,11 @@ function mapPayload(key:any,value:any){
     font-size: 1 * 0.8rem;
     background: #FFFFFF;
     text-align: center;
+    li{
+      span{
+        max-width: 50%;
+      } 
+    }
   }
   &:hover {
     box-shadow: var(--#{-tr}box-shadow);

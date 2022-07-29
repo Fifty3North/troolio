@@ -5,35 +5,32 @@
       img(src="./images/troolio-logo.svg", alt="Trool.io")
       span.h5 Trool.io 
   .tabs
-    .tab(:class="selectedClass(Tabs.Functions)" v-on:click="selectTab(Tabs.Functions)") 
-      h6 Functions
+    .tab.me-2(:class="selectedClass(Tabs.ShoppingLists)" v-on:click="selectTab(Tabs.ShoppingLists)") 
+      h6 Shopping Lists
     .tab(:class="selectedClass(Tabs.Debug)" v-on:click="selectTab(Tabs.Debug)") 
       h6 Debug
 .visualiser
   .visualiser__left
     .visualiser__content(v-show="selectedTab === Tabs.Debug")    
-      ListView(@selectMsg="selectMessage")
+      Flush(@selectMsg="selectMessage")
 
-    .visualiser__content(v-show="selectedTab === Tabs.Functions")
-      Functions
+    .visualiser__content(v-show="selectedTab === Tabs.ShoppingLists")
+      ShoppingLists
   .visualiser__right
     MessageVisualiser(:message="selectedMessage")
-    //- h6 {{selectedMessage}}/
 </template>
 <script setup lang="ts">
-import {computed, ref} from 'vue'
-import ListView from './components/ListView.vue'
+import {computed, onMounted, ref} from 'vue'
+import Flush from './components/Flush.vue'
 import MessageVisualiser from './components/MessageVisualiser.vue'
-import Functions from './components/Functions.vue'
+import ShoppingLists from './components/ShoppingLists.vue'
 import * as Interfaces from './Interfaces';
 import './scss/general.scss';
+import {Guid} from 'typescript-guid'
+import {LocalVariables, Tabs} from './Enums'
 
-enum Tabs{
-  Debug=2,
-  Functions=3
-}
 const selectedMessage = ref<Interfaces.MessageLogListEntity>();
-const selectedTab = ref(Tabs.Functions);
+const selectedTab = ref(Tabs.ShoppingLists);
 const selectedClass = computed(()=>{
   return function(tab:Tabs){
     let toReturn = "inactive";
@@ -51,6 +48,16 @@ function selectMessage(msg:Interfaces.MessageLogListEntity){
   console.log('selected', msg)
   selectedMessage.value = msg;
 }
+onMounted(()=>{
+  if(localStorage.getItem(LocalVariables.UserId) == null){
+    let userId = Guid.create().toString();
+    localStorage.setItem(LocalVariables.UserId, userId);
+  }
+  if(localStorage.getItem(LocalVariables.DeviceId) == null){
+    let deviceId = Guid.create().toString();
+    localStorage.setItem(LocalVariables.DeviceId, deviceId);
+  }
+});
 </script>
 
 <style scoped>
@@ -77,6 +84,9 @@ function selectMessage(msg:Interfaces.MessageLogListEntity){
     }
   }
   .visualiser{
+    &__left{
+      padding-top: 100px;
+    }
     &__content{
       
         .active{
@@ -93,8 +103,8 @@ function selectMessage(msg:Interfaces.MessageLogListEntity){
       max-width: 600px;
       margin: 0 auto;
       position: absolute;
-      top: 2rem;
-      left: 2rem;
+      top: 1rem;
+      left: 1rem;
     }
     &__header {
       width: 100%;

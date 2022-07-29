@@ -10,9 +10,11 @@ namespace Troolio.Tests.Setup
 {
     public static class ActorSystemServer
     {
-        static IHost _host;
+        private static IHost _host;
         private static ITroolioClient _client;
-        const string AppName = "Sample.Test";
+
+        private const string AppName = "Sample.Test";
+
         public static async Task Start()
         {
             Action<IServiceCollection> configureServices = (s) =>
@@ -21,12 +23,13 @@ namespace Troolio.Tests.Setup
             };            
             
             _host = Host.CreateDefaultBuilder()
-               .TroolioServer<Troolio.Stores.InMemoryStore>(AppName, 
-                   new[] { 
+               .TroolioServer<Stores.InMemoryStore, Core.Serialization.JsonEventSerializer>(AppName, 
+                   registerAssemblies: new[] { 
                        typeof(ShoppingListActor).Assembly,
                        typeof(IShoppingListActor).Assembly
                    },
                    configureServices,
+                   builderDelegates: null,
                    // This disables any actors that you do not want to be registered
                    // Turn off DB projections for running tests
                    disableActors: new[] { 
@@ -36,10 +39,14 @@ namespace Troolio.Tests.Setup
                );
 
             await _host.StartAsync();
+
+            ClearHostStore();
         }
 
         public static async Task Shutdown()
         {
+            ClearHostStore();
+
             await _host.StopAsync();
             _host.Dispose();
         }
@@ -61,6 +68,19 @@ namespace Troolio.Tests.Setup
         internal static async Task EnableTracing()
         {
             await _client.Tell(Constants.SingletonActorId, new EnableTracing());
+        }
+
+        private static void ClearHostStore()
+        {
+            if (_host != null)
+            {
+                Stores.IStore store = _host.Services.GetRequiredService<Stores.IStore>();
+
+                if (store != null)
+                {
+                    store.Clear();
+                };
+            }
         }
     }
 }

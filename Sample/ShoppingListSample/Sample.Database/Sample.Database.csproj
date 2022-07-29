@@ -6,7 +6,6 @@
 
 	<ItemGroup>
 		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.1" />
-		<PackageReference Include="Troolio.Projection.EntityFramework" Version="1.0.0.33-prerelease" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Sample.Shared.ActorInterfaces;
 using Sample.Database.Model;
 using Sample.Host.App.ShoppingList;
-using Troolio.Stores.EventStore;
 using Microsoft.Extensions.Hosting;
 using Troolio.Core;
 
@@ -47,7 +46,7 @@ if (configuration["Shopping:Clustering:Storage"] != null && configuration["Shopp
 // Docker using Event Store and Azure table storage for actor registry
 else
 {
-    await Startup.RunWithDefaults("Shopping",
+    await Troolio.Stores.EventStore.Startup.RunWithDefaults("Shopping",
     new[] {
         typeof(IShoppingListActor).Assembly,    // Sample.Shared
         typeof(ShoppingListActor).Assembly      // Sample.Host.App

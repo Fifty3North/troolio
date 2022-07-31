@@ -4,7 +4,7 @@ using Troolio.Core.Creatable;
 
 namespace Sample.Shared.Commands;
 
-public record AddItemToListPayload(string Description, ushort Quantity, Guid Id);
+public record AddItemToListPayload(string Description, ushort Quantity, Guid ItemId);
 public record AddItemToList(Metadata Headers, AddItemToListPayload Payload) 
     : Command<IShoppingListActor>(Headers);
 

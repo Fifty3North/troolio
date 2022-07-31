@@ -24,7 +24,9 @@
 
   ul.tree(v-if="message.children && message.children.length > 0")
     li(v-for="child in message.children")
-      EntityNode(:message="child", :showNodeContent="showNodeContent")
+      EntityNode(:message="child" 
+        :showNodeContent="showNodeContent" 
+        :key="child.id" )
 
 </template>
 <script lang="ts">

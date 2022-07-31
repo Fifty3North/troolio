@@ -6,18 +6,31 @@
         .title.truncated {{shoppingList.title}}
         .card-body
           .form
-            input.form-control.add-task.me-2(type='text' v-model="itemName" placeholder='Item Name' @keydown.enter="add")
-            input.form-control.add-task.me-2.quantity(type='text' v-model="quantity" placeholder='Quantity' @keydown.enter="add")
+            input.form-control.add-task.me-2(type='text' 
+              placeholder='Item Name' 
+              v-model="itemName" 
+              @keydown.enter="add" )
+            input.form-control.add-task.me-2.quantity(type='text' 
+              placeholder='Quantity' 
+              v-model="quantity" 
+              @keydown.enter="add" )
             button.btn.btn-primary(:disabled="!itemName" v-on:click="add") Add
           .todo-list
-            .todo-item(v-for="item in shoppingList?.items" :class="{'crossed':item.crossedOff}")
-              .checker
+            .todo-item(v-for="item in shoppingList?.items" 
+              :class="{'crossed':item.crossedOff}"
+              :key="item.id" )
+              .checker 
                 span
-                  input(type='checkbox' :v-model="!item.crossedOff" v-on:click="emit('check',item.id)" :disabled="item.crossedOff")
-              span.truncated {{item.description}} 
-              .quantity  x {{item.quantity}}
-              a.float-right.remove-todo-item(href='javascript:void(0);')
-                i.icon-close
+                  input(type='checkbox' 
+                    :v-model="!item.crossedOff" 
+                    v-on:click="emit('check',item.id)" 
+                    :disabled="item.crossedOff" )
+              .truncated(:title="item.description")
+                span {{item.description}} 
+              .quantity.me-2
+                span  x {{item.quantity}}
+              button.no-style(v-on:click="emit('remove',item.id)")
+                i(data-feather="trash")
 </template>
 <script lang="ts">
 export default {
@@ -26,15 +39,17 @@ export default {
 </script>
 
 <script lang="ts" setup>
-import {ref} from 'vue'
+import {ref, onUpdated} from 'vue'
 import * as Interfaces from '../Interfaces';
+import feather from 'feather-icons';
 const props = defineProps({
     shoppingList: {required: true, type: Object as ()=> Interfaces.ShoppingList},
 });
-const emit= defineEmits(['add','check']);
+const emit= defineEmits(['add','check','remove']);
 
 const itemName = ref('')
-const quantity = ref('0')
+const quantityDefault = '1';
+const quantity = ref(quantityDefault)
 function add(){
   if(itemName.value.trim() && quantity.value.trim()){
     let payload:Interfaces.AddToShoppingListEmit = {
@@ -43,11 +58,21 @@ function add(){
     }
     emit('add',payload)
     itemName.value='';
-    quantity.value='0'
+    quantity.value = quantityDefault
   }
 }
+onUpdated(()=>{
+  feather.replace();
+})
 </script>
 <style lang="scss" scoped>
+.no-style{
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: inherit;
+}
+
 .card{
   .title{
     font-weight: bold;

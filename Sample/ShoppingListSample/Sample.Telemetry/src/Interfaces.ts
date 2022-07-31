@@ -1,5 +1,6 @@
 import { Guid } from "typescript-guid"
 import  * as Enums from './Enums';
+import {AxiosRequestHeaders} from 'axios'
 export interface MessageLog {
     id: string,
     stream:string,
@@ -72,6 +73,21 @@ export interface AddToShoppingListEmit{
     description:string, 
     quantity:string
 }
-export interface AddToShoppingListPayload extends AddToShoppingListEmit{
-    id:string
+
+export interface CreateShoppingListPayload{
+    title:string
+}
+
+export interface ShoppingListItemPayload {
+    itemId:string
+}
+
+export interface AddToShoppingListPayload extends AddToShoppingListEmit,ShoppingListItemPayload { }
+export interface CheckItemPayload extends ShoppingListItemPayload { }
+export interface RemoveItemPayload extends ShoppingListItemPayload { }
+
+
+export interface PayloadHeaders extends AxiosRequestHeaders {
+    userId:string,
+    deviceId:string
 }

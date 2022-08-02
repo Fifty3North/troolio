@@ -5,6 +5,7 @@ using Sample.Database.Model;
 using Sample.Host.App.ShoppingList;
 using Microsoft.Extensions.Hosting;
 using Troolio.Core;
+using Troolio.MessageQueue;
 
 Console.WriteLine("Running sample. Booting cluster might take some time ...\n");
 
@@ -19,7 +20,7 @@ Action<IServiceCollection> configureServices = (s) =>
 {
     s
     .AddDbContext<ShoppingListsDbContext>()
-    .AddSingleton<F3N.Providers.MessageQueue.IMessageQueueProvider>(new F3N.Providers.MessageQueue.InMemoryMessageQueueProvider())
+    .AddSingleton<IMessageQueueProvider>(new InMemoryMessageQueueProvider())
     // Orleans incoming call fiulter to log messages
     //.AddSingleton<IIncomingGrainCallFilter, LoggingCallFilter>()
     ;

@@ -5,6 +5,7 @@ using Sample.Host.App.ShoppingList;
 using Sample.Shared.ActorInterfaces;
 using Troolio.Core;
 using Troolio.Core.Client;
+using Troolio.MessageQueue;
 
 namespace Troolio.Tests.Setup
 {
@@ -19,7 +20,7 @@ namespace Troolio.Tests.Setup
         {
             Action<IServiceCollection> configureServices = (s) =>
             {
-                s.AddTransient<F3N.Providers.MessageQueue.IMessageQueueProvider, F3N.Providers.MessageQueue.InMemoryMessageQueueProvider>();
+                s.AddTransient<IMessageQueueProvider, InMemoryMessageQueueProvider>();
             };            
             
             _host = Host.CreateDefaultBuilder()

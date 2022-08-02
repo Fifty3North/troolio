@@ -13,7 +13,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Troolio.Core" Version="1.0.0.87-prerelease" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.7" />
+    <PackageReference Include="Troolio.Core" Version="1.0.0.90-prerelease" />
     <PackageReference Include="ValueInjecter" Version="3.2.0" />
   </ItemGroup>
 

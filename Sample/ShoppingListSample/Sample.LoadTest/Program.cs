@@ -5,16 +5,9 @@ using Newtonsoft.Json;
 
 namespace Troolio.Deployment.LoadTest
 {
-    public class ListTitle
-    {
-        public string? Title { get; set; }
-    }
+    public record ListTitle(string Title);
 
-    public class ListItem
-    {
-        public string? Description { get; set; }
-        public int Quantity { get; set; } = 1;
-    }
+    public record ListItem(Guid ItemId, string Description, ushort Quantity = 1);
 
     class Program
     {
@@ -40,7 +33,7 @@ namespace Troolio.Deployment.LoadTest
                         .WithHeader("Accept", "*/*")
                         .WithHeader("userId", userId)
                         .WithHeader("deviceId", deviceId)
-                        .WithBody(new StringContent(JsonConvert.SerializeObject(new ListTitle { Title = $"testlist-{listId}" }), Encoding.UTF8, "application/json"));
+                        .WithBody(new StringContent(JsonConvert.SerializeObject(new ListTitle($"testlist-{listId}")), Encoding.UTF8, "application/json"));
 
                     context.Data.Add("listId", listId);
                     context.Data.Add("userId", userId);
@@ -63,7 +56,7 @@ namespace Troolio.Deployment.LoadTest
                         .WithHeader("Accept", "*/*")
                         .WithHeader("userId", userId.ToString())
                         .WithHeader("deviceId", deviceId)
-                        .WithBody(new StringContent(JsonConvert.SerializeObject(new ListItem { Description = $"Item 1", Quantity = 1 }), Encoding.UTF8, "application/json"));
+                        .WithBody(new StringContent(JsonConvert.SerializeObject(new ListItem(Guid.NewGuid(), "Item 1", 1)), Encoding.UTF8, "application/json"));
 
 
                     context.Logger.Debug($"Creating item in list: {requestPath}");
@@ -84,7 +77,7 @@ namespace Troolio.Deployment.LoadTest
                         .WithHeader("Accept", "*/*")
                         .WithHeader("userId", userId.ToString())
                         .WithHeader("deviceId", deviceId)
-                        .WithBody(new StringContent(JsonConvert.SerializeObject(new ListItem { Description = $"Item 2", Quantity = 1 }), Encoding.UTF8, "application/json"));
+                        .WithBody(new StringContent(JsonConvert.SerializeObject(new ListItem(Guid.NewGuid(), "Item 2", 2)), Encoding.UTF8, "application/json"));
 
                     context.Logger.Debug($"Creating item in list: {requestPath}");
                     var response = await Http.Send(request, context);

@@ -11,11 +11,12 @@ using Troolio.Projection.EntityFramework;
 
 namespace Troolio.Core.Projection
 {
+    [Obsolete("No longer required")]
     public abstract class EFPersistance<TEntity, TDbContext> : DispatchActor, IIncomingGrainCallFilter
         where TEntity : class
         where TDbContext : DbContext
     {
-        protected Microsoft.Extensions.Logging.ILogger<EFPersistance<TEntity, TDbContext>>? _logger;
+        protected ILogger<EFPersistance<TEntity, TDbContext>>? _logger;
         protected static readonly string _entityName = typeof(TEntity).Name;
 
         public override Task OnActivateAsync()
@@ -67,8 +68,8 @@ namespace Troolio.Core.Projection
         {
             using (DbContext dbContext = this.RequestServices!.GetRequiredService<TDbContext>())
             {
-                EventEntityCollection<TEntity, TChildEntity> entityCollection = await Mapper.Map<Task<EventEntityCollection<TEntity, TChildEntity>>>(e);
-                await LinkEntity(dbContext, entityCollection.Parent, entityCollection.Child, entityCollection.Collection);
+                EventEntityCollectionWithPredicates<TEntity, TChildEntity> entityCollection = await Mapper.Map<Task<EventEntityCollectionWithPredicates<TEntity, TChildEntity>>>(e);
+                await LinkEntity(dbContext, entityCollection.Entity, entityCollection.ChildEntity, entityCollection.Collection);
             }
         }
 
@@ -78,8 +79,8 @@ namespace Troolio.Core.Projection
         {
             using (DbContext dbContext = this.RequestServices!.GetRequiredService<TDbContext>())
             {
-                EventEntityCollection<TEntity, TChildEntity> entityCollection = await Mapper.Map<Task<EventEntityCollection<TEntity, TChildEntity>>>(e);
-                await UnlinkEntity(dbContext, entityCollection.Parent, entityCollection.Child, entityCollection.Collection);
+                EventEntityCollectionWithPredicates<TEntity, TChildEntity> entityCollection = await Mapper.Map<Task<EventEntityCollectionWithPredicates<TEntity, TChildEntity>>>(e);
+                await UnlinkEntity(dbContext, entityCollection.Entity, entityCollection.ChildEntity, entityCollection.Collection);
             }
         }
 

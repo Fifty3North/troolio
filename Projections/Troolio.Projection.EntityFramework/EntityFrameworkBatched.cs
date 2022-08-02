@@ -7,16 +7,19 @@ using Orleans;
 using Orleans.Streams;
 using System.Collections.Concurrent;
 using System.ComponentModel.DataAnnotations;
-using System.Linq.Expressions;
 using System.Reflection;
 using Troolio.Core.Projection.Exceptions;
 
 namespace Troolio.Core.Projection
 {
-    public abstract class EntityFrameworkBatched<TEntity, TDbContext> : EFPersistance<TEntity, TDbContext>
-            where TEntity : class
-            where TDbContext : DbContext
+    public abstract class EntityFrameworkBatched<TEntity, TDbContext> : DispatchActor
+        where TEntity : class
+        where TDbContext : DbContext
     {
+        private ILogger<EntityFrameworkBatched<TEntity, TDbContext>>? _logger;
+
+        private static readonly string _entityName = typeof(TEntity).Name;
+
         private static readonly TimeSpan[] _defaultRetryDurations = new[]
         {
             TimeSpan.FromMilliseconds(10),
@@ -28,8 +31,6 @@ namespace Troolio.Core.Projection
             TimeSpan.FromMilliseconds(5000),
             TimeSpan.FromMilliseconds(10000)
         };
-
-        private PropertyInfo? _entityPrimaryKeyPropertyInfo;
 
         /// <summary>
         /// The Id for the timer to instigate a flush
@@ -58,7 +59,7 @@ namespace Troolio.Core.Projection
 
         public virtual async Task On(Activate _)
         {
-            _entityPrimaryKeyPropertyInfo = GetPrimaryKeyPropertyInfo<TEntity>();
+            _logger = this.ServiceProvider.GetRequiredService<ILogger<EntityFrameworkBatched<TEntity, TDbContext>>>();
 
             IStreamProvider streamProvider = GetStreamProvider(Constants.ProjectionStreamPrefix);
 
@@ -71,8 +72,6 @@ namespace Troolio.Core.Projection
             IAsyncStream<IEventEnvelope> stream = streamProvider.GetStream<IEventEnvelope>(guid, extension);
 
             await stream.SubscribeAsync((envelope, token) => Receive(envelope));
-
-            //Timers.Register(_flushTimerId, _flushPeriod, _flushPeriod, () => Self.Tell(new Commands.ProcessNow()));
 
             RegisterFlushTimer();
         }
@@ -169,7 +168,7 @@ namespace Troolio.Core.Projection
             }
         }
 
-        protected Task AddJobToQueue(Func<Task> job)
+        private Task AddJobToQueue(Func<Task> job)
         {
             _jobs.Enqueue(new EfJob(job));
 
@@ -178,7 +177,8 @@ namespace Troolio.Core.Projection
             return Task.CompletedTask;
         }
 
-        public override async Task<int> Create<TEvent>(EventEnvelope<TEvent> e)
+        public async Task Create<TEvent>(EventEnvelope<TEvent> e)
+           where TEvent : Event
         {
             await AddJobToQueue(async () =>
             {
@@ -196,20 +196,35 @@ namespace Troolio.Core.Projection
                 catch (Exception ex)
                 {
                     _logger?.LogError($"Error Creating Entity for Type: {_entityName} - Mapping failed. (Event: {eventName}, Source Id: {e.Id})  from {this.GetType().Name}", ex);
-                    // TODO: should we throw this or just swallow it and return here?
                     throw;
                 }
                 
-                using (DbContext dbContext = this.RequestServices!.GetRequiredService<TDbContext>())
+                using (IServiceScope scope = this.ServiceProvider.CreateScope())
+                using (DbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>())
                 {
                     TEntity entity = create.Entity;
-                    Guid entityId = create.EntityGuid;
+                    Guid entityId = create.EntityId;
 
                     try
                     {
                         _logger?.LogTrace($"About to InsertEntity for {eventName} : {e.Id} from {this.GetType().Name}");
 
-                        int insertedItemCount = await InsertEntity(dbContext, entity);
+                        DbSet<TEntity> entitySet = dbContext.Set<TEntity>();
+
+                        try
+                        {
+                            entitySet.Add(entity);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError($"Error adding Entity to set ({_entityName}) ({ex.GetType().Name}) (Non DbEntityValidationException): {ex.Message}");
+                            throw;
+                        }
+
+                        Validate(dbContext);
+
+                        int insertedItemCount = await dbContext.SaveChangesAsync();
+
                         if (insertedItemCount <= 0)
                         {
                             _logger?.LogError($"Failed to Insert Entity for Type: {_entityName} - Inserted Item Count = 0. (Event: {eventName}, Source Id: {e.Id}, Entity Id: {entityId})");
@@ -217,37 +232,30 @@ namespace Troolio.Core.Projection
                         }
 
                         _logger?.LogTrace($"Finished InsertEntity for {eventName} : {e.Id}  from {this.GetType().Name}");
-
-                        object? oId = _entityPrimaryKeyPropertyInfo?.GetValue(entity, null);
-                        
-                        if (oId is null)
-                        {
-                            _logger?.LogError($"Failed to Insert Entity for Type: {_entityName} - Primary Key Id = 0. (Event: {eventName}, Source Id: {e.Id}, Entity Id: {entityId})");
-                            // TODO: We should throw exception here or just return
-                        }
                     }
                     catch (ValidationException ex)
                     {
-                        CatchValidationError(ex);
+                        LogValidationException(ex);
                         throw;
                     }
                     catch (DbUpdateException updex)
                     {
-                        CatchUpdateError(updex);
+                        LogDbUpdateException(updex);
+                        throw;
                     }
                     catch (Exception e)
                     {
-                        CatchError(e);
+                        LogException(e);
+                        throw;
                     }
                 }
 
                 _logger?.LogTrace($"Finished Create for Event: {eventName} : {e.Id}  from {this.GetType().Name}");
             });
-
-            return 1;
         }
 
-        public override async Task Update<TEvent>(EventEnvelope<TEvent> e)
+        public async Task Update<TEvent>(EventEnvelope<TEvent> e)
+            where TEvent : Event
         {
             await AddJobToQueue(async () =>
             {
@@ -273,39 +281,43 @@ namespace Troolio.Core.Projection
                     return;
                 }
 
-                using (DbContext dbContext = this.RequestServices!.GetRequiredService<TDbContext>())
+                using (IServiceScope scope = this.ServiceProvider.CreateScope())
+                using (DbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>())
                 {
-                    Guid entityId = update.EntityGuid;
+                    Guid entityId = update.EntityId;
 
                     try
                     {
                         _logger?.LogTrace($"Update Entity for Type: {_entityName}. (Event: {eventName}, Source Id: {e.Id}, Entity Id: {entityId})");
-                        var errorMessage = $"Error Updating Entity for Type: {_entityName} - Existing entity does not exist. (Event: {eventName}, Source Id: {e.Id}, Entity Id: {entityId})";
 
-                        TEntity existingEntity = await GetExistingEntity<TEntity>(dbContext, entityId, _entityPrimaryKeyPropertyInfo?.PropertyType ?? throw new Exception(errorMessage));
+                        string errorMessage = $"Error Updating Entity for Type: {_entityName} - Existing entity does not exist. (Event: {eventName}, Source Id: {e.Id}, Entity Id: {entityId})";
 
-                        if (existingEntity == null)
+                        // This will throw exception if entity not found
+                        TEntity entity = await GetExistingEntity<TEntity>(dbContext, entityId);
+
+                        Validate(dbContext);
+
+                        foreach (Action<TEntity> action in update.PropertyUpdateActions)
                         {
-                            _logger?.LogError(errorMessage);
+                            action(entity);
                         }
-                        else
-                        {
-                            Validate(dbContext);
-                            await UpdateExistingEntity(dbContext, existingEntity, update.PropertyUpdateActions);
-                        }
+
+                        await dbContext.SaveChangesAsync();
                     }
                     catch (ValidationException ex)
                     {
-                        CatchValidationError(ex);
+                        LogValidationException(ex);
                         throw;
                     }
                     catch (DbUpdateException updex)
                     {
-                        CatchUpdateError(updex);
+                        LogDbUpdateException(updex);
+                        throw;
                     }
                     catch (Exception e)
                     {
-                        CatchError(e);
+                        LogException(e);
+                        throw;
                     }
                 }
             });
@@ -332,24 +344,17 @@ namespace Troolio.Core.Projection
                     throw;
                 }
 
-                using (DbContext dbContext = this.RequestServices!.GetRequiredService<TDbContext>())
+                using (IServiceScope scope = this.ServiceProvider.CreateScope())
+                using (DbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>())
                 {
-                    Guid entityId = delete.EntityGuid;
+                    Guid entityId = delete.EntityId;
 
                     try
                     {
-                        // Convert the primary key Id we looked up via the Guid to the type of the PK of the entity
-                        object primaryKeyId = Convert.ChangeType(entityId, _entityPrimaryKeyPropertyInfo?.PropertyType ?? throw new Exception("Property Type is null"));
+                        // This will throw exception if entity not found
+                        TEntity entity = await GetExistingEntity<TEntity>(dbContext, entityId);
 
-                        // Get the entity record 
                         DbSet<TEntity> entitySet = dbContext.Set<TEntity>();
-                        TEntity? entity = entitySet.Find(primaryKeyId);
-                        if (entity == null)
-                        {
-                            _logger?.LogError($"Error Deleting Entity for Type: {_entityName} - Entity does not exist. (Event: {eventName}, Source Id: {e.Id}, Entity Id: {entityId})");
-                            return;
-                        }
-
 
                         entitySet.Remove(entity);
 
@@ -358,33 +363,37 @@ namespace Troolio.Core.Projection
                     }
                     catch (ValidationException ex)
                     {
-                        CatchValidationError(ex);
+                        LogValidationException(ex);
                         throw;
                     }
                     catch (DbUpdateException updex)
                     {
-                        CatchUpdateError(updex);
+                        LogDbUpdateException(updex);
+                        throw;
                     }
                     catch (Exception e)
                     {
-                        CatchError(e);
+                        LogException(e);
+                        throw;
                     }
                 }
             });
         }
 
-        public override async Task AddItem<TChildEntity, TEvent>(EventEnvelope<TEvent> e)
+        public async Task AddItem<TChildEntity, TEvent>(EventEnvelope<TEvent> e)
+            where TChildEntity : class
+            where TEvent : Event
         {
             await AddJobToQueue(async () =>
             {
                 string eventName = typeof(TEvent).Name;
 
                 // Map
-                TroolioEventEntityCollection<TEntity, TChildEntity> collection;
+                EventEntityCollection<TEntity, TChildEntity> collection;
 
                 try
                 {
-                    collection = await Mapper.Map<Task<TroolioEventEntityCollection<TEntity, TChildEntity>>>(e);
+                    collection = await Mapper.Map<Task<EventEntityCollection<TEntity, TChildEntity>>>(e);
                 }
                 catch (Exception ex)
                 {
@@ -393,51 +402,61 @@ namespace Troolio.Core.Projection
                     throw;
                 }
 
-                using (DbContext dbContext = this.RequestServices!.GetRequiredService<TDbContext>())
+                using (IServiceScope scope = this.ServiceProvider.CreateScope())
+                using (DbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>())
                 {
-                    Guid parentId = collection.ParentGuid;
-                    Guid childId = collection.ChildGuid;
+                    Guid entityId = collection.EntityId;
+                    Guid childId = collection.ChildEntityId;
 
                     try
                     {
-                        TEntity parent = await GetExistingEntity<TEntity>(dbContext, parentId, _entityPrimaryKeyPropertyInfo?.PropertyType ?? throw new Exception("Property Type is null"));
-                        if (parent == null)
-                        {
-                            _logger?.LogError($"Error Adding Item for Type: {_entityName} - Parent entity does not exist. (Event: {eventName}, Source Id: {e.Id}, Parent Id: {parentId}, Child Id: {childId}) from {this.GetType().Name}");
-                            return;
-                        }
+                        // This will throw exception if Entity not found
+                        TEntity entity = await GetExistingEntity<TEntity>(dbContext, entityId);
 
-                        TChildEntity child = await GetExistingEntity<TChildEntity>(dbContext, childId);
-                        if (child == null)
-                        {
-                            _logger?.LogError($"Error Adding Item for Type: {_entityName} - Child entity does not exist. (Event: {eventName}, Source Id: {e.Id}, Parent Id: {parentId}, Child Id: {childId}) from {this.GetType().Name}");
-                            return;
-                        }
+                        // This will throw exception if Child Entity not found
+                        TChildEntity childEntity = await GetExistingEntity<TChildEntity>(dbContext, childId);
 
-                        await LinkEntity(dbContext, parent, child, collection.Collection);
+                        ICollection<TChildEntity> childCollection = collection.Collection.Compile().Invoke(entity) ?? new List<TChildEntity>();
+
+                        childCollection.Add(childEntity);
+
+                        Validate(dbContext);
+
+                        await dbContext.SaveChangesAsync();
                     }
-                    catch (Exception ex)
+                    catch (ValidationException ex)
                     {
-                        _logger?.LogError($"Error Adding Item for Type: {_entityName} - {ex.Message}. (Event: {eventName}, Source Id: {e.Id}, Parent Id: {parentId}, Child Id: {childId}) from {this.GetType().Name}", ex);
-                        // TODO: should we throw this or just swallow it and return here?
+                        LogValidationException(ex);
+                        throw;
+                    }
+                    catch (DbUpdateException updex)
+                    {
+                        LogDbUpdateException(updex);
+                        throw;
+                    }
+                    catch (Exception e)
+                    {
+                        LogException(e);
                         throw;
                     }
                 }
             });
         }
 
-        public override async Task RemoveItem<TChildEntity, TEvent>(EventEnvelope<TEvent> e)
+        public async Task RemoveItem<TChildEntity, TEvent>(EventEnvelope<TEvent> e)
+            where TChildEntity : class
+            where TEvent : Event
         {
             await AddJobToQueue(async () =>
             {
                 string eventName = typeof(TEvent).Name;
 
                 // Map
-                TroolioEventEntityCollection<TEntity, TChildEntity> collection;
+                EventEntityCollection<TEntity, TChildEntity> collection;
 
                 try
                 {
-                    collection = await Mapper.Map<Task<TroolioEventEntityCollection<TEntity, TChildEntity>>>(e);
+                    collection = await Mapper.Map<Task<EventEntityCollection<TEntity, TChildEntity>>>(e);
                 }
                 catch (Exception ex)
                 {
@@ -446,41 +465,46 @@ namespace Troolio.Core.Projection
                     throw;
                 }
 
-                using (DbContext dbContext = this.RequestServices!.GetRequiredService<TDbContext>())
+                using (IServiceScope scope = this.ServiceProvider.CreateScope())
+                using (DbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>())
                 {
-                    Guid parentId = collection.ParentGuid;
-                    Guid childId = collection.ChildGuid;
+                    Guid entityId = collection.EntityId;
+                    Guid childId = collection.ChildEntityId;
 
                     try
                     {
-                        TEntity parent = await GetExistingEntity<TEntity>(dbContext, parentId, _entityPrimaryKeyPropertyInfo?.PropertyType ?? throw new Exception("Property Type is null"));
-                        if (parent == null)
-                        {
-                            _logger?.LogError($"Error Removing Item for Type: {_entityName} - Parent entity does not exist. (Event: {eventName}, Source Id: {e.Id}, Parent Id: {parentId}, Child Id: {childId}) from {this.GetType().Name}");
-                            return;
-                        }
+                        // This will throw exception if Entity not found
+                        TEntity entity = await GetExistingEntity<TEntity>(dbContext, entityId);
 
-                        TChildEntity child = await GetExistingEntity<TChildEntity>(dbContext, childId);
-                        if (child == null)
-                        {
-                            _logger?.LogError($"Error Removing Item for Type: {_entityName} - Child entity does not exist. (Event: {eventName}, Source Id: {e.Id}, Parent Id: {parentId}, Child Id: {childId}) from {this.GetType().Name}");
-                            return;
-                        }
+                        // This will throw exception if Child Entity not found
+                        TChildEntity childEntity = await GetExistingEntity<TChildEntity>(dbContext, childId);
 
-                        await UnlinkEntity(dbContext, parent, child, collection.Collection);
+                        ICollection<TChildEntity> childCollection = collection.Collection.Compile().Invoke(entity) ?? new List<TChildEntity>();
+
+                        childCollection.Add(childEntity);
+
+                        dbContext.Set<TEntity>().Attach(entity);
+
+                        childCollection.Remove(childEntity);
+
+                        Validate(dbContext);
+
+                        await dbContext.SaveChangesAsync();
                     }
                     catch (ValidationException ex)
                     {
-                        CatchValidationError(ex);
+                        LogValidationException(ex);
                         throw;
                     }
                     catch (DbUpdateException updex)
                     {
-                        CatchUpdateError(updex);
+                        LogDbUpdateException(updex);
+                        throw;
                     }
                     catch (Exception e)
                     {
-                        CatchError(e);
+                        LogException(e);
+                        throw;
                     }
                 }
             });
@@ -489,125 +513,89 @@ namespace Troolio.Core.Projection
         private async Task<T> GetExistingEntity<T>(DbContext dbContext, object id)
             where T : class
         {
-            PropertyInfo primaryKeyPropertyInfo = GetPrimaryKeyPropertyInfo<T>();
-            return await GetExistingEntity<T>(dbContext, id, primaryKeyPropertyInfo.PropertyType);
-        }
+            Type primaryKeyType = GetPrimaryKeyPropertyType<T>();
 
-        private async Task<T> GetExistingEntity<T>(DbContext dbContext, object id, Type primaryKeyType)
-            where T : class
-        {
             // Convert the primary key Id we looked up via the id to the type of the PK of the entity
             object primaryKeyId = Convert.ChangeType(id, primaryKeyType);
-            
+
             // Look up the entity in the DB
             T? entity = await dbContext.Set<T>().FindAsync(primaryKeyId);
             if (entity == null)
             {
                 string message = $"Error Getting Existing Entity: Entity does not exist for Type: {typeof(T).Name}, Id: {id}";
                 _logger?.LogError(message);
-                throw new ArgumentException(message);
+                throw new EntityDoesNotExistException(message);
             }
 
             return entity;
         }
 
-        protected async Task<TEntity> GetExistingEntity(DbContext dbContext, Expression<Func<TEntity, bool>> entityPredicate)
-        {
-            TEntity? entity = await dbContext.Set<TEntity>().FirstOrDefaultAsync(entityPredicate);
+        private readonly ConcurrentDictionary<Type, Type> _entityTypePrimaryKeyTypeCache = new ConcurrentDictionary<Type, Type>();
 
-            if (entity == null)
-            {
-                string message = $"Error Getting Existing Entity: Entity does not exist for Type: {typeof(TEntity).Name}";
-                _logger?.LogError(message);
-                throw new ArgumentException(message);
-            }
-
-            return entity;
-        }
-
-        protected async Task UpdateExistingEntity(DbContext dbContext, Expression<Func<TEntity, bool>> entityPredicate, params Action<TEntity>[] propertyUpdateActions)
-        {
-            TEntity existingEntity = await GetExistingEntity(dbContext, entityPredicate);
-            if (existingEntity == null)
-            {
-                _logger?.LogError($"Error Updating Entity - Existing entity does not exist for Type: {_entityName} from {this.GetType().Name}");
-            }
-            else
-            {
-                await UpdateExistingEntity(dbContext, existingEntity, propertyUpdateActions);
-            }
-        }
-
-        protected async Task UpdateExistingEntity(DbContext dbContext, TEntity existingEntity, params Action<TEntity>[] propertyUpdateActions)
-        {
-            if (propertyUpdateActions == null || propertyUpdateActions.Length == 0)
-            {
-                // Nothing to update
-                return;
-            }
-
-            foreach (Action<TEntity> action in propertyUpdateActions)
-            {
-                action(existingEntity);
-            }
-
-            try
-            {
-                await dbContext.SaveChangesAsync();
-            }
-            catch (ValidationException ex)
-            {
-                CatchValidationError(ex);
-                throw;
-            }
-            catch (DbUpdateException updex)
-            {
-                CatchUpdateError(updex);
-            }
-            catch (Exception e)
-            {
-                CatchError(e);
-            }
-        }
-
-        protected async Task DeleteExistingEntity(DbContext dbContext, Expression<Func<TEntity, bool>> entityPredicate)
-        {
-            TEntity existingEntity = await GetExistingEntity(dbContext, entityPredicate);
-            if (existingEntity == null)
-            {
-                _logger?.LogError($"Existing entity to Delete does not exist for Type: {_entityName}");
-            }
-            else
-            {
-                await DeleteExistingEntity(dbContext, existingEntity);
-            }
-        }
-
-        private async Task DeleteExistingEntity(DbContext dbContext, TEntity existingEntity)
-        {
-            try
-            {
-                dbContext.Set<TEntity>().Remove(existingEntity);
-                await dbContext.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError($"Error Deleting Entity for Type: {_entityName} - {ex.Message}", ex);
-                throw;
-            }
-        }
-
-        private PropertyInfo GetPrimaryKeyPropertyInfo<T>()
+        private Type GetPrimaryKeyPropertyType<T>()
             where T : class
         {
             Type type = typeof(T);
-            PropertyInfo? propertyInfo = type.GetProperties().FirstOrDefault(p => Attribute.IsDefined(p, typeof(KeyAttribute)));
-            if (propertyInfo == null)
+
+            if (_entityTypePrimaryKeyTypeCache.TryGetValue(type, out Type? primaryKeyType))
             {
-                _logger?.LogError($"Primary Key not found for Type: {type}");
-                throw new PrimaryKeyNotFoundException($"Primary Key not found for Type: {type}");
+                return primaryKeyType;
             }
-            return propertyInfo;
+
+            PropertyInfo? propertyInfo = type.GetProperties().FirstOrDefault(p => Attribute.IsDefined(p, typeof(KeyAttribute)));
+
+            if (propertyInfo?.PropertyType == null)
+            {
+                string error = $"Primary Key not found for Type: {type.Name}";
+                _logger?.LogError(error);
+                throw new PrimaryKeyNotFoundException(error);
+            }
+
+            primaryKeyType = propertyInfo.PropertyType;
+
+            _entityTypePrimaryKeyTypeCache.TryAdd(type, primaryKeyType);
+
+            return primaryKeyType;
+        }
+
+        private static void Validate(DbContext dbContext)
+        {
+            IEnumerable<object> entities = from e in dbContext.ChangeTracker.Entries()
+                           where e.State == EntityState.Added
+                               || e.State == EntityState.Modified
+                           select e.Entity;
+
+            foreach (object dbEntity in entities)
+            {
+                ValidationContext validationContext = new ValidationContext(dbEntity);
+                Validator.ValidateObject(dbEntity, validationContext);
+            }
+        }
+
+        private void LogException(Exception ex)
+        {
+            _logger?.LogError($"Exception for Entity of type: {_entityName} ({ex.Message}");
+        }
+
+        private void LogDbUpdateException(DbUpdateException ex)
+        {
+            _logger?.LogError($"DbUpdateException for Entity of type: {_entityName} - {ex.Message}");
+
+            if (ex.InnerException != null)
+            {
+                _logger?.LogError($"- InnerException ({ex.InnerException.GetType().Name}) {ex.InnerException.Message}");
+
+                if (ex.InnerException.InnerException != null)
+                {
+                    _logger?.LogError($"- InnerInnerException ({ex.InnerException.InnerException.GetType().Name}) {ex.InnerException.InnerException.Message}");
+                }
+            }
+        }
+
+        private void LogValidationException(ValidationException ex)
+        {
+            _logger?.LogError($"ValidationException for Entity of type: {_entityName} - ({ex.Message}");
+            _logger?.LogError($"Property Name: {ex.ValidationAttribute?.ErrorMessageResourceName} Message: {ex.ValidationAttribute?.ErrorMessage}");
         }
     }
 }

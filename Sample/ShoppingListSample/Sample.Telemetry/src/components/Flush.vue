@@ -13,7 +13,7 @@
         | Flush
       span(v-else)
         | Cancel
-    button.btn.btn-primary(v-on:click="disableLogging" style="margin-right:10px;  ")
+    button.btn.btn-primary(v-on:click="disableLogging")
       | Disable Logging
 
 ul.messages(v-if="data != null && data.length > 0")  
@@ -27,7 +27,6 @@ ul.messages(v-if="data != null && data.length > 0")
 </template>
 <script setup lang="ts">
 import { onMounted, onUpdated, ref} from "vue";
-import { Guid } from 'typescript-guid'
 import feather from "feather-icons";
 import * as Interfaces from '../Interfaces'
 import * as Enums from '../Enums'

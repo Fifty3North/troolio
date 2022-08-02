@@ -3,7 +3,7 @@
   .visualiser__header
     a.visualiser__logo(title="Trool.io")
       img(src="./images/troolio-logo.svg", alt="Trool.io")
-      span.h5 Trool.io 
+      span.h5 Shopping List
   .tabs
     .tab.me-2(:class="selectedClass(Tabs.ShoppingLists)" v-on:click="selectTab(Tabs.ShoppingLists)") 
       h6 Shopping Lists

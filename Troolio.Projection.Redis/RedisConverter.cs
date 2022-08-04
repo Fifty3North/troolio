@@ -1,13 +1,9 @@
 ﻿using Newtonsoft.Json;
 using StackExchange.Redis;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Troolio.Projection.Redis
 {
@@ -207,10 +203,10 @@ namespace Troolio.Projection.Redis
             return (TEntity)entity;
         }
 
-        public static TProperty FromRedisValue<TProperty>(RedisValue value, Expression<Func<TEntity, TProperty>> propertyExpression)
-        {
-            return FromRedisValue<TProperty>(value);
-        }
+        //public static TProperty FromRedisValue<TProperty>(RedisValue value, Expression<Func<TEntity, TProperty>> propertyExpression)
+        //{
+        //    return FromRedisValue<TProperty>(value);
+        //}
 
         private static ReflectedProperty GetReflectedProperty(Expression<Func<TEntity, object>> propertyExpression)
         {

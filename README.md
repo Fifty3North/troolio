@@ -3,6 +3,14 @@ This project contains projections, stores and samples to be used with Trool.io. 
 
 [![NuGet Badge](https://buildstats.info/nuget/troolio.core)](https://www.nuget.org/packages/Troolio.Core/)
 
+## TL;DR
+
+To run the sample, clone the repo, hit run in Visual Studio, wait for Docker containers to boot and open: http://localhost:8081/swagger/index.html 
+
+To run the sample Vue Shopping App, first complete the above, then from the command line, change to directory `Sample\ShoppingListSample\Sample.Telemetry` and run `yarn install` then `yarn run dev` and open the URL in the command window. 
+
+To see live tracing in action, click the debug link in the Vue Shopping App, select "Tracing" from the dropdown list and click "Enable Logging". Go back to the shopping app and add a list and some items to the list. Head back to the debug link and click Flush to see the operations that were executed while running the app.
+
 ## Concepts
 All functionality is performed by passing immutable messages to actors. Immutable means that messages cannot be modified. There are 3 types of message:-
 * **Command** e.g. AddToDoItem

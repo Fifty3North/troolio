@@ -1,6 +1,8 @@
 # Troolio
 This project contains projections, stores and samples to be used with Trool.io.  Trool.io is an opinionated CQRS and Event Sourcing library running on top of Microsoft Orleans - the virtual actor framework.  Lowering the barrier to entry for Event Sourcing and CQRS, Trool.io lets you quickly and safely build robust and scalable distributed systems without extensive knowledge of the underlying technology.
 
+[![NuGet Badge](https://buildstats.info/nuget/troolio.core)](https://www.nuget.org/packages/Troolio.Core/)
+
 ## Concepts
 All functionality is performed by passing immutable messages to actors. Immutable means that messages cannot be modified. There are 3 types of message:-
 * **Command** e.g. AddToDoItem

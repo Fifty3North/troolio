@@ -1,5 +1,4 @@
-﻿using Orleans;
-using Orleans.Concurrency;
+﻿using Orleans.Concurrency;
 using Sample.Shared.ActorInterfaces;
 using Sample.Shared.Events;
 using Sample.Shared.InternalCommands;
@@ -7,7 +6,7 @@ using Troolio.Core;
 
 namespace Sample.Host.App.ShoppingList;
 
-[RegexImplicitStreamSubscription($"{nameof(ShoppingListActor)}-.*")]
+[OrchestrationStreamSubscription(nameof(ShoppingListActor))]
 [Reentrant]
 [StatelessWorker]
 public class AllShoppingListsOrchestrationActor : OrchestrationActor

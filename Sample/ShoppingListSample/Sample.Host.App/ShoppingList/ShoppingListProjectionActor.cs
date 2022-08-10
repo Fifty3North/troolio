@@ -1,4 +1,4 @@
-﻿using Orleans;
+﻿using Orleans.Concurrency;
 using Sample.Shared.ActorInterfaces;
 using Sample.Shared.Events;
 using Sample.Shared.InternalCommands;
@@ -14,7 +14,8 @@ namespace Sample.Host.App.ShoppingList
     /// to be used for external systems as otherwise the external system can be notified of a command but the command 
     /// subsequently fails
     /// </summary>
-    [RegexImplicitStreamSubscription($"{nameof(AllShoppingListsActor)}-.*")]
+    [ProjectionStreamSubscription(nameof(AllShoppingListsActor))]
+    [Reentrant]
     public class ShoppingListProjectionActor : ProjectionActor
     {
         async Task On(EventEnvelope<ListJoinedUsingCode> e)

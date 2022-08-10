@@ -1,5 +1,4 @@
 ﻿using Omu.ValueInjecter;
-using Orleans;
 using Orleans.Concurrency;
 using Sample.Host.App.ShoppingList;
 using Sample.Shared.Enums;
@@ -9,7 +8,7 @@ using Troolio.Core.Projection;
 
 namespace Sample.Database.Projection
 {
-    [RegexImplicitStreamSubscription($"{nameof(ShoppingListActor)}-.*")]
+    [ProjectionStreamSubscription(nameof(ShoppingListActor))]
     [Reentrant]
     public class ShoppingListItemEFProjection : EntityFrameworkBatchedProjection<Model.ShoppingListItem, Model.ShoppingListsDbContext>, Shared.ActorInterfaces.IShoppingListItemEFProjection
     {

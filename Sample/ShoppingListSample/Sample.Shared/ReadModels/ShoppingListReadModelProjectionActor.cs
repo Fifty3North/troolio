@@ -1,13 +1,12 @@
-﻿using Orleans;
-using Sample.Shared.Events;
+﻿using Sample.Shared.Events;
 using Troolio.Core;
 using Troolio.Core.ReadModels;
 using Troolio.Stores;
 
 namespace Sample.Shared.ReadModels;
 
-[RegexImplicitStreamSubscription("ShoppingListActor-.*")]
-[RegexImplicitStreamSubscription("AllShoppingListsActor-.*")]
+[ProjectionStreamSubscription("ShoppingListActor")]
+[ProjectionStreamSubscription("AllShoppingListsActor")]
 public class ShoppingListReadModelProjectionActor : ReadModelProjectionActor<ShoppingListReadModel>
 {
     public ShoppingListReadModelProjectionActor(IStore store) : base(store) { }

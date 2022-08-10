@@ -1,5 +1,4 @@
-﻿using Orleans;
-using Orleans.Concurrency;
+﻿using Orleans.Concurrency;
 using Sample.Shared.ActorInterfaces;
 using Sample.Shared.Events;
 using Sample.Shared.InternalCommands;
@@ -9,9 +8,8 @@ using Troolio.Core.Reliable.Messages;
 
 namespace Sample.Host.App.ShoppingList;
 
-[RegexImplicitStreamSubscription($"{nameof(ShoppingListActor)}-.*")]
+[ProjectionStreamSubscription(nameof(ShoppingListActor))]
 [Reentrant]
-[StatelessWorker]
 public class UserProjectionActor : ProjectionActor
 {
     public async Task On(EventEnvelope<NewListCreated> e)

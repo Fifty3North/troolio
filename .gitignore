@@ -8,3 +8,4 @@ packages
 Sample/ShoppingListSample/Sample.Silo/shoppinglists.db*
 *.trace
 reports
+.idea

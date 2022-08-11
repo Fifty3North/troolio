@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Orleans.CodeGenerator.MSBuild" Version="3.6.0">
+    <PackageReference Include="Microsoft.Orleans.CodeGenerator.MSBuild" Version="3.6.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -28,7 +28,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
-    <PackageReference Include="Troolio.Core" Version="1.0.0.98-prerelease" />
+    <PackageReference Include="Troolio.Core" Version="1.0.3" />
   </ItemGroup>
 
   <ItemGroup>

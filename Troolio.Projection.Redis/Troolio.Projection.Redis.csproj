@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <PackageReference Include="StackExchange.Redis" Version="2.6.48" />
-    <PackageReference Include="Troolio.Core" Version="1.0.0.98-prerelease" />
+    <PackageReference Include="Troolio.Core" Version="1.0.3" />
     <PackageReference Include="ValueInjecter" Version="3.2.0" />
   </ItemGroup>
 

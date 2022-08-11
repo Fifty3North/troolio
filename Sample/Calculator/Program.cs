@@ -35,7 +35,6 @@ Console.WriteLine("Press any key to quit");
 Console.ReadKey();
 
 public interface ICalculator : IActor { }
-public interface ICalculatorWithMemory : IActor { }
 public record RecordInteger(Metadata Headers, int Value) : Command<ICalculator>(Headers);
 public record IntegerRecorded(Metadata Headers, int Value) : Event(Headers);
 public record Sum : Query<ICalculator, int>;

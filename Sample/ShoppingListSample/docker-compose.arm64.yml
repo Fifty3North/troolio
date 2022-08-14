@@ -1,0 +1,21 @@
+# use in conjunction with docker-compose.yml on arm64
+# docker compose -f docker-compose.yml -f docker-compose.arm64.yml up -d 
+version: '3.7'
+
+services:
+  eventstore:
+    container_name: shopping-eventstore
+    image: "ghcr.io/eventstore/eventstore:21.10.1-alpha-arm64v8"
+    environment:
+      - EVENTSTORE_INSECURE=true
+      - EVENTSTORE_RUN_PROJECTIONS=System
+      - EVENTSTORE_CLUSTER_SIZE=1
+      - EVENTSTORE_EXT_TCP_PORT=1113
+      - EVENTSTORE_HTTP_PORT=2113
+      - EVENTSTORE_ENABLE_EXTERNAL_TCP=true
+      - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
+    ports:
+      - "1113:1113"
+      - "2113:2113" 
+    networks:
+      - Shopping-Net

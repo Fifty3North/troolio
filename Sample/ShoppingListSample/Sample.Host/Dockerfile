@@ -6,6 +6,7 @@ WORKDIR /app
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 COPY ["nuget.config", "."]
+COPY ["Sample/ShoppingListSample/Sample.Database/Sample.Database.csproj", "Sample/ShoppingListSample/Sample.Database/"]
 COPY ["Sample/ShoppingListSample/Sample.Host/Sample.Host.csproj", "Sample/ShoppingListSample/Sample.Host/"]
 COPY ["Sample/ShoppingListSample/Sample.Host.App/Sample.Host.App.csproj", "Sample/ShoppingListSample/Sample.Host.App/"]
 COPY ["Sample/ShoppingListSample/Sample.Shared/Sample.Shared.csproj", "Sample/ShoppingListSample/Sample.Shared/"]

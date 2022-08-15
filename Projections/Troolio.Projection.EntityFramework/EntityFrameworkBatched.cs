@@ -73,24 +73,26 @@ namespace Troolio.Core.Projection
 
             await stream.SubscribeAsync((envelope, token) => Receive(envelope));
 
-            RegisterFlushTimer();
+            //RegisterFlushTimer();
+
+            Timers.Register(_flushTimerId, _flushPeriod, _flushPeriod, () => Flush(false));
         }
 
-        private void RegisterFlushTimer()
-        {
-            if (!Timers.IsRegistered(_flushTimerId))
-            {
-                Timers.Register(_flushTimerId, _flushPeriod, _flushPeriod, () => Self.Tell(new Commands.Flush(false)));
-            }
-        }
+        //private void RegisterFlushTimer()
+        //{
+        //    if (!Timers.IsRegistered(_flushTimerId))
+        //    {
+        //        Timers.Register(_flushTimerId, _flushPeriod, _flushPeriod, () => Self.Tell(new Commands.Flush(false)));
+        //    }
+        //}
 
-        private void UnregisterFlushTimer()
-        {
-            if (Timers.IsRegistered(_flushTimerId))
-            {
-                Timers.Unregister(_flushTimerId);
-            }
-        }
+        //private void UnregisterFlushTimer()
+        //{
+        //    if (Timers.IsRegistered(_flushTimerId))
+        //    {
+        //        Timers.Unregister(_flushTimerId);
+        //    }
+        //}
 
         /// <summary>
         /// Message handler to Process Job queue now.
@@ -120,7 +122,7 @@ namespace Troolio.Core.Projection
 
         private async Task Flush(bool forceFlush = false)
         {
-            if (_jobs.Count != 0)
+            if (!_jobs.IsEmpty)
             {
                 if (_activeFlushCount > 0 && !forceFlush)
                 {
@@ -133,8 +135,7 @@ namespace Troolio.Core.Projection
 
                 Interlocked.Increment(ref _activeFlushCount);
 
-                EfJob? efJob;
-                while (_jobs.TryPeek(out efJob))
+                while (_jobs.TryPeek(out EfJob? efJob))
                 {
                     try
                     {
@@ -151,15 +152,15 @@ namespace Troolio.Core.Projection
                         else
                         {
                             _jobs.TryDequeue(out _);
-                            _logger?.Log(LogLevel.Error, $"Retry count exceeded abandoning job for : {_entityName}", ex);
+                            _logger?.LogError($"Retry count exceeded abandoning job for : {_entityName}", ex);
                         }
                     }
                 }
 
-                if (_jobs.Count == 0)
-                {
-                    UnregisterFlushTimer();
-                }
+                //if (_jobs.IsEmpty)
+                //{
+                //    UnregisterFlushTimer();
+                //}
 
                 // release lock
                 _queueProcessLock.Release();
@@ -172,7 +173,8 @@ namespace Troolio.Core.Projection
         {
             _jobs.Enqueue(new EfJob(job));
 
-            RegisterFlushTimer();
+            //RegisterFlushTimer();
+            _ = Flush(false);
 
             return Task.CompletedTask;
         }
@@ -184,7 +186,7 @@ namespace Troolio.Core.Projection
             {
                 string eventName = typeof(TEvent).Name;
 
-                _logger?.Log(LogLevel.Trace, $"Starting Create for Event: {eventName} : {e.Id} from {this.GetType().Name}");
+                _logger?.LogTrace($"Starting Create for Event: {eventName} : {e.Id} from {this.GetType().Name}");
 
                 // Map
                 EventEntityCreate<TEntity> create;

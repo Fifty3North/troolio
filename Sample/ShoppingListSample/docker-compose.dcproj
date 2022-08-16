@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="docker-compose.yml" />
+    <None Include="docker-compose.arm64.yml" />
     <None Include=".dockerignore" />
   </ItemGroup>
 </Project>

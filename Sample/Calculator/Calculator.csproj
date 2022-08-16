@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Troolio.Core" Version="1.0.3.111-prerelease" />
+    <PackageReference Include="Troolio.Core" Version="1.0.3.112-prerelease" />
   </ItemGroup>
 
 </Project>

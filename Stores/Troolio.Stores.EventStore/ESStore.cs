@@ -4,7 +4,6 @@ using System.Text;
 using Troolio.Core;
 using Troolio.Core.ReadModels;
 using Troolio.Stores.EventStore;
-using Troolio.Stores.Serialization;
 
 namespace Troolio.Stores
 {
@@ -280,7 +279,7 @@ namespace Troolio.Stores
                     return null;
                 }
             }
-            catch (SerializationException)
+            catch (Troolio.Core.Serialization.EventDeserializationException)
             {
                 _logger?.Error($"Couldn't deserialize type '{@event.EventType}'. Are you missing an assembly reference, chaged an event or deleted it?");
                 //Debug.Assert(false, $"Couldn't deserialize type '{@event.EventType}'. Are you missing an assembly reference, chaged an event or deleted it?");
@@ -298,7 +297,7 @@ namespace Troolio.Stores
         //    {
         //        return (Dictionary<string, object>)Serializer.Deserialize(metadata, typeof(Dictionary<string, object>));
         //    }
-        //    catch (SerializationException)
+        //    catch (Troolio.Core.Serialization.EventDeserializationException)
         //    {
         //        _logger?.Error($"Couldn't deserialize metadata. Are you missing an assembly reference, chaged an event or deleted it?");
         //        var original = Console.ForegroundColor;

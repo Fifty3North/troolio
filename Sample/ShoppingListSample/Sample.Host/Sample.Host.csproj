@@ -23,7 +23,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
-    <PackageReference Include="Troolio.Stores.EventStore" Version="1.0.0.38-prerelease" />
+    <PackageReference Include="Troolio.Stores.EventStore" Version="1.0.0.39-prerelease" />
   </ItemGroup>
 
   <ItemGroup>

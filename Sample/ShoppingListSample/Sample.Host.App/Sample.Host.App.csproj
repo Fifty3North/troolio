@@ -11,7 +11,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Troolio.Projection.EntityFramework" Version="1.0.0.41-prerelease" />
+    <PackageReference Include="Troolio.Projection.EntityFramework" Version="1.0.0.42-prerelease" />
   </ItemGroup>
 
   <ItemGroup>

@@ -31,6 +31,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Troolio.Projection.Redis", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Calculator", "Sample\Calculator\Calculator.csproj", "{B08E3EA3-7FC1-498A-9CBF-8B0BCCA71102}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Troolio.Stores.Marten", "Stores\Troolio.Stores.Marten\Troolio.Stores.Marten.csproj", "{86B10808-7019-492C-8117-75DB1C0AA48C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Troolio.Stores.Tests", "Stores\Troolio.Stores.Tests\Troolio.Stores.Tests.csproj", "{3511A271-E3B5-46F0-8257-441094CAF6B6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +89,14 @@ Global
 		{B08E3EA3-7FC1-498A-9CBF-8B0BCCA71102}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B08E3EA3-7FC1-498A-9CBF-8B0BCCA71102}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B08E3EA3-7FC1-498A-9CBF-8B0BCCA71102}.Release|Any CPU.Build.0 = Release|Any CPU
+		{86B10808-7019-492C-8117-75DB1C0AA48C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86B10808-7019-492C-8117-75DB1C0AA48C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86B10808-7019-492C-8117-75DB1C0AA48C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86B10808-7019-492C-8117-75DB1C0AA48C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3511A271-E3B5-46F0-8257-441094CAF6B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3511A271-E3B5-46F0-8257-441094CAF6B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3511A271-E3B5-46F0-8257-441094CAF6B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3511A271-E3B5-46F0-8257-441094CAF6B6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

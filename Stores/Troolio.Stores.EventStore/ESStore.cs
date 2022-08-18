@@ -1,5 +1,4 @@
 ﻿using EventStore.ClientAPI;
-using EventStore.ClientAPI.Exceptions;
 using System.Text;
 using Troolio.Core;
 using Troolio.Core.ReadModels;
@@ -51,9 +50,9 @@ namespace Troolio.Stores
                 WriteResult result =  await ES.Connection!.AppendToStreamAsync(streamName, expectedVersion, serialized);
                 return (ulong)events.Count;
             }
-            catch (WrongExpectedVersionException)
+            catch (global::EventStore.ClientAPI.Exceptions.WrongExpectedVersionException)
             {
-                throw new InvalidOperationException($"Wrong Expected EventStore Event Version - Possible duplicate activation of actor '{streamName}' detected");
+                throw new Troolio.Stores.Exceptions.WrongExpectedVersionException($"Wrong Expected EventStore Event Version - Possible duplicate activation of actor '{streamName}' detected");
             }
         }
 

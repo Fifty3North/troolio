@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Troolio.Core;
 
-namespace Troolio.Stores.Tests.Models
+namespace Troolio.Stores.Tests.Models.Foo
 {
     public record UpdateName(string Name, Metadata Headers) : Command<IFooActor>(Headers);
     public record UpdateSize(uint Size, Metadata Headers) : Command<IFooActor>(Headers);

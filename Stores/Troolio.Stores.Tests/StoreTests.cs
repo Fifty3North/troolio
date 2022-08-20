@@ -1,10 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
+using System.Net.Sockets;
 using Troolio.Core;
 using Troolio.Core.ReadModels;
 using Troolio.Core.Serialization;
-using Troolio.Stores.Tests.Models;
+using Troolio.Stores.Tests.Models.Foo;
 
 namespace Troolio.Stores.Tests
 {
@@ -12,6 +13,10 @@ namespace Troolio.Stores.Tests
     internal class StoreTests
     {
         private static IList<IStore> StoreTestCases;
+
+        private static readonly string LOCALHOST = "127.0.0.1";
+        private static readonly int EVENTSTORE_PORT = 1113;
+        private static readonly int POSTGRES_PORT = 5432;
 
         private readonly Random _random = new();
 
@@ -33,19 +38,43 @@ namespace Troolio.Stores.Tests
 
 #if DEBUG
             // Marten
-            try
+            // docker run -d -e POSTGRES_PASSWORD=abcd@1234 -p 5432:5432 postgres
+            if (IsLocalPortConnectable(POSTGRES_PORT))
             {
-                IConfiguration configuration = new ConfigurationBuilder()
-                    .AddJsonFile("appsettings.json")
-                    .Build();
+                try
+                {
+                    IConfiguration configuration = new ConfigurationBuilder()
+                        .AddJsonFile("appsettings.json")
+                        .Build();
 
-                MartenStore martenStore = new MartenStore(configuration);
+                    MartenStore martenStore = new MartenStore(configuration);
 
-                StoreTestCases.Add(martenStore);
+                    StoreTestCases.Add(martenStore);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error creating Marten Store: {ex.Message}");
+                }
             }
-            catch (Exception ex)
+
+            // Event Store
+            // docker run -d -e EVENTSTORE_INSECURE=true -e EVENTSTORE_ENABLE_EXTERNAL_TCP=true -p 1113:1113 -d eventstore/eventstore
+            if (IsLocalPortConnectable(EVENTSTORE_PORT))
             {
-                System.Diagnostics.Debug.WriteLine($"Error creating Marten Store: {ex.Message}");
+                try
+                {
+                    EventStore.ES es = new EventStore.ES(false, EVENTSTORE_PORT, LOCALHOST);
+
+                    _= es.Connect();
+
+                    ESStore eventStore = new ESStore(eventSerializer, null!);
+
+                    StoreTestCases.Add(eventStore);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error creating Event Store: {ex.Message}");
+                }
             }
 #endif
         }
@@ -60,6 +89,19 @@ namespace Troolio.Stores.Tests
         public async Task TearDown()
         {
             await TryClearStores(StoreTestCases);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(StoreTestCases))]
+        public async Task StoreCanReadNoEventsWhenNoEventsWrittenToStream(IStore store)
+        {
+            Guid actorId = Guid.NewGuid();
+            string streamName = $"{nameof(FooActor)}-{actorId}";
+
+            IEvent[] eventsRead = await store.ReadStream(streamName);
+
+            Assert.IsNotNull(eventsRead);
+            Assert.AreEqual(0, eventsRead.Length);
         }
 
         [Test]
@@ -156,6 +198,19 @@ namespace Troolio.Stores.Tests
 
         [Test]
         [TestCaseSource(nameof(StoreTestCases))]
+        public async Task StoreCanReadNoEventsFromVersionWhenNoEventsWrittenToStream(IStore store)
+        {
+            Guid actorId = Guid.NewGuid();
+            string streamName = $"{nameof(FooActor)}-{actorId}";
+
+            IEvent[] eventsRead = await store.ReadStreamFromEvent(streamName, 2);
+
+            Assert.IsNotNull(eventsRead);
+            Assert.AreEqual(0, eventsRead.Length);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(StoreTestCases))]
         public async Task StoreCanReadLastEvent(IStore store)
         {
             Guid actorId = Guid.NewGuid();
@@ -178,6 +233,19 @@ namespace Troolio.Stores.Tests
             Assert.AreEqual(3, version);
 
             AssertThatSizeUpdatedEventMatchesExpected(events[2] as SizeUpdated, @event);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(StoreTestCases))]
+        public async Task StoreCanReadLastEventAsNullIfNoEventsWritten(IStore store)
+        {
+            Guid actorId = Guid.NewGuid();
+            string streamName = $"{nameof(FooActor)}-{actorId}";
+
+            (IEvent? @event, ulong version) = await store.ReadLastEvent(streamName);
+
+            Assert.IsNull(@event);
+            Assert.AreEqual(0, version);
         }
 
         [Test]
@@ -207,6 +275,18 @@ namespace Troolio.Stores.Tests
 
         [Test]
         [TestCaseSource(nameof(StoreTestCases))]
+        public async Task StoreCanReadEventAtVersionAsNullIfNoEventsWritten(IStore store)
+        {
+            Guid actorId = Guid.NewGuid();
+            string streamName = $"{nameof(FooActor)}-{actorId}";
+
+            IEvent? @event = await store.ReadStreamEvent(streamName, 2);
+
+            Assert.IsNull(@event);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(StoreTestCases))]
         public async Task StoreCanClearEvents(IStore store)
         {
             Guid actorId = Guid.NewGuid();
@@ -223,11 +303,25 @@ namespace Troolio.Stores.Tests
 
             await store.Append(streamName, expectedVersion, events);
 
-            await store.Clear();
+            if (store is ESStore)
+            {
+                try
+                {
+                    await store.Clear();
+                }
+                catch
+                {
+                    Assert.Warn("Known issue that ESStore does not implement IStore.Clear()");
+                }
+            }
+            else
+            {
+                await store.Clear();
 
-            IEvent[] eventsRead = await store.ReadStream(streamName);
+                IEvent[] eventsRead = await store.ReadStream(streamName);
 
-            Assert.AreEqual(0, eventsRead.Length);
+                Assert.AreEqual(0, eventsRead.Length);
+            }
         }
 
         [Test]
@@ -312,6 +406,61 @@ namespace Troolio.Stores.Tests
             }
         }
 
+        [Test]
+        [TestCaseSource(nameof(StoreTestCases))]
+        public async Task StoreResolvesEventTypesCorrectlyForEventsWithSameName(IStore store)
+        {
+            Guid actorId = Guid.NewGuid();
+            string streamName = $"ACreatableActor-{actorId}";
+
+            Metadata headers = GetHeaders();
+
+            IEvent[] initialEvents = new IEvent[]
+            {
+                new Core.Creatable.Events.ActorCreated(headers),
+                new Models.ActorCreated(DateTime.UtcNow, headers)
+            };
+
+            await store.Append(streamName, 0, initialEvents);
+
+            IEvent[] eventsRead = await store.ReadStream(streamName);
+
+            Assert.AreEqual(2, eventsRead.Length);
+
+            Assert.IsTrue(eventsRead[0] is Core.Creatable.Events.ActorCreated, $"Expected: {typeof(Troolio.Core.Creatable.Events.ActorCreated).FullName}");
+            Assert.IsTrue(eventsRead[1] is Models.ActorCreated, $"Expected: {typeof(Models.ActorCreated).FullName}");
+        }
+
+        [Test]
+        [TestCaseSource(nameof(StoreTestCases))]
+        public async Task StoreResolvesEventTypesCorrectlyForEventsWithSameNameOnDifferentStreams(IStore store)
+        {
+            Guid actorId1 = Guid.NewGuid();
+            string streamName1 = $"{nameof(FooActor)}-{actorId1}";
+
+            Guid actorId2 = Guid.NewGuid();
+            string streamName2 = $"{nameof(Models.Bar.BarActor)}-{actorId2}";
+
+            IEvent[] events1 = new IEvent[]
+            {
+                new Models.Foo.NameUpdated("Bob", GetHeaders()),
+            };
+
+            IEvent[] events2 = new IEvent[]
+            {
+                new Models.Bar.NameUpdated("Kevin", GetHeaders())
+            };
+
+            await store.Append(streamName1, 0, events1);
+            await store.Append(streamName2, 0, events2);
+
+            IEvent[] eventsRead1 = await store.ReadStream(streamName1);
+            IEvent[] eventsRead2 = await store.ReadStream(streamName2);
+
+            Assert.IsTrue(eventsRead1[0] is Models.Foo.NameUpdated, $"Expected: {typeof(Models.Foo.NameUpdated).FullName}");
+            Assert.IsTrue(eventsRead2[0] is Models.Bar.NameUpdated, $"Expected: {typeof(Models.Bar.NameUpdated).FullName}");
+        }
+
         #region Private Helper Methods
 
         private Metadata GetHeaders()
@@ -377,6 +526,22 @@ namespace Troolio.Stores.Tests
                     {
                     }
                 }
+            }
+        }
+
+        private static bool IsLocalPortConnectable(int port)
+        {
+            using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+            {
+                try
+                {
+                    socket.Connect(LOCALHOST, port);
+                    return true;
+                }
+                catch (SocketException)
+                {
+                }
+                return false;
             }
         }
 

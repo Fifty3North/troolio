@@ -1,7 +1,7 @@
 ﻿using Troolio.Core;
 using Troolio.Core.ReadModels;
 
-namespace Troolio.Stores.Tests.Models
+namespace Troolio.Stores.Tests.Models.Foo
 {
     internal record FooReadModel(string? Name, uint Size) : TroolioReadModel
     {

@@ -4,13 +4,13 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-	<Authors>Fifty3North (F3N Limited)</Authors>
-	<Description>trool.io Marten store</Description>
-	<Copyright></Copyright>
-	<PackageProjectUrl>https://github.com/Fifty3North/troolio</PackageProjectUrl>
-	<RepositoryUrl>https://github.com/Fifty3North/troolio.git</RepositoryUrl>
-	<RepositoryType>git</RepositoryType>
-	<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	  <Authors>Fifty3North (F3N Limited)</Authors>
+	  <Description>trool.io Marten store</Description>
+	  <Copyright></Copyright>
+	  <PackageProjectUrl>https://github.com/Fifty3North/troolio</PackageProjectUrl>
+	  <RepositoryUrl>https://github.com/Fifty3North/troolio.git</RepositoryUrl>
+	  <RepositoryType>git</RepositoryType>
+	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>

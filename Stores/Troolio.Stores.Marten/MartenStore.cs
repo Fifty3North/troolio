@@ -34,6 +34,8 @@ namespace Troolio.Stores
             TimeSpan.FromMilliseconds(10000)
         };
 
+        private const long ZERO_EVENT_VERSION = 0L;
+
         public MartenStore(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString(_connectionStringName);
@@ -101,7 +103,7 @@ namespace Troolio.Stores
 
         public async Task<Core.IEvent[]> ReadStream(string streamName)
         {
-            return await ReadStreamFromEvent(streamName, 0L);
+            return await ReadStreamFromEvent(streamName, ZERO_EVENT_VERSION);
         }
 
         public async Task<Core.IEvent[]> ReadStreamFromEvent(string streamName, ulong evVersion)
@@ -128,33 +130,9 @@ namespace Troolio.Stores
             return events.ToArray();
         }
 
-        //public async Task<(Core.IEvent? Event, ulong Version)> ReadLastEvent(string streamName)
-        //{
-        //    using (IDocumentSession session = _store.OpenSession())
-        //    {
-        //        Marten.Events.IEvent? streamEvent = await RetrySessionAction(session, async (s) =>
-        //        {
-        //            return await s.Events.QueryAllRawEvents()
-        //                .Where(e => e.StreamKey == streamName)
-        //                .OrderByDescending(e => e.Version)
-        //                .FirstOrDefaultAsync();
-        //        });
-
-        //        if (streamEvent != null)
-        //        {
-        //            Core.IEvent? @event = await DecodeEvent(streamEvent);
-
-        //            return (@event, (ulong)streamEvent.Version);
-        //        }
-
-        //        return (null, 0);
-        //    }
-        //}
-
-        // This gives better time performance compared with above especially when no events written to the stream
         public async Task<(Core.IEvent? Event, ulong Version)> ReadLastEvent(string streamName)
         {
-            long version = 0;
+            long version = ZERO_EVENT_VERSION;
 
             IReadOnlyList<Marten.Events.IEvent>? streamEvents = null;
 
@@ -166,7 +144,7 @@ namespace Troolio.Stores
                     {
                         Marten.Events.StreamState streamState = await s.Events.FetchStreamStateAsync(streamName);
 
-                        return streamState?.Version ?? 0;
+                        return streamState?.Version ?? ZERO_EVENT_VERSION;
                     });
                 }
                 catch (Marten.Exceptions.MartenCommandException)
@@ -175,7 +153,7 @@ namespace Troolio.Stores
                     // relation "troolio.mt_streams" does not exist
                 }
 
-                if (version != 0)
+                if (version != ZERO_EVENT_VERSION)
                 {
                     streamEvents = await ReadStreamEvents(session, streamName, version, version);
                 }
@@ -200,7 +178,7 @@ namespace Troolio.Stores
             return (streamEvents.Count != 0) ? await DecodeEvent(streamEvents[0]) : null;
         }
 
-        private async Task<IReadOnlyList<Marten.Events.IEvent>> ReadStreamEvents(string streamName, long fromVersion = 0L, long toVersion = 0L)
+        private async Task<IReadOnlyList<Marten.Events.IEvent>> ReadStreamEvents(string streamName, long fromVersion = ZERO_EVENT_VERSION, long toVersion = ZERO_EVENT_VERSION)
         {
             using (IDocumentSession session = _store.OpenSession())
             {
@@ -208,7 +186,7 @@ namespace Troolio.Stores
             }
         }
 
-        private async Task<IReadOnlyList<Marten.Events.IEvent>> ReadStreamEvents(IDocumentSession session, string streamName, long fromVersion = 0L, long toVersion = 0L)
+        private async Task<IReadOnlyList<Marten.Events.IEvent>> ReadStreamEvents(IDocumentSession session, string streamName, long fromVersion = ZERO_EVENT_VERSION, long toVersion = ZERO_EVENT_VERSION)
         {
             return await RetrySessionAction(session, async (s) =>
             {
@@ -226,9 +204,9 @@ namespace Troolio.Stores
                 }
                 catch (PostgresException ex)
                 {
-                    if (ex.SqlState == "53300")
+                    if (ex.SqlState == PostgresErrorCodes.TooManyConnections)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Marten Store Error - Too many clients. Attempt: {i + 1}");
+                        System.Diagnostics.Debug.WriteLine($"Marten Store Error - Too many connections. Attempt: {i + 1}");
 
                         await Task.Delay(_retryDurations[i]);
                         continue;

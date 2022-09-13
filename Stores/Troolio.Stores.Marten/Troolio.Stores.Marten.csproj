@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Marten" Version="5.8.0" />
+    <PackageReference Include="Marten" Version="5.10.1" />
     <PackageReference Include="Troolio.Core" Version="1.0.3" />
   </ItemGroup>
 

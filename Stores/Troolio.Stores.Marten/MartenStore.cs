@@ -20,6 +20,22 @@ namespace Troolio.Stores
 
         private readonly bool _wrapEvents = true;
 
+        private readonly bool _preCreateEventTables = true;
+
+        private static readonly TimeSpan[] _retryDurations = new[]
+        {
+            TimeSpan.FromMilliseconds(10),
+            TimeSpan.FromMilliseconds(50),
+            TimeSpan.FromMilliseconds(100),
+            TimeSpan.FromMilliseconds(500),
+            TimeSpan.FromMilliseconds(1000),
+            TimeSpan.FromMilliseconds(2000),
+            TimeSpan.FromMilliseconds(5000),
+            TimeSpan.FromMilliseconds(10000)
+        };
+
+        private const long ZERO_EVENT_VERSION = 0L;
+
         public MartenStore(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString(_connectionStringName);
@@ -29,40 +45,52 @@ namespace Troolio.Stores
                 throw new ArgumentException($"Connection string not found - ConnectionStrings:{_connectionStringName}");
             }
 
-            _store = DocumentStore.For((storeOptions) => {
-                storeOptions.Connection(_connectionString);
-                storeOptions.DatabaseSchemaName = _schemaName;
-                storeOptions.Events.StreamIdentity = Marten.Events.StreamIdentity.AsString;
-                //storeOptions.AutoCreateSchemaObjects = Weasel.Core.AutoCreate.All;
-                storeOptions.AutoCreateSchemaObjects = Weasel.Core.AutoCreate.CreateOrUpdate;
+            _store = DocumentStore.For((options) => {
+                options.Connection(_connectionString);
+                options.DatabaseSchemaName = _schemaName;
+                options.Events.StreamIdentity = Marten.Events.StreamIdentity.AsString;
+                options.AutoCreateSchemaObjects = (_preCreateEventTables)
+                    ? Weasel.Core.AutoCreate.None
+                    : Weasel.Core.AutoCreate.All;
             });
 
             CreateDatabaseIfNotExists();
+
+            if (_preCreateEventTables)
+            {
+                CreateEventTablesIfNotCreated();
+            }
         }
 
         public async Task Clear()
         {
             await _store.Advanced.Clean.CompletelyRemoveAllAsync();
+
+            if (_preCreateEventTables)
+            {
+                CreateEventTablesIfNotCreated();
+            }
         }
 
         public async Task<ulong> Append(string streamName, ulong expectedEvVersion, ICollection<Core.IEvent> events)
         {
+            long expectedVersionAfterAppend = (long)expectedEvVersion + events.Count;
+
+            object[] eventsToStore = _wrapEvents
+                ? events.Select(e => new EventWrapper(e)).ToArray()
+                : events.ToArray();
+
             using (IDocumentSession session = _store.OpenSession())
             {
+                session.Events.Append(streamName, expectedVersionAfterAppend, eventsToStore);
+
                 try
                 {
-                    long expectedVersionAfterAppend = (long)expectedEvVersion + events.Count;
-
-                    if (_wrapEvents)
+                    await RetrySessionAction(session, async (s) =>
                     {
-                        session.Events.Append(streamName, expectedVersionAfterAppend, events.Select(e => new EventWrapper(e)));
-                    }
-                    else
-                    {
-                        session.Events.Append(streamName, expectedVersionAfterAppend, events);
-                    }
-
-                    await session.SaveChangesAsync();
+                        await s.SaveChangesAsync();
+                        return true;
+                    });
                 }
                 catch (Marten.Exceptions.EventStreamUnexpectedMaxEventIdException)
                 {
@@ -75,50 +103,49 @@ namespace Troolio.Stores
 
         public async Task<Core.IEvent[]> ReadStream(string streamName)
         {
-            return await ReadStreamFromEvent(streamName, 0);
+            return await ReadStreamFromEvent(streamName, ZERO_EVENT_VERSION);
         }
 
         public async Task<Core.IEvent[]> ReadStreamFromEvent(string streamName, ulong evVersion)
         {
-            using (IDocumentSession session = _store.OpenSession())
+            IReadOnlyList<Marten.Events.IEvent> streamEvents = await ReadStreamEvents(streamName, (long)evVersion);
+
+            if (streamEvents.Count == 0)
             {
-                IReadOnlyList<Marten.Events.IEvent> streamEvents = await session.Events.FetchStreamAsync(streamName, fromVersion: (long)evVersion);
-
-                if (streamEvents.Count == 0)
-                {
-                    return Array.Empty<Core.Event>();
-                }
-
-                List<Core.Event> events = new List<Core.Event>(streamEvents.Count);
-
-                foreach (Marten.Events.IEvent streamEvent in streamEvents)
-                {
-                    Core.IEvent? @event = await DecodeEvent(streamEvent);
-
-                    if (@event is Core.Event ev)
-                    {
-                        events.Add(ev);
-                    }
-                }
-
-                return events.ToArray();
+                return Array.Empty<Core.Event>();
             }
+
+            List<Core.Event> events = new List<Core.Event>(streamEvents.Count);
+
+            foreach (Marten.Events.IEvent streamEvent in streamEvents)
+            {
+                Core.IEvent? @event = await DecodeEvent(streamEvent);
+
+                if (@event is Core.Event ev)
+                {
+                    events.Add(ev);
+                }
+            }
+
+            return events.ToArray();
         }
 
         public async Task<(Core.IEvent? Event, ulong Version)> ReadLastEvent(string streamName)
         {
+            long version = ZERO_EVENT_VERSION;
+
+            IReadOnlyList<Marten.Events.IEvent>? streamEvents = null;
+
             using (IDocumentSession session = _store.OpenSession())
             {
-                long version = 0;
-
                 try
                 {
-                    Marten.Events.StreamState streamState = await session.Events.FetchStreamStateAsync(streamName);
-
-                    if (streamState != null)
+                    version = await RetrySessionAction(session, async (s) =>
                     {
-                        version = streamState.Version;
-                    }
+                        Marten.Events.StreamState streamState = await s.Events.FetchStreamStateAsync(streamName);
+
+                        return streamState?.Version ?? ZERO_EVENT_VERSION;
+                    });
                 }
                 catch (Marten.Exceptions.MartenCommandException)
                 {
@@ -126,46 +153,86 @@ namespace Troolio.Stores
                     // relation "troolio.mt_streams" does not exist
                 }
 
-                if (version != 0)
+                if (version != ZERO_EVENT_VERSION)
                 {
-                    IReadOnlyList<Marten.Events.IEvent> streamEvents = await session.Events.FetchStreamAsync(streamName, fromVersion: version, version: version);
-
-                    if (streamEvents.Count != 0)
-                    {
-                        Core.IEvent? @event = await DecodeEvent(streamEvents[0]);
-
-                        return (@event, (ulong)version);
-                    }
+                    streamEvents = await ReadStreamEvents(session, streamName, version, version);
                 }
-
-                // This does not behave when running within Orleankka
-
-                //Marten.Events.IEvent? streamEvent = session.Events.QueryAllRawEvents()
-                //    .Where(e => e.StreamKey == streamName)
-                //    .OrderByDescending(e => e.Version)
-                //    .FirstOrDefault();
-
-                //if (streamEvent != null)
-                //{
-                //    Core.IEvent? @event = await DecodeEvent(streamEvent);
-
-                //    return (@event, (ulong)streamEvent.Version);
-                //}
-
-                return (null, 0);
             }
+
+            if (streamEvents != null && streamEvents.Count != 0)
+            {
+                Core.IEvent? @event = await DecodeEvent(streamEvents[0]);
+
+                return (@event, (ulong)version);
+            }
+
+            return (null, 0);
         }
 
         public async Task<Core.IEvent?> ReadStreamEvent(string streamName, ulong evVersion)
         {
+            long version = (long)evVersion;
+
+            IReadOnlyList<Marten.Events.IEvent> streamEvents = await ReadStreamEvents(streamName, version, version);
+
+            return (streamEvents.Count != 0) ? await DecodeEvent(streamEvents[0]) : null;
+        }
+
+        private async Task<IReadOnlyList<Marten.Events.IEvent>> ReadStreamEvents(string streamName, long fromVersion = ZERO_EVENT_VERSION, long toVersion = ZERO_EVENT_VERSION)
+        {
             using (IDocumentSession session = _store.OpenSession())
             {
-                long version = (long)evVersion;
-
-                IReadOnlyList<Marten.Events.IEvent> streamEvents = await session.Events.FetchStreamAsync(streamName, fromVersion: version, version: version);
-
-                return (streamEvents.Count != 0) ? await DecodeEvent(streamEvents[0]) : null;
+                return await ReadStreamEvents(session, streamName, fromVersion, toVersion);
             }
+        }
+
+        private async Task<IReadOnlyList<Marten.Events.IEvent>> ReadStreamEvents(IDocumentSession session, string streamName, long fromVersion = ZERO_EVENT_VERSION, long toVersion = ZERO_EVENT_VERSION)
+        {
+            return await RetrySessionAction(session, async (s) =>
+            {
+                return await s.Events.FetchStreamAsync(streamName, fromVersion: fromVersion, version: toVersion);
+            });
+        }
+
+        private async Task<T> RetrySessionAction<T>(IDocumentSession session, Func<IDocumentSession, Task<T>> action)
+        {
+            for (int i = 0; i < _retryDurations.Length; i++)
+            {
+                try
+                {
+                    return await action(session);
+                }
+                catch (PostgresException ex)
+                {
+                    if (ex.SqlState == PostgresErrorCodes.TooManyConnections)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Marten Store Error - Too many connections. Attempt: {i + 1}");
+
+                        await Task.Delay(_retryDurations[i]);
+                        continue;
+                    }
+
+                    throw;
+                }
+                catch (NpgsqlException ex)
+                {
+                    if (ex.Message.ToLower().Contains("connection pool"))
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Marten Store Error - Connection Pool exhausted. Attempt: {i + 1}");
+
+                        await Task.Delay(_retryDurations[i]);
+                        continue;
+                    }
+
+                    throw;
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+
+            throw new Exceptions.MaximumRetriesExceededException();
         }
 
         private async Task<Core.IEvent?> DecodeEvent(Marten.Events.IEvent streamEvent)
@@ -201,7 +268,7 @@ namespace Troolio.Stores
 
         private void CreateDatabaseIfNotExists()
         {
-            string postgres_db_name = "postgres";
+            const string postgres_db_name = "postgres";
 
             NpgsqlConnectionStringBuilder connBuilder = new NpgsqlConnectionStringBuilder(_connectionString);
 
@@ -238,5 +305,20 @@ namespace Troolio.Stores
                 connection.Close();
             }
         }
+
+        private void CreateEventTablesIfNotCreated()
+        {
+            using (IDocumentStore store = DocumentStore.For((option) =>
+            {
+                option.Connection(_connectionString);
+                option.DatabaseSchemaName = _schemaName;
+                option.Events.StreamIdentity = Marten.Events.StreamIdentity.AsString;
+                option.AutoCreateSchemaObjects = Weasel.Core.AutoCreate.CreateOnly;
+            }))
+            {
+                store.Storage.Database.EnsureStorageExists(typeof(Marten.Events.IEvent));
+            }
+        }
+
     }
 }

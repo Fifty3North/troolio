@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
+using System.Collections;
+using System.Diagnostics;
 using System.Net.Sockets;
 using Troolio.Core;
 using Troolio.Core.ReadModels;
@@ -13,6 +15,19 @@ namespace Troolio.Stores.Tests
     internal class StoreTests
     {
         private static IList<IStore> StoreTestCases;
+
+        private static IList<int> ConcurrencyTestCases = new List<int> { 50, 100, 250, 500 };
+
+        private static IEnumerable StoreConcurrencyTestCases()
+        {
+            foreach (IStore store in StoreTestCases)
+            {
+                foreach (int concurrentCount in ConcurrencyTestCases)
+                {
+                    yield return new object[] { store, concurrentCount };
+                }
+            }
+        }
 
         private static readonly string LOCALHOST = "127.0.0.1";
         private static readonly int EVENTSTORE_PORT = 1113;
@@ -38,7 +53,7 @@ namespace Troolio.Stores.Tests
 
 #if DEBUG
             // Marten
-            // docker run -d -e POSTGRES_PASSWORD=abcd@1234 -p 5432:5432 postgres
+            // docker run -d -e POSTGRES_PASSWORD=abcd@1234 -p 5432:5432 postgres -c max_connections=250 -c shared_buffers=256MB
             if (IsLocalPortConnectable(POSTGRES_PORT))
             {
                 try
@@ -53,12 +68,12 @@ namespace Troolio.Stores.Tests
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Error creating Marten Store: {ex.Message}");
+                    Debug.WriteLine($"Error creating Marten Store: {ex.Message}");
                 }
             }
 
             // Event Store
-            // docker run -d -e EVENTSTORE_INSECURE=true -e EVENTSTORE_ENABLE_EXTERNAL_TCP=true -p 1113:1113 -d eventstore/eventstore
+            // docker run -d -e EVENTSTORE_INSECURE=true -e EVENTSTORE_ENABLE_EXTERNAL_TCP=true -p 1113:1113 eventstore/eventstore
             if (IsLocalPortConnectable(EVENTSTORE_PORT))
             {
                 try
@@ -73,7 +88,7 @@ namespace Troolio.Stores.Tests
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Error creating Event Store: {ex.Message}");
+                    Debug.WriteLine($"Error creating Event Store: {ex.Message}");
                 }
             }
 #endif
@@ -82,12 +97,16 @@ namespace Troolio.Stores.Tests
         [OneTimeSetUp]
         public async Task Setup()
         {
+            Trace.Listeners.Add(new ConsoleTraceListener());
+
             await TryClearStores(StoreTestCases);
         }
 
         [OneTimeTearDown]
         public async Task TearDown()
         {
+            Trace.Flush();
+
             await TryClearStores(StoreTestCases);
         }
 
@@ -390,10 +409,10 @@ namespace Troolio.Stores.Tests
         }
 
         [Test]
-        [TestCaseSource(nameof(StoreTestCases))]
-        public async Task StoreCanWriteToMultipleStreamsConcurrently(IStore store)
+        [TestCaseSource(nameof(StoreConcurrencyTestCases))]
+        public async Task StoreCanWriteToMultipleStreamsConcurrently(IStore store, int concurrentCount)
         {
-            (string, ulong)[] results = await Task.WhenAll(Enumerable.Range(0, 5).Select(async (i) =>
+            (string, ulong)[] results = await Task.WhenAll(Enumerable.Range(0, concurrentCount).Select(async (_) =>
                 await WriteSomeEventsToStore(store)));
 
             foreach ((string streamName, ulong eventsStored) in results)
@@ -403,6 +422,52 @@ namespace Troolio.Stores.Tests
                 IEvent[] eventsRead = await store.ReadStream(streamName);
 
                 Assert.AreEqual(eventsStored, eventsRead.Length);
+            }
+        }
+
+        [Test]
+        [TestCaseSource(nameof(StoreConcurrencyTestCases))]
+        public async Task StoreCanReadFromMultipleEmptyStreamsConcurrently(IStore store, int concurrentCount)
+        {
+            int[] results = await Task.WhenAll(Enumerable.Range(0, concurrentCount).Select(async (_) => {
+                string streamName = $"{nameof(FooActor)}-{Guid.NewGuid()}";
+
+                IEvent[] eventsRead = await store.ReadStream(streamName);
+
+                return eventsRead.Length;
+            }));
+
+            foreach (ulong eventsRead in results)
+            {
+                Assert.AreEqual(0, eventsRead);
+            }
+        }
+
+        [Test]
+        [TestCaseSource(nameof(StoreConcurrencyTestCases))]
+        public async Task StoreCanReadFromMultipleStreamsConcurrently(IStore store, int concurrentCount)
+        {
+            List<(string StreamName, ulong EventsStored)> written = new List<(string, ulong)>();
+
+            for (int i = 0; i < concurrentCount; i++)
+            {
+                (string streamName, ulong eventsWritten) = await WriteSomeEventsToStore(store);
+
+                written.Add((streamName, eventsWritten));
+            }
+
+            int[] results = await Task.WhenAll(written.Select(async (w) =>
+            {
+                IEvent[] eventsRead = await store.ReadStream(w.StreamName);
+
+                return eventsRead.Length;
+            }));
+
+            Assert.AreEqual(results.Length, written.Count);
+
+            for (int i = 0; i < written.Count; i++)
+            {
+                Assert.AreEqual(written[i].EventsStored, results[i]);
             }
         }
 
@@ -510,6 +575,8 @@ namespace Troolio.Stores.Tests
             Assert.AreEqual(expected.Headers.UserId, actual.Headers.UserId);
             Assert.AreEqual(expected.Headers.DeviceId, actual.Headers.DeviceId);
             Assert.AreEqual(expected.Headers.MessageId, actual.Headers.MessageId);
+            Assert.AreEqual(expected.Headers.TransactionId, actual.Headers.TransactionId);
+            Assert.AreEqual(expected.Headers.CausationId, actual.Headers.CausationId);
         }
 
         private static async Task TryClearStores(IEnumerable<IStore> stores)

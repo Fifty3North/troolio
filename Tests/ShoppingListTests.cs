@@ -1,8 +1,8 @@
 ﻿using NUnit.Framework;
-using Sample.Shared.Commands;
-using Sample.Shared.Enums;
-using Sample.Shared.Exceptions;
-using Sample.Shared.Queries;
+using ShoppingList.Shared.Commands;
+using ShoppingList.Shared.Enums;
+using ShoppingList.Shared.Exceptions;
+using ShoppingList.Shared.Queries;
 using System.Collections.Immutable;
 using Troolio.Core;
 using Troolio.Core.Client;
@@ -205,7 +205,7 @@ internal class ShoppingListTests
         Guid shoppingListId = await HavingCreatedShoppingListForUser(user);
         string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListId, user);
 
-        var readModel = await _client.Get<Sample.Shared.ReadModels.ShoppingListReadModel>(shoppingListId.ToString());
+        var readModel = await _client.Get<ShoppingList.Shared.ReadModels.ShoppingListReadModel>(shoppingListId.ToString());
         Assert.AreEqual(1, readModel.Items.Count());
         Assert.AreEqual(itemDescription, readModel.Items.First().Description);
     }

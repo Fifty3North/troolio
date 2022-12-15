@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Sample.Host.App.ShoppingList;
-using Sample.Shared.ActorInterfaces;
+using ShoppingList.Host.App.ShoppingList;
+using ShoppingList.Shared.ActorInterfaces;
 using Troolio.Core;
 using Troolio.Core.Client;
 using Troolio.MessageQueue;

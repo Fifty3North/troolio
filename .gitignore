@@ -5,7 +5,7 @@
 obj
 bin
 packages
-Sample/ShoppingListSample/Sample.Silo/shoppinglists.db*
+Sample/ShoppingList/Sample.Silo/shoppinglists.db*
 *.trace
 reports
 .idea

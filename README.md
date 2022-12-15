@@ -7,7 +7,7 @@ This project contains projections, stores and samples to be used with Trool.io. 
 
 To run the sample, clone the repo, hit run in Visual Studio, wait for Docker containers to boot and open: http://localhost:8081/swagger/index.html 
 
-To run the sample Vue Shopping App, first complete the above, then from the command line, change to directory `Sample\ShoppingListSample\Sample.Telemetry` and run `yarn install` then `yarn run dev` and open the URL in the command window. 
+To run the sample Vue Shopping App, first complete the above, then from the command line, change to directory `Sample\ShoppingList\Sample.Telemetry` and run `yarn install` then `yarn run dev` and open the URL in the command window. 
 
 To see live tracing in action, click the debug link in the Vue Shopping App, select "Tracing" from the dropdown list and click "Enable Logging". Go back to the shopping app and add a list and some items to the list. Head back to the debug link and click Flush to see the operations that were executed while running the app.
 
@@ -192,8 +192,8 @@ To run locally (without docker) you can configure the host as:
     var host = Host
         .CreateDefaultBuilder(args)
         .TroolioServer(appName, new[] {
-	    typeof(IShoppingListActor).Assembly,    // Sample.Shared
-	    typeof(ShoppingListActor).Assembly      // Sample.Host.App
+	    typeof(IShoppingListActor).Assembly,    // ShoppingList.Shared
+	    typeof(ShoppingListActor).Assembly      // ShoppingList.Host.App
         }, configureServices);
 
     await host.RunAsync();
@@ -226,15 +226,15 @@ Right click on docker-compose project in Visual Studio and select "Set as Startu
 
 OR
 
-From the command line type: `docker-compose -f "Sample/ShoppingListSample/docker-compose.yml" up -d --build`
+From the command line type: `docker-compose -f "Sample/ShoppingList/docker-compose.yml" up -d --build`
 
 This uses the EventStore shortcut to start the server using the "StartWithDefaults" passing in the application name, the list of assemblies and the service delegates:
 
 ```c#
 await Startup.StartWithDefaults("Shopping",
     new[] {
-        typeof(IShoppingListActor).Assembly,    // Sample.Shared
-        typeof(ShoppingListActor).Assembly      // Sample.Host.App
+        typeof(IShoppingListActor).Assembly,    // ShoppingList.Shared
+        typeof(ShoppingListActor).Assembly      // ShoppingList.Host.App
     },
     configureServices);
 ```
@@ -317,7 +317,7 @@ And once enabled you can access it by issuing a Flush query:
 var tracingLog = await _client.Ask(Constants.SingletonActorId, new Flush());
 ```
 
-An example of using the trace to write out to a file is in the Sample.Api.  Should you wish to switch it off you can issue a "DisableTracing" command:
+An example of using the trace to write out to a file is in the ShoppingList.Api.  Should you wish to switch it off you can issue a "DisableTracing" command:
 
 ```c#
 await client.Tell(Constants.SingletonActorId, new DisableTracing());

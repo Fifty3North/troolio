@@ -6,7 +6,7 @@ services:
     image: ${DOCKER_REGISTRY-}shopping-api
     build:
       context: ../../
-      dockerfile: Sample/ShoppingListSample/Sample.Api/Dockerfile
+      dockerfile: Sample/ShoppingListSample/ShoppingListSample.Api/Dockerfile
     depends_on: 
       - "shopping-host"
     environment:

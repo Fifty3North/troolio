@@ -1,4 +1,4 @@
-﻿using Sample.Shared.Enums;
+﻿using ShoppingListSample.Shared.Enums;
 using System;
 using System.ComponentModel.DataAnnotations;
 

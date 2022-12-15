@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Sample.Shared.ActorInterfaces;
+using ShoppingListSample.Shared.ActorInterfaces;
 using Sample.Database.Model;
-using Sample.Host.App.ShoppingList;
+using ShoppingListSample.Host.App.ShoppingList;
 using Microsoft.Extensions.Hosting;
 using Troolio.Core;
 using Troolio.MessageQueue;
@@ -31,8 +31,8 @@ if (configuration["Shopping:Clustering:Storage"] != null && configuration["Shopp
 {
     var host = Host.CreateDefaultBuilder(args)
         .TroolioServer("Shopping", new[] {
-            typeof(IShoppingListActor).Assembly,    // Sample.Shared
-            typeof(ShoppingListActor).Assembly      // Sample.Host.App
+            typeof(IShoppingListActor).Assembly,    // ShoppingListSample.Shared
+            typeof(ShoppingListActor).Assembly      // ShoppingListSample.Host.App
         }, configureServices
         // Lines below will disable MySQL projections if uncommented
         //,
@@ -49,8 +49,8 @@ else
 {
     await Troolio.Stores.EventStore.Startup.RunWithDefaults("Shopping",
     new[] {
-        typeof(IShoppingListActor).Assembly,    // Sample.Shared
-        typeof(ShoppingListActor).Assembly      // Sample.Host.App
+        typeof(IShoppingListActor).Assembly,    // ShoppingListSample.Shared
+        typeof(ShoppingListActor).Assembly      // ShoppingListSample.Host.App
     },
     configureServices
     // Lines below will disable MySQL projections if uncommented

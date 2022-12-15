@@ -8,8 +8,8 @@ WORKDIR /src
 COPY ["nuget.config", "."]
 COPY ["Sample/ShoppingListSample/Sample.Database/Sample.Database.csproj", "Sample/ShoppingListSample/Sample.Database/"]
 COPY ["Sample/ShoppingListSample/Sample.Host/Sample.Host.csproj", "Sample/ShoppingListSample/Sample.Host/"]
-COPY ["Sample/ShoppingListSample/Sample.Host.App/Sample.Host.App.csproj", "Sample/ShoppingListSample/Sample.Host.App/"]
-COPY ["Sample/ShoppingListSample/Sample.Shared/Sample.Shared.csproj", "Sample/ShoppingListSample/Sample.Shared/"]
+COPY ["Sample/ShoppingListSample/ShoppingListSample.Host.App/ShoppingListSample.Host.App.csproj", "Sample/ShoppingListSample/ShoppingListSample.Host.App/"]
+COPY ["Sample/ShoppingListSample/ShoppingListSample.Shared/ShoppingListSample.Shared.csproj", "Sample/ShoppingListSample/ShoppingListSample.Shared/"]
 RUN dotnet restore "Sample/ShoppingListSample/Sample.Host/Sample.Host.csproj"
 COPY . .
 WORKDIR "/src/Sample/ShoppingListSample/Sample.Host"

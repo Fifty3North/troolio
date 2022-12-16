@@ -7,7 +7,7 @@ using Troolio.Core;
 using Troolio.Core.Reliable.Interfaces;
 using Troolio.Core.Reliable.Messages;
 
-namespace ShoppingList.Host.App.ShoppingList
+namespace ShoppingList.Host.App
 {
     /// <summary>
     /// The ShoppingListProjection will only take place once a command is fully orchestrated successfully.  This needs 
@@ -28,7 +28,7 @@ namespace ShoppingList.Host.App.ShoppingList
 
             var actorPath = System.Worker<IEmailActor>().Path;
 
-            await System.Worker<IBatchJobActor>()  
+            await System.Worker<IBatchJobActor>()
                 .Tell(new AddBatchJob(actorPath, command));
         }
     }

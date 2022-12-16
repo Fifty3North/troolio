@@ -8,17 +8,17 @@ using Troolio.Core;
 using Troolio.Core.Stateful;
 using Troolio.Stores;
 
-namespace ShoppingList.Host.App.ShoppingList;
+namespace ShoppingList.Host.App;
 
 public class UserActor : StatefulActor<UserState>, IUserActor
 {
-    public UserActor(IStore store, IConfiguration configuration) : base(store, configuration) 
-    { 
-        State = new UserState(ImmutableList<Guid>.Empty); 
+    public UserActor(IStore store, IConfiguration configuration) : base(store, configuration)
+    {
+        State = new UserState(ImmutableList<Guid>.Empty);
     }
 
     #region Commands ...
-    public IEnumerable<Event> Handle(RecordListId command) => new[] { new ListIdRecorded(command.ListId, command.Headers) };
+    public IEnumerable<Event> Handle(RecordListId command) => new[] { new ListIdRecorded(command.Headers, command.ListId) };
     #endregion
 
     #region Events ...
@@ -30,12 +30,12 @@ public class UserActor : StatefulActor<UserState>, IUserActor
     {
         return (
           await Task.WhenAll(
-            this.State.Lists.Select(async (l) =>
-                await this.System.ActorOf<IShoppingListActor>(l.ToString())
+            State.Lists.Select(async (l) =>
+                await System.ActorOf<IShoppingListActor>(l.ToString())
                     .Ask(new ShoppingListDetails())
             )
           )
-        ).ToImmutableList<ShoppingListQueryResult>();
+        ).ToImmutableList();
     }
     #endregion
 }

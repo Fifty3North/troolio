@@ -4,7 +4,7 @@ using ShoppingList.Shared.Events;
 using ShoppingList.Shared.InternalCommands;
 using Troolio.Core;
 
-namespace ShoppingList.Host.App.ShoppingList;
+namespace ShoppingList.Host.App;
 
 [OrchestrationStreamSubscription(nameof(AllShoppingListsActor))]
 [Reentrant]
@@ -13,6 +13,6 @@ public class ShoppingListOrchestrationActor : OrchestrationActor
 {
     async Task On(EventEnvelope<ListJoinedUsingCode> e)
     {
-        await System.ActorOf<IShoppingListActor>(e.Event.ListId.ToString()).Tell(new JoinList(e.Event.Headers));
+        await System.ActorOf<IShoppingListActor>(e.Event.ListId.ToString()).Tell(new JoinList(e.Event.Headers, e.Event.UserId));
     }
 }

@@ -6,7 +6,7 @@ using Troolio.Core;
 using Troolio.Core.Reliable.Interfaces;
 using Troolio.Core.Reliable.Messages;
 
-namespace ShoppingList.Host.App.ShoppingList;
+namespace ShoppingList.Host.App;
 
 [ProjectionStreamSubscription(nameof(ShoppingListActor))]
 [Reentrant]

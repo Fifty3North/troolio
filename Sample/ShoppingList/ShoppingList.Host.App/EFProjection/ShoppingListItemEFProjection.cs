@@ -1,6 +1,6 @@
 ﻿using Omu.ValueInjecter;
 using Orleans.Concurrency;
-using ShoppingList.Host.App.ShoppingList;
+using ShoppingList.Host.App;
 using ShoppingList.Shared.Enums;
 using ShoppingList.Shared.Events;
 using Troolio.Core;
@@ -10,7 +10,7 @@ namespace Sample.Database.Projection
 {
     [ProjectionStreamSubscription(nameof(ShoppingListActor))]
     [Reentrant]
-    public class ShoppingListItemEFProjection : EntityFrameworkBatchedProjection<Model.ShoppingListItem, Model.ShoppingListsDbContext>, Shared.ActorInterfaces.IShoppingListItemEFProjection
+    public class ShoppingListItemEFProjection : EntityFrameworkBatchedProjection<Model.ShoppingListItem, Model.ShoppingListsDbContext>, ShoppingList.Shared.ActorInterfaces.IShoppingListItemEFProjection
     {
         protected override void SetupMappings()
         {

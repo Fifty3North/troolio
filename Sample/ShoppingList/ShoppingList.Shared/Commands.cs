@@ -4,24 +4,10 @@ using Troolio.Core.Creatable;
 
 namespace ShoppingList.Shared.Commands;
 
-public record AddItemToListPayload(Guid ItemId, string Description, ushort Quantity);
-public record AddItemToList(Metadata Headers, AddItemToListPayload Payload) 
-    : Command<IShoppingListActor>(Headers);
-
-public record CreateNewListPayload(string Title);
-public record CreateNewList(Metadata Headers, CreateNewListPayload Payload) 
-    : Command<IShoppingListActor>(Headers), ICreateActorCommand;
-
-public record CrossItemOffListPayload(Guid ItemId);
-public record CrossItemOffList(Metadata Headers, CrossItemOffListPayload Payload) 
-    : Command<IShoppingListActor>(Headers);
-
-public record RemoveItemFromListPayload(Guid ItemId);
-public record RemoveItemFromList(Metadata Headers, RemoveItemFromListPayload Payload) 
-    : Command<IShoppingListActor>(Headers);
-
-public record JoinListUsingCodePayload(string Code);
-public record JoinListUsingCode(Metadata Headers, JoinListUsingCodePayload Payload) 
-    : Command<IAllShoppingListsActor>(Headers);
+public record AddItemToList(Metadata Headers, Guid ItemId, string Description, ushort Quantity) : Command<IShoppingListActor>(Headers);
+public record CreateNewList(Metadata Headers, Guid UserId, string Title) : Command<IShoppingListActor>(Headers), ICreateActorCommand;
+public record CrossItemOffList(Metadata Headers, Guid ItemId) : Command<IShoppingListActor>(Headers);
+public record RemoveItemFromList(Metadata Headers, Guid ItemId) : Command<IShoppingListActor>(Headers);
+public record JoinListUsingCode(Metadata Headers, string Code) : Command<IAllShoppingListsActor>(Headers);
 
 public record Ping(Metadata Headers) : Command<IPingActor>(Headers);

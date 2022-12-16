@@ -57,7 +57,7 @@ internal class ShoppingListTests
         ShoppingListQueryResult list = await _client.Ask(shoppingListId.ToString(), new ShoppingListDetails());
         var item = list.Items.Where(i => i.Name == itemDescription).FirstOrDefault();
 
-        await _client.Tell(shoppingListId.ToString(), new CrossItemOffList(user, new CrossItemOffListPayload(item.Id)));
+        await _client.Tell(shoppingListId.ToString(), new CrossItemOffList(user, item.Id));
 
         list = await _client.Ask(shoppingListId.ToString(), new ShoppingListDetails());
         item = list.Items.Where(i => i.Name == itemDescription).FirstOrDefault();
@@ -74,7 +74,7 @@ internal class ShoppingListTests
         ShoppingListQueryResult list = await _client.Ask(shoppingListId.ToString(), new ShoppingListDetails());
         var item = list.Items.Where(i => i.Name == itemDescription).FirstOrDefault();
 
-        await _client.Tell(shoppingListId.ToString(), new RemoveItemFromList(user, new RemoveItemFromListPayload(item.Id)));
+        await _client.Tell(shoppingListId.ToString(), new RemoveItemFromList(user, item.Id));
 
         list = await _client.Ask(shoppingListId.ToString(), new ShoppingListDetails());
         item = list.Items.Where(i => i.Name == itemDescription).FirstOrDefault();
@@ -97,7 +97,7 @@ internal class ShoppingListTests
         Guid shoppingListId = await HavingCreatedShoppingListForUser(user);
         var joinCode = await _client.Ask(shoppingListId.ToString(), new GetJoinCode(user.UserId));
         
-        Assert.ThrowsAsync<AuthorCannotJoinListException>(async () => { await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(user, new JoinListUsingCodePayload(joinCode))); });
+        Assert.ThrowsAsync<AuthorCannotJoinListException>(async () => { await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(user, joinCode)); });
     }
 
     [Test]
@@ -107,7 +107,7 @@ internal class ShoppingListTests
         Metadata collaborator = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
         Guid shoppingListId = await HavingCreatedShoppingListForUser(author);
         var joinCode = await _client.Ask(shoppingListId.ToString(), new GetJoinCode(author.UserId));
-        await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(collaborator, new JoinListUsingCodePayload(joinCode)));
+        await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(collaborator, joinCode));
         var list = await _client.Ask(shoppingListId.ToString(), new ShoppingListDetails());
         Assert.Contains(collaborator.UserId, list.Collaborators);
     }
@@ -119,10 +119,10 @@ internal class ShoppingListTests
         Metadata collaborator = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
         Guid shoppingListId = await HavingCreatedShoppingListForUser(author);
         var joinCode = await _client.Ask(shoppingListId.ToString(), new GetJoinCode(author.UserId));
-        await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(collaborator, new JoinListUsingCodePayload(joinCode)));
+        await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(collaborator, joinCode));
         
         Assert.ThrowsAsync<UserHasAlreadyJoinedListException>(async () => {
-            await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(collaborator, new JoinListUsingCodePayload(joinCode)));
+            await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(collaborator, joinCode));
         });
     }
 
@@ -140,7 +140,7 @@ internal class ShoppingListTests
         var joinCode = await _client.Ask(shoppingListId.ToString(), new GetJoinCode(author.UserId));
 
         // join list
-        await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(collaborator, new JoinListUsingCodePayload(joinCode)));
+        await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(collaborator, joinCode));
         
         // add item to list
         string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListId, author);
@@ -151,7 +151,7 @@ internal class ShoppingListTests
 
         // try to remove item as a collaborator
         Assert.ThrowsAsync<CollaboratorCannotRemoveItemFromListException>(async () => { 
-            await _client.Tell(shoppingListId.ToString(), new RemoveItemFromList(collaborator, new RemoveItemFromListPayload(itemId))); 
+            await _client.Tell(shoppingListId.ToString(), new RemoveItemFromList(collaborator, itemId)); 
         });
     }
 
@@ -170,7 +170,7 @@ internal class ShoppingListTests
 
         // try to join list with invalid code
         Assert.ThrowsAsync<InvalidJoinCodeException>(async () => {
-            await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(collaborator, new JoinListUsingCodePayload("abcd")));
+            await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(collaborator, "abcd"));
         });
     }
 
@@ -182,7 +182,7 @@ internal class ShoppingListTests
         string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListId, user);
 
         Assert.ThrowsAsync<ItemDoesNotExistException>(async () => {
-            await _client.Tell(shoppingListId.ToString(), new CrossItemOffList(user, new CrossItemOffListPayload(Guid.NewGuid())));
+            await _client.Tell(shoppingListId.ToString(), new CrossItemOffList(user, Guid.NewGuid()));
         });
     }
 
@@ -194,7 +194,7 @@ internal class ShoppingListTests
         string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListId, user);
 
         Assert.ThrowsAsync<ItemDoesNotExistException>(async () => {
-            await _client.Tell(shoppingListId.ToString(), new RemoveItemFromList(user, new RemoveItemFromListPayload(Guid.NewGuid())));
+            await _client.Tell(shoppingListId.ToString(), new RemoveItemFromList(user, Guid.NewGuid()));
         });
     }
 
@@ -219,7 +219,7 @@ internal class ShoppingListTests
     private async Task<string> HavingAddedAnItemToAShoppingList(Guid shoppingListId, Metadata user, string item = null)
     {
         string itemDescription = item == null ? Guid.NewGuid().ToString() : item;
-        await _client.Tell(shoppingListId.ToString(), new AddItemToList(user with { CorrelationId = Guid.NewGuid() }, new AddItemToListPayload(Guid.NewGuid(), itemDescription, 1)));
+        await _client.Tell(shoppingListId.ToString(), new AddItemToList(user with { CorrelationId = Guid.NewGuid() }, Guid.NewGuid(), itemDescription, 1));
 
         return itemDescription;
     }
@@ -229,7 +229,7 @@ internal class ShoppingListTests
         Guid shoppingListId = Guid.NewGuid();
         await _client.Tell(
             shoppingListId.ToString(),
-            new CreateNewList(user with { CorrelationId = Guid.NewGuid() }, new CreateNewListPayload(shoppingListId.ToString())));
+            new CreateNewList(user with { CorrelationId = Guid.NewGuid() }, user.UserId, shoppingListId.ToString()));
 
         return shoppingListId;
     }

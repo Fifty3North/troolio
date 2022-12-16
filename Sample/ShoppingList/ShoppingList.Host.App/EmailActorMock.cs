@@ -3,7 +3,7 @@ using ShoppingList.Shared.ActorInterfaces;
 using ShoppingList.Shared.InternalCommands;
 using Troolio.Core;
 
-namespace ShoppingList.Host.App.ShoppingList
+namespace ShoppingList.Host.App
 {
     [Reentrant]
     [StatelessWorker]

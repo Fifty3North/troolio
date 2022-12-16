@@ -4,15 +4,15 @@ using ShoppingList.Shared.Events;
 using ShoppingList.Shared.InternalCommands;
 using Troolio.Core;
 
-namespace ShoppingList.Host.App.ShoppingList;
+namespace ShoppingList.Host.App;
 
 [OrchestrationStreamSubscription(nameof(ShoppingListActor))]
 [Reentrant]
 [StatelessWorker]
-public class UserOrchestrationActor : OrchestrationActor
+public class AllShoppingListsOrchestrationActor : OrchestrationActor
 {
     public async Task On(EventEnvelope<NewListCreated> e)
     {
-        await System.ActorOf<IUserActor>(e.Event.Headers.UserId.ToString()).Tell(new RecordListId(e.Event.Headers, Guid.Parse(e.Id)));
+        await System.ActorOf<IAllShoppingListsActor>(Constants.SingletonActorId).Tell(new AddShoppingList(e.Event.Headers, Guid.Parse(e.Id)));
     }
 }

@@ -13,6 +13,6 @@ public class UserOrchestrationActor : OrchestrationActor
 {
     public async Task On(EventEnvelope<NewListCreated> e)
     {
-        await System.ActorOf<IUserActor>(e.Event.Headers.UserId.ToString()).Tell(new RecordListId(e.Event.Headers, Guid.Parse(e.Id)));
+        await System.ActorOf<IUserActor>(e.Event.UserId.ToString()).Tell(new RecordListId(e.Event.Headers, Guid.Parse(e.Id)));
     }
 }

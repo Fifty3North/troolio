@@ -20,13 +20,13 @@ public record ShoppingListReadModel : TroolioReadModel
     public string JoinCode { get; private set; }
     
     public ShoppingListReadModel On(EventEnvelope<NewListCreated> ev) 
-        => this with { Title = ev.Event.Title, OwnerId = ev.Event.Headers.UserId };
+        => this with { Title = ev.Event.Title, OwnerId = ev.Event.UserId };
     public ShoppingListReadModel On(EventEnvelope<ItemAddedToList> ev) 
         => this with { Items = Items.Add(new ShoppingListItemReadModel(ev.Event.ItemId).On(ev)) };
     public ShoppingListReadModel On(EventEnvelope<ItemRemovedFromList> ev) 
         => this with { Items = Items.RemoveAt( Items.FindIndex((i) => i.Id == ev.Event.ItemId)) };
     public ShoppingListReadModel On(EventEnvelope<ListJoined> ev) 
-        => this with { Collaborators = Collaborators.Add(ev.Event.Headers.UserId) };
+        => this with { Collaborators = Collaborators.Add(ev.Event.UserId) };
     public ShoppingListReadModel On(EventEnvelope<ListJoinedUsingCode> _) 
         => this;
     public ShoppingListReadModel On(EventEnvelope<ShoppingListAdded> ev) 

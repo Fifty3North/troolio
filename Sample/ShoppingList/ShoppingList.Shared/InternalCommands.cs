@@ -5,7 +5,7 @@ namespace ShoppingList.Shared.InternalCommands;
 public record AddShoppingList(Metadata Headers, Guid ListId) 
     : InternalCommand<IAllShoppingListsActor>(Headers);
 
-public record JoinList(Metadata Headers) 
+public record JoinList(Metadata Headers, Guid UserId) 
     : InternalCommand<IShoppingListActor>(Headers);
 
 public record RecordListId(Metadata Headers, Guid ListId) 

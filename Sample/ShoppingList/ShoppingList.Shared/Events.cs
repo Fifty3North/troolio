@@ -6,7 +6,7 @@ public record ItemAddedToList(Metadata Headers, Guid ItemId, string Description,
 public record ItemCrossedOffList(Metadata Headers, Guid ItemId) : Event(Headers);
 public record ItemRemovedFromList(Metadata Headers, Guid ItemId) : Event(Headers);
 public record ListIdRecorded(Metadata Headers, Guid ListId) : Event(Headers);
-public record ListJoined(Metadata Headers) : Event(Headers);
-public record ListJoinedUsingCode(Metadata Headers, Guid ListId) : Event(Headers);
-public record NewListCreated(Metadata Headers, string Title) : Event(Headers);
+public record ListJoined(Metadata Headers, Guid UserId) : Event(Headers);
+public record ListJoinedUsingCode(Metadata Headers, Guid UserId, Guid ListId) : Event(Headers);
+public record NewListCreated(Metadata Headers, Guid UserId, string Title) : Event(Headers);
 public record ShoppingListAdded(Metadata Headers, Guid ListId, string JoinCode) : Event(Headers);

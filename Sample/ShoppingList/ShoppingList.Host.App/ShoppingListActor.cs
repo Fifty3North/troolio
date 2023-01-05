@@ -12,7 +12,6 @@ using Troolio.Core.Creatable;
 using Troolio.Stores;
 
 namespace ShoppingList.Host.App;
-
 public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList>, IShoppingListActor
 {
     public ShoppingListActor(IStore store, IConfiguration configuration) : base(store, configuration) 
@@ -22,7 +21,7 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
     #region Commands ...
     public IEnumerable<Event> Handle(AddItemToList command)
     {
-        if (!(this.State.Author == command.Headers.UserId || this.State.Collaborators.Contains(command.Headers.UserId)))
+        if (!(this.State.Author == command.UserId || this.State.Collaborators.Contains(command.UserId)))
         {
             throw new UnauthorizedAccessException();
         }
@@ -37,11 +36,11 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
     }
     public IEnumerable<Event> Handle(CreateNewList command)
     {
-        yield return new NewListCreated(command.Headers, command.Payload.Title);
+        yield return new NewListCreated(command.Headers, command.UserId, command.Payload.Title);
     }
     public IEnumerable<Event> Handle(CrossItemOffList command)
     {
-        if (!(this.State.Author == command.Headers.UserId || this.State.Collaborators.Contains(command.Headers.UserId)))
+        if (!(this.State.Author == command.UserId || this.State.Collaborators.Contains(command.UserId)))
         {
             throw new UnauthorizedAccessException();
         }
@@ -54,24 +53,24 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
     }
     public IEnumerable<Event> Handle(JoinList command)
     {
-        if (this.State.Author == command.Headers.UserId)
+        if (this.State.Author == command.UserId)
         {
             throw new AuthorCannotJoinListException();
         }
-        else if (this.State.Collaborators.Contains(command.Headers.UserId))
+        else if (this.State.Collaborators.Contains(command.UserId))
         {
             throw new UserHasAlreadyJoinedListException();
         }
 
-        yield return new ListJoined(command.Headers);
+        yield return new ListJoined(command.Headers, command.UserId);
     }
     public IEnumerable<Event> Handle(RemoveItemFromList command)
     {
-        if (!(this.State.Author == command.Headers.UserId || this.State.Collaborators.Contains(command.Headers.UserId)))
+        if (!(this.State.Author == command.UserId || this.State.Collaborators.Contains(command.UserId)))
         {
             throw new UnauthorizedAccessException();
         } 
-        else if (this.State.Author != command.Headers.UserId)
+        else if (this.State.Author != command.UserId)
         {
             throw new CollaboratorCannotRemoveItemFromListException();
         }
@@ -99,8 +98,8 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
         };
     }
     public void On(ItemRemovedFromList ev) => State = State with { Items = State.Items.RemoveAt(this.State.Items.FindIndex((i) => i.Id == ev.ItemId)) };
-    public void On(ListJoined ev) => State = State with { Collaborators = State.Collaborators.Add(ev.Headers.UserId) };
-    public void On(NewListCreated ev) => this.State = new ShoppingListState(ev.Headers.UserId, ImmutableList<ShoppingListItemState>.Empty, ev.Title, ImmutableList<Guid>.Empty);
+    public void On(ListJoined ev) => State = State with { Collaborators = State.Collaborators.Add(ev.UserId) };
+    public void On(NewListCreated ev) => this.State = new ShoppingListState(ev.UserId, ImmutableList<ShoppingListItemState>.Empty, ev.Title, ImmutableList<Guid>.Empty);
     #endregion
 
     #region Queries ...

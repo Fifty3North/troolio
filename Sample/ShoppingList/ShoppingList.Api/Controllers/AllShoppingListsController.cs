@@ -79,6 +79,6 @@ public class AllShoppingListsController : BaseController
     [Route("JoinListUsingCode")]
     public async Task<IActionResult> JoinListUsingCode([FromHeader] Guid userId, [FromHeader] Guid deviceId, [FromBody] JoinListUsingCodePayload payload)
     {
-        return await ExecuteCommand(userId, deviceId, new JoinListUsingCode(new Metadata(Guid.NewGuid(), userId, deviceId), payload));
+        return await ExecuteCommand(userId, deviceId, new JoinListUsingCode(new Metadata(Guid.NewGuid(), userId, deviceId), userId, payload));
     }
 }

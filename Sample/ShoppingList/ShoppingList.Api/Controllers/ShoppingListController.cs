@@ -87,28 +87,28 @@ public class ShoppingListController : BaseController
     [Route("{ShoppingListId}/AddItemToList")]
     public async Task<IActionResult> AddItemToList([FromHeader] Guid userId, [FromHeader] Guid deviceId, [FromRoute] Guid ShoppingListId, AddItemToListPayload payload)
     {
-        return await ExecuteCommand(userId, deviceId, ShoppingListId, new AddItemToList(new Metadata(Guid.NewGuid(), userId, deviceId), payload));
+        return await ExecuteCommand(userId, deviceId, ShoppingListId, new AddItemToList(new Metadata(Guid.NewGuid(), userId, deviceId), userId, payload));
     }
 
     [HttpPost]
     [Route("{ShoppingListId}/CreateNewList")]
     public async Task<IActionResult> CreateNewList([FromHeader] Guid userId, [FromHeader] Guid deviceId, [FromRoute] Guid ShoppingListId, CreateNewListPayload payload)
     {
-        return await ExecuteCommand(userId, deviceId, ShoppingListId, new CreateNewList(new Metadata(Guid.NewGuid(), userId, deviceId),  payload));
+        return await ExecuteCommand(userId, deviceId, ShoppingListId, new CreateNewList(new Metadata(Guid.NewGuid(), userId, deviceId), userId,  payload));
     }
 
     [HttpPost]
     [Route("{ShoppingListId}/CrossItemOffList")]
     public async Task<IActionResult> CrossItemOffList([FromHeader] Guid userId, [FromHeader] Guid deviceId, [FromRoute] Guid ShoppingListId, CrossItemOffListPayload payload)
     {
-        return await ExecuteCommand(userId, deviceId, ShoppingListId, new CrossItemOffList(new Metadata(Guid.NewGuid(), userId, deviceId), payload));
+        return await ExecuteCommand(userId, deviceId, ShoppingListId, new CrossItemOffList(new Metadata(Guid.NewGuid(), userId, deviceId), userId, payload));
     }
 
     [HttpPost]
     [Route("{ShoppingListId}/RemoveItemFromList")]
     public async Task<IActionResult> RemoveItemFromList([FromHeader] Guid userId, [FromHeader] Guid deviceId, [FromRoute] Guid ShoppingListId, RemoveItemFromListPayload payload)
     {
-        return await ExecuteCommand(userId, deviceId, ShoppingListId, new RemoveItemFromList(new Metadata(Guid.NewGuid(), userId, deviceId), payload));
+        return await ExecuteCommand(userId, deviceId, ShoppingListId, new RemoveItemFromList(new Metadata(Guid.NewGuid(), userId, deviceId), userId, payload));
     }
 
     [HttpGet]

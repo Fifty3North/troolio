@@ -35,7 +35,7 @@ public class AllShoppingListsActor : StatefulActor<AllShoppingListsState>, IAllS
             throw new InvalidJoinCodeException();
         }
 
-        yield return new ListJoinedUsingCode(command.Headers, this.State.Lists[command.Payload.Code]);
+        yield return new ListJoinedUsingCode(command.Headers, command.UserId, this.State.Lists[command.Payload.Code]);
     }
     #endregion
 

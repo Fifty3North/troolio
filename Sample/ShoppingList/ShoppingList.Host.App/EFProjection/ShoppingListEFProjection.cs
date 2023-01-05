@@ -21,7 +21,7 @@ namespace ShoppingList.Database.Projection
                 {
                     Id = listId,
                     Title = src.Event.Title,
-                    AuthorId = src.Event.Headers.UserId,
+                    AuthorId = src.Event.UserId,
                 };
 
                 return Task.FromResult(new EventEntityCreate<Model.ShoppingList>(listId, item));

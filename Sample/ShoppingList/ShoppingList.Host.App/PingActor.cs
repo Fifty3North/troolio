@@ -21,7 +21,7 @@ namespace ShoppingList.Host.App
 
         public IEnumerable<Event> Handle(Ping command)
         {
-            return new[] { new Pong(command.Headers) };
+            yield return new Pong(command.Headers);
         }
 
         public void On(Pong ev) { State = State with { Count = State.Count + 1 }; }

@@ -33,9 +33,12 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
             throw new ItemAlreadyExistsException();
         }
 
-        return new[] { new ItemAddedToList(command.Payload.ItemId, command.Payload.Description, command.Payload.Quantity, command.Headers) };
+        yield return new ItemAddedToList(command.Payload.ItemId, command.Payload.Description, command.Payload.Quantity, command.Headers);
     }
-    public IEnumerable<Event> Handle(CreateNewList command) => new[] { new NewListCreated(command.Payload.Title, command.Headers) };
+    public IEnumerable<Event> Handle(CreateNewList command)
+    {
+        yield return new NewListCreated(command.Payload.Title, command.Headers);
+    }
     public IEnumerable<Event> Handle(CrossItemOffList command)
     {
         if (!(this.State.Author == command.Headers.UserId || this.State.Collaborators.Contains(command.Headers.UserId)))

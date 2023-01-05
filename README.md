@@ -7,7 +7,7 @@ This project contains projections, stores and samples to be used with Trool.io. 
 
 To run the sample, clone the repo, hit run in Visual Studio, wait for Docker containers to boot and open: http://localhost:8081/swagger/index.html 
 
-To run the sample Vue Shopping App, first complete the above, then from the command line, change to directory `Sample\ShoppingListSample\Sample.Telemetry` and run `yarn install` then `yarn run dev` and open the URL in the command window. 
+To run the sample Vue Shopping App, first complete the above, then from the command line, change to directory `Sample\ShoppingList\Sample.Telemetry` and run `yarn install` then `yarn run dev` and open the URL in the command window. 
 
 To see live tracing in action, click the debug link in the Vue Shopping App, select "Tracing" from the dropdown list and click "Enable Logging". Go back to the shopping app and add a list and some items to the list. Head back to the debug link and click Flush to see the operations that were executed while running the app.
 
@@ -226,7 +226,7 @@ Right click on docker-compose project in Visual Studio and select "Set as Startu
 
 OR
 
-From the command line type: `docker-compose -f "Sample/ShoppingListSample/docker-compose.yml" up -d --build`
+From the command line type: `docker-compose -f "Sample/ShoppingList/docker-compose.yml" up -d --build`
 
 This uses the EventStore shortcut to start the server using the "StartWithDefaults" passing in the application name, the list of assemblies and the service delegates:
 

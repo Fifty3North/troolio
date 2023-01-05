@@ -6,7 +6,7 @@ services:
     image: ${DOCKER_REGISTRY-}shopping-api
     build:
       context: ../../
-      dockerfile: Sample/ShoppingListSample/Sample.Api/Dockerfile
+      dockerfile: Sample/ShoppingList/Sample.Api/Dockerfile
     depends_on: 
       - "shopping-host"
     environment:
@@ -26,7 +26,7 @@ services:
       - "8888:8888"
     build:
       context: ../../
-      dockerfile: Sample/ShoppingListSample/Sample.Host/Dockerfile
+      dockerfile: Sample/ShoppingList/Sample.Host/Dockerfile
     depends_on: 
       - "azurite"
       - "db"

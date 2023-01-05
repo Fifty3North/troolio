@@ -39,7 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Sample\ShoppingListSample\Sample.Host.App\Sample.Host.App.csproj" />
+    <ProjectReference Include="..\Sample\ShoppingList\Sample.Host.App\Sample.Host.App.csproj" />
   </ItemGroup>
 
 </Project>

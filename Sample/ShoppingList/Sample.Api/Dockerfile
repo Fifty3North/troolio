@@ -7,10 +7,10 @@ EXPOSE 80
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 COPY ["nuget.config", "."]
-COPY ["Sample/ShoppingListSample/Sample.Api/Sample.Api.csproj", "Sample/ShoppingListSample/Sample.Api/"]
-RUN dotnet restore "Sample/ShoppingListSample/Sample.Api/Sample.Api.csproj"
+COPY ["Sample/ShoppingList/Sample.Api/Sample.Api.csproj", "Sample/ShoppingList/Sample.Api/"]
+RUN dotnet restore "Sample/ShoppingList/Sample.Api/Sample.Api.csproj"
 COPY . .
-WORKDIR "/src/Sample/ShoppingListSample/Sample.Api"
+WORKDIR "/src/Sample/ShoppingList/Sample.Api"
 RUN dotnet build "Sample.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish

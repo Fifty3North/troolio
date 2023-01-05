@@ -1,15 +1,15 @@
 ﻿using Microsoft.Extensions.Configuration;
+using ShoppingList.Shared.ActorInterfaces;
+using ShoppingList.Shared.Commands;
+using ShoppingList.Shared.Enums;
 using ShoppingList.Shared.Events;
 using ShoppingList.Shared.Exceptions;
+using ShoppingList.Shared.InternalCommands;
 using ShoppingList.Shared.Queries;
-using ShoppingList.Shared.Enums;
 using System.Collections.Immutable;
 using Troolio.Core;
 using Troolio.Core.Creatable;
 using Troolio.Stores;
-using ShoppingList.Shared.ActorInterfaces;
-using ShoppingList.Shared.InternalCommands;
-using ShoppingList.Shared.Commands;
 
 namespace ShoppingList.Host.App.ShoppingList;
 

@@ -33,11 +33,11 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
             throw new ItemAlreadyExistsException();
         }
 
-        yield return new ItemAddedToList(command.Payload.ItemId, command.Payload.Description, command.Payload.Quantity, command.Headers);
+        yield return new ItemAddedToList(command.Headers, command.Payload.ItemId, command.Payload.Description, command.Payload.Quantity);
     }
     public IEnumerable<Event> Handle(CreateNewList command)
     {
-        yield return new NewListCreated(command.Payload.Title, command.Headers);
+        yield return new NewListCreated(command.Headers, command.Payload.Title);
     }
     public IEnumerable<Event> Handle(CrossItemOffList command)
     {
@@ -50,7 +50,7 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
             throw new ItemDoesNotExistException();
         }
 
-        yield return new ItemCrossedOffList(command.Payload.ItemId, command.Headers);
+        yield return new ItemCrossedOffList(command.Headers, command.Payload.ItemId);
     }
     public IEnumerable<Event> Handle(JoinList command)
     {
@@ -81,7 +81,7 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
             throw new ItemDoesNotExistException();
         }
 
-        yield return new ItemRemovedFromList(command.Payload.ItemId, command.Headers);
+        yield return new ItemRemovedFromList(command.Headers, command.Payload.ItemId);
     }
     #endregion
 

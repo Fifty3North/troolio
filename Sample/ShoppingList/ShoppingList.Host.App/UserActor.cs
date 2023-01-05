@@ -18,7 +18,7 @@ public class UserActor : StatefulActor<UserState>, IUserActor
     }
 
     #region Commands ...
-    public IEnumerable<Event> Handle(RecordListId command) => new[] { new ListIdRecorded(command.ListId, command.Headers) };
+    public IEnumerable<Event> Handle(RecordListId command) => new[] { new ListIdRecorded(command.Headers, command.ListId) };
     #endregion
 
     #region Events ...

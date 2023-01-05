@@ -18,7 +18,9 @@ public class ShoppingListController : BaseController
     /// Constructor
     /// </summary>
     /// <param name="troolioClient">injected actor system client</param>
-    public ShoppingListController(ITroolioClient troolioClient) : base(troolioClient) { }
+    public ShoppingListController(ITroolioClient troolioClient) : base(troolioClient) 
+    { 
+    }
 
     /// <summary>
     /// Command execution giver full headers and a specific actor, this is intended for internal use.

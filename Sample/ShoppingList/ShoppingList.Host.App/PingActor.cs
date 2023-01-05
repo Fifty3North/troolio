@@ -9,7 +9,9 @@ namespace ShoppingList.Host.App
 {
     public record Pong(Metadata Headers) : Event(Headers);
 
-    public record PingState(int Count) : IActorState { }
+    public record PingState(int Count) : IActorState 
+    { 
+    }
     internal class PingActor : EventSourcedActor<PingState>, IPingActor
     {
         public PingActor(IStore _store, IConfiguration configuration) : base(_store, configuration)

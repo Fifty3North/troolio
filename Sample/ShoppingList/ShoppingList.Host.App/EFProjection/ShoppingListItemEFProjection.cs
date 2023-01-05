@@ -1,6 +1,6 @@
 ﻿using Omu.ValueInjecter;
 using Orleans.Concurrency;
-using ShoppingList.Host.App.ShoppingList;
+using ShoppingList.Host.App;
 using ShoppingList.Shared.Enums;
 using ShoppingList.Shared.Events;
 using Troolio.Core;

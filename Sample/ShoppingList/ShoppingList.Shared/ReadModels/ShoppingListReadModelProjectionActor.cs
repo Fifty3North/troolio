@@ -9,7 +9,10 @@ namespace ShoppingList.Shared.ReadModels;
 [ProjectionStreamSubscription("AllShoppingListsActor")]
 public class ShoppingListReadModelProjectionActor : ReadModelProjectionActor<ShoppingListReadModel>
 {
-    public ShoppingListReadModelProjectionActor(IStore store) : base(store) { }
+    public ShoppingListReadModelProjectionActor(IStore store) : base(store) 
+	{
+	}
+
 
     public string Handle(EventEnvelope<NewListCreated> ev) 
         => ev.Id.ToString();

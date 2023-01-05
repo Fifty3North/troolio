@@ -10,7 +10,9 @@ public class ShoppingListsDbContext : DbContext
     private string _connectionString = "Server=db;port=3306;Database=shopping;User=root;Password=secret;Connection Timeout=30";
 
     // empty constructor for use with command line migrations
-    public ShoppingListsDbContext() { }
+    public ShoppingListsDbContext() 
+    { 
+    }
 
     // configuration constructor for use with runtime builder
     public ShoppingListsDbContext(IConfiguration configuration)

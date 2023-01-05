@@ -15,7 +15,9 @@ namespace ShoppingList.Host.App;
 
 public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList>, IShoppingListActor
 {
-    public ShoppingListActor(IStore store, IConfiguration configuration) : base(store, configuration) { }
+    public ShoppingListActor(IStore store, IConfiguration configuration) : base(store, configuration) 
+    { 
+    }
 
     #region Commands ...
     public IEnumerable<Event> Handle(AddItemToList command)

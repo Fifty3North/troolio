@@ -82,9 +82,18 @@ export interface ShoppingListItemPayload {
     itemId:string
 }
 
-export interface AddToShoppingListPayload extends AddToShoppingListEmit,ShoppingListItemPayload { }
-export interface CheckItemPayload extends ShoppingListItemPayload { }
-export interface RemoveItemPayload extends ShoppingListItemPayload { }
+export interface AddToShoppingListPayload extends AddToShoppingListEmit,ShoppingListItemPayload 
+{
+}
+
+export interface CheckItemPayload extends ShoppingListItemPayload 
+{
+}
+
+export interface RemoveItemPayload extends ShoppingListItemPayload 
+{
+}
+
 
 
 export interface PayloadHeaders extends AxiosRequestHeaders {

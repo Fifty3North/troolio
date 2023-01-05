@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using ShoppingList.Shared.ActorInterfaces;
 using ShoppingList.Database.Model;
-using ShoppingList.Host.App.ShoppingList;
+using ShoppingList.Host.App;
 using Microsoft.Extensions.Hosting;
 using Troolio.Core;
 using Troolio.MessageQueue;

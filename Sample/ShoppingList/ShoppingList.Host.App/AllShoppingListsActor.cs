@@ -40,7 +40,9 @@ public class AllShoppingListsActor : StatefulActor<AllShoppingListsState>, IAllS
     #endregion
 
     #region Events ...
-    public void On(ListJoinedUsingCode _) { } // Stub this non-state changing event
+    public void On(ListJoinedUsingCode _)  // Stub this non-state changing event
+    { 
+    }
     public void On(ShoppingListAdded ev) => this.State = this.State with { Lists = State.Lists.Add(ev.JoinCode, ev.ListId) };
     #endregion
 

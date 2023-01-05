@@ -14,14 +14,24 @@ public class ShoppingListReadModelProjectionActor : ReadModelProjectionActor<Sho
 	}
 
 
-    public string Handle(EventEnvelope<NewListCreated> ev) 
-        => ev.Id.ToString();
-    public string Handle(EventEnvelope<ItemAddedToList> ev) 
-        => ev.Id.ToString();
-    public string Handle(EventEnvelope<ItemRemovedFromList> ev) 
-        => ev.Id.ToString();
-    public string Handle(EventEnvelope<ListJoined> ev) 
-        => ev.Id.ToString();
-    public string Handle(EventEnvelope<ShoppingListAdded> ev) 
-        => ev.Event.ListId.ToString();
+    public string Handle(EventEnvelope<NewListCreated> ev)
+    {
+        return ev.Id.ToString();
+    }
+    public string Handle(EventEnvelope<ItemAddedToList> ev)
+    {
+        return ev.Id.ToString();
+    }
+    public string Handle(EventEnvelope<ItemRemovedFromList> ev)
+    { 
+        return ev.Id.ToString(); 
+    }
+    public string Handle(EventEnvelope<ListJoined> ev)
+    {
+        return ev.Id.ToString();
+    }
+    public string Handle(EventEnvelope<ShoppingListAdded> ev)
+    {
+        return ev.Event.ListId.ToString();
+    }
 }

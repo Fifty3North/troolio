@@ -12,17 +12,23 @@ namespace ShoppingList.Host.App;
 
 public class UserActor : StatefulActor<UserState>, IUserActor
 {
-    public UserActor(IStore store, IConfiguration configuration) : base(store, configuration) 
-    { 
-        State = new UserState(ImmutableList<Guid>.Empty); 
+    public UserActor(IStore store, IConfiguration configuration) : base(store, configuration)
+    {
+        State = new UserState(ImmutableList<Guid>.Empty);
     }
 
     #region Commands ...
-    public IEnumerable<Event> Handle(RecordListId command) => new[] { new ListIdRecorded(command.Headers, command.ListId) };
+    public IEnumerable<Event> Handle(RecordListId command) 
+    {
+        yield return new ListIdRecorded(command.Headers, command.ListId); 
+    }
     #endregion
 
     #region Events ...
-    public void On(ListIdRecorded ev) => State = State with { Lists = State.Lists.Add(ev.ListId) };
+    public void On(ListIdRecorded ev)
+    {
+        State = State with { Lists = State.Lists.Add(ev.ListId) };
+    }
     #endregion
 
     #region Queries ...

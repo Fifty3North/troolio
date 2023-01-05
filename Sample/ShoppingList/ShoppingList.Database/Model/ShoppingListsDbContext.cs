@@ -22,7 +22,10 @@ public class ShoppingListsDbContext : DbContext
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
-    => options.UseMySql(_connectionString, ServerVersion.AutoDetect(_connectionString));
+    {
+        options.UseMySql(_connectionString, ServerVersion.AutoDetect(_connectionString));
+    }
+    
 
     private Task Migrate()
     {

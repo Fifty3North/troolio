@@ -85,7 +85,11 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
     #endregion
 
     #region Events ...
-    public void On(ItemAddedToList ev) => State = State with { Items = State.Items.Add(new ShoppingListItemState(ev.ItemId, ev.Description, ItemState.Pending, ev.Quantity)) };
+    public void On(ItemAddedToList ev) 
+    { 
+        State = State with { Items = State.Items.Add(new ShoppingListItemState(ev.ItemId, ev.Description, ItemState.Pending, ev.Quantity)) }; 
+    } 
+
     public void On(ItemCrossedOffList ev)
     {
         var index = this.State.Items.FindIndex((i) => i.Id == ev.ItemId);
@@ -97,9 +101,18 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
             })
         };
     }
-    public void On(ItemRemovedFromList ev) => State = State with { Items = State.Items.RemoveAt(this.State.Items.FindIndex((i) => i.Id == ev.ItemId)) };
-    public void On(ListJoined ev) => State = State with { Collaborators = State.Collaborators.Add(ev.UserId) };
-    public void On(NewListCreated ev) => this.State = new ShoppingListState(ev.UserId, ImmutableList<ShoppingListItemState>.Empty, ev.Title, ImmutableList<Guid>.Empty);
+    public void On(ItemRemovedFromList ev)
+    {
+        State = State with { Items = State.Items.RemoveAt(this.State.Items.FindIndex((i) => i.Id == ev.ItemId)) };
+    }
+    public void On(ListJoined ev)
+    {
+        State = State with { Collaborators = State.Collaborators.Add(ev.UserId) };
+    }
+    public void On(NewListCreated ev)
+    {
+        this.State = new ShoppingListState(ev.UserId, ImmutableList<ShoppingListItemState>.Empty, ev.Title, ImmutableList<Guid>.Empty);
+    }
     #endregion
 
     #region Queries ...

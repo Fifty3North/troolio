@@ -18,17 +18,29 @@ public record ShoppingListReadModel : TroolioReadModel
     public ImmutableArray<Guid> Collaborators { get; private set; } = ImmutableArray<Guid>.Empty;
     public ImmutableArray<ShoppingListItemReadModel> Items { get; private set; } = ImmutableArray<ShoppingListItemReadModel>.Empty;
     public string JoinCode { get; private set; }
-    
-    public ShoppingListReadModel On(EventEnvelope<NewListCreated> ev) 
-        => this with { Title = ev.Event.Title, OwnerId = ev.Event.UserId };
-    public ShoppingListReadModel On(EventEnvelope<ItemAddedToList> ev) 
-        => this with { Items = Items.Add(new ShoppingListItemReadModel(ev.Event.ItemId).On(ev)) };
-    public ShoppingListReadModel On(EventEnvelope<ItemRemovedFromList> ev) 
-        => this with { Items = Items.RemoveAt( Items.FindIndex((i) => i.Id == ev.Event.ItemId)) };
-    public ShoppingListReadModel On(EventEnvelope<ListJoined> ev) 
-        => this with { Collaborators = Collaborators.Add(ev.Event.UserId) };
-    public ShoppingListReadModel On(EventEnvelope<ListJoinedUsingCode> _) 
-        => this;
-    public ShoppingListReadModel On(EventEnvelope<ShoppingListAdded> ev) 
-        => this with { JoinCode = ev.Event.JoinCode };
+
+    public ShoppingListReadModel On(EventEnvelope<NewListCreated> ev)
+    {
+        return this with { Title = ev.Event.Title, OwnerId = ev.Event.UserId };
+    }
+    public ShoppingListReadModel On(EventEnvelope<ItemAddedToList> ev)
+    {
+        return this with { Items = Items.Add(new ShoppingListItemReadModel(ev.Event.ItemId).On(ev)) };
+    }
+    public ShoppingListReadModel On(EventEnvelope<ItemRemovedFromList> ev)
+    {
+        return this with { Items = Items.RemoveAt(Items.FindIndex((i) => i.Id == ev.Event.ItemId)) };
+    }
+    public ShoppingListReadModel On(EventEnvelope<ListJoined> ev)
+    {
+        return this with { Collaborators = Collaborators.Add(ev.Event.UserId) };
+    }
+    public ShoppingListReadModel On(EventEnvelope<ListJoinedUsingCode> _)
+    {
+        return this;
+    }
+    public ShoppingListReadModel On(EventEnvelope<ShoppingListAdded> ev)
+    {
+        return this with { JoinCode = ev.Event.JoinCode };
+    }
 }

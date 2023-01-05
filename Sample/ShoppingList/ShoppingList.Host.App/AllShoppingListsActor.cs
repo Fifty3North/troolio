@@ -43,10 +43,16 @@ public class AllShoppingListsActor : StatefulActor<AllShoppingListsState>, IAllS
     public void On(ListJoinedUsingCode _)  // Stub this non-state changing event
     { 
     }
-    public void On(ShoppingListAdded ev) => this.State = this.State with { Lists = State.Lists.Add(ev.JoinCode, ev.ListId) };
+    public void On(ShoppingListAdded ev)
+    {
+        this.State = this.State with { Lists = State.Lists.Add(ev.JoinCode, ev.ListId) };
+    }
     #endregion
 
     #region Queries 
-    internal string On(AuthorRequestedJoinCode query) => State.Lists.FirstOrDefault(l => l.Value == query.ListId).Key;
+    internal string On(AuthorRequestedJoinCode query)
+    {
+        return State.Lists.FirstOrDefault(l => l.Value == query.ListId).Key;
+    }
     #endregion
 }

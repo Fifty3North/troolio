@@ -7,17 +7,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sample", "Sample", "{5CB93C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ShoppingList", "ShoppingList", "{89409134-C4D3-40F1-B980-19B77780D0AB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Shared", "Sample\ShoppingList\Sample.Shared\Sample.Shared.csproj", "{F0A1E717-BAA9-4F55-AAD8-9853087C8166}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingList.Shared", "Sample\ShoppingList\ShoppingList.Shared\ShoppingList.Shared.csproj", "{F0A1E717-BAA9-4F55-AAD8-9853087C8166}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Host.App", "Sample\ShoppingList\Sample.Host.App\Sample.Host.App.csproj", "{B3243B2E-D007-4DCC-B405-3CEC376DE4A0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingList.Host.App", "Sample\ShoppingList\ShoppingList.Host.App\ShoppingList.Host.App.csproj", "{B3243B2E-D007-4DCC-B405-3CEC376DE4A0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Host", "Sample\ShoppingList\Sample.Host\Sample.Host.csproj", "{49D2B04C-49EC-48FF-A887-3F2617251CE9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingList.Host", "Sample\ShoppingList\ShoppingList.Host\ShoppingList.Host.csproj", "{49D2B04C-49EC-48FF-A887-3F2617251CE9}"
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "Sample\ShoppingList\docker-compose.dcproj", "{A4FBC061-8DE7-4F3B-AD0C-B0D92DE37D25}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Api", "Sample\ShoppingList\Sample.Api\Sample.Api.csproj", "{B0342A59-C761-415E-B08E-9AD69BF336FA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingList.Api", "Sample\ShoppingList\ShoppingList.Api\ShoppingList.Api.csproj", "{B0342A59-C761-415E-B08E-9AD69BF336FA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Database", "Sample\ShoppingList\Sample.Database\Sample.Database.csproj", "{ACC27214-6FE6-4773-932E-C9FED64DFFC1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingList.Database", "Sample\ShoppingList\ShoppingList.Database\ShoppingList.Database.csproj", "{ACC27214-6FE6-4773-932E-C9FED64DFFC1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{49DBCA53-F78A-452F-91A3-BFF212D07162}"
 EndProject
@@ -25,7 +25,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Troolio.Projection.EntityFr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Troolio.Stores.EventStore", "Stores\Troolio.Stores.EventStore\Troolio.Stores.EventStore.csproj", "{18706139-E0FF-4F63-A682-A0759536DF48}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.LoadTest", "Sample\ShoppingList\Sample.LoadTest\Sample.LoadTest.csproj", "{6A279014-8AD8-437B-9F2B-3C6BBB95298F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingList.LoadTest", "Sample\ShoppingList\ShoppingList.LoadTest\ShoppingList.LoadTest.csproj", "{6A279014-8AD8-437B-9F2B-3C6BBB95298F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Troolio.Projection.Redis", "Troolio.Projection.Redis\Troolio.Projection.Redis.csproj", "{4134D840-8149-480C-883F-23ECCED298E8}"
 EndProject

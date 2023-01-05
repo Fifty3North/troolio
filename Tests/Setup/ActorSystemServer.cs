@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Sample.Host.App.ShoppingList;
-using Sample.Shared.ActorInterfaces;
+using ShoppingList.Host.App.ShoppingList;
+using ShoppingList.Shared.ActorInterfaces;
 using Troolio.Core;
 using Troolio.Core.Client;
 using Troolio.MessageQueue;
@@ -14,7 +14,7 @@ namespace Troolio.Tests.Setup
         private static IHost _host;
         private static ITroolioClient _client;
 
-        private const string AppName = "Sample.Test";
+        private const string AppName = "ShoppingList.Test";
 
         public static async Task Start()
         {
@@ -34,8 +34,8 @@ namespace Troolio.Tests.Setup
                    // This disables any actors that you do not want to be registered
                    // Turn off DB projections for running tests
                    disableActors: new[] { 
-                       "Sample.Database.Projection.ShoppingListEFProjection", 
-                       "Sample.Database.Projection.ShoppingListItemEFProjection" 
+                       "ShoppingList.Database.Projection.ShoppingListEFProjection", 
+                       "ShoppingList.Database.Projection.ShoppingListItemEFProjection" 
                    }
                );
 

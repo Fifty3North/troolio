@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Orleans.CodeGenerator.MSBuild" Version="3.6.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Troolio.Projection.EntityFramework" Version="1.0.0.42-prerelease" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ShoppingList.Database\ShoppingList.Database.csproj" />
+    <ProjectReference Include="..\ShoppingList.Shared\ShoppingList.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

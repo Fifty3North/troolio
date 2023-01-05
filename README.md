@@ -7,7 +7,7 @@ This project contains projections, stores and samples to be used with Trool.io. 
 
 To run the sample, clone the repo, hit run in Visual Studio, wait for Docker containers to boot and open: http://localhost:8081/swagger/index.html 
 
-To run the sample Vue Shopping App, first complete the above, then from the command line, change to directory `Sample\ShoppingList\Sample.Telemetry` and run `yarn install` then `yarn run dev` and open the URL in the command window. 
+To run the sample Vue Shopping App, first complete the above, then from the command line, change to directory `Sample\ShoppingList\ShoppingList.Telemetry` and run `yarn install` then `yarn run dev` and open the URL in the command window. 
 
 To see live tracing in action, click the debug link in the Vue Shopping App, select "Tracing" from the dropdown list and click "Enable Logging". Go back to the shopping app and add a list and some items to the list. Head back to the debug link and click Flush to see the operations that were executed while running the app.
 
@@ -182,7 +182,7 @@ public class ShoppingReadModelOrchestrator
 ```
 
 ## Creating a Server (Host)
-In order to run a Trool.io project you first need to create a server.  An example can be found in the Sample.Host project.  The server is a command line application which configures all the actors and runs them waiting for a client.
+In order to run a Trool.io project you first need to create a server.  An example can be found in the ShoppingList.Host project.  The server is a command line application which configures all the actors and runs them waiting for a client.
 
 ### Local Development (without docker)
 
@@ -192,8 +192,8 @@ To run locally (without docker) you can configure the host as:
     var host = Host
         .CreateDefaultBuilder(args)
         .TroolioServer(appName, new[] {
-	    typeof(IShoppingListActor).Assembly,    // Sample.Shared
-	    typeof(ShoppingListActor).Assembly      // Sample.Host.App
+	    typeof(IShoppingListActor).Assembly,    // ShoppingList.Shared
+	    typeof(ShoppingListActor).Assembly      // ShoppingList.Host.App
         }, configureServices);
 
     await host.RunAsync();
@@ -233,8 +233,8 @@ This uses the EventStore shortcut to start the server using the "StartWithDefaul
 ```c#
 await Startup.StartWithDefaults("Shopping",
     new[] {
-        typeof(IShoppingListActor).Assembly,    // Sample.Shared
-        typeof(ShoppingListActor).Assembly      // Sample.Host.App
+        typeof(IShoppingListActor).Assembly,    // ShoppingList.Shared
+        typeof(ShoppingListActor).Assembly      // ShoppingList.Host.App
     },
     configureServices);
 ```
@@ -253,7 +253,7 @@ appsettings.json requires more information:
 The list of assemblies will be scanned to determine the relevant interfaces and implementations of those interfaces to be used by the application.  ConfigureServices allows mapping of services to delegates for dependancy injection.
 
 ### Configuration / Dependency Injection
-The Sample.Host uses json configuration in the form of appsettings.json which will automatically be loaded in while starting the server if started with defaults.
+The ShoppingList.Host uses json configuration in the form of appsettings.json which will automatically be loaded in while starting the server if started with defaults.
 
 You can configure services by passing in an Action<IServiceCollection> to the StartWithDefaults.  It allows mapping of interfaces and types so that you can inject implementations for different cases
 
@@ -317,7 +317,7 @@ And once enabled you can access it by issuing a Flush query:
 var tracingLog = await _client.Ask(Constants.SingletonActorId, new Flush());
 ```
 
-An example of using the trace to write out to a file is in the Sample.Api.  Should you wish to switch it off you can issue a "DisableTracing" command:
+An example of using the trace to write out to a file is in the ShoppingList.Api.  Should you wish to switch it off you can issue a "DisableTracing" command:
 
 ```c#
 await client.Tell(Constants.SingletonActorId, new DisableTracing());

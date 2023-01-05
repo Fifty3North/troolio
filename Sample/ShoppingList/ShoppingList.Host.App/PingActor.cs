@@ -5,7 +5,7 @@ using Troolio.Core;
 using Troolio.Core.State;
 using Troolio.Stores;
 
-namespace ShoppingList.Host.App.ShoppingList
+namespace ShoppingList.Host.App
 {
     public record Pong(Metadata Headers) : Event(Headers);
 

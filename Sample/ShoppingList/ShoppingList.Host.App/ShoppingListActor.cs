@@ -11,7 +11,7 @@ using Troolio.Core;
 using Troolio.Core.Creatable;
 using Troolio.Stores;
 
-namespace ShoppingList.Host.App.ShoppingList;
+namespace ShoppingList.Host.App;
 
 public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList>, IShoppingListActor
 {

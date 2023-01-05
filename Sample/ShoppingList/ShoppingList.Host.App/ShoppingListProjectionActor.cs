@@ -7,7 +7,7 @@ using Troolio.Core;
 using Troolio.Core.Reliable.Interfaces;
 using Troolio.Core.Reliable.Messages;
 
-namespace ShoppingList.Host.App.ShoppingList
+namespace ShoppingList.Host.App
 {
     /// <summary>
     /// The ShoppingListProjection will only take place once a command is fully orchestrated successfully.  This needs 

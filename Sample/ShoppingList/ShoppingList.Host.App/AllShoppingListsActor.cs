@@ -9,7 +9,7 @@ using Troolio.Core;
 using Troolio.Core.Stateful;
 using Troolio.Stores;
 
-namespace ShoppingList.Host.App.ShoppingList;
+namespace ShoppingList.Host.App;
 
 public class AllShoppingListsActor : StatefulActor<AllShoppingListsState>, IAllShoppingListsActor
 {

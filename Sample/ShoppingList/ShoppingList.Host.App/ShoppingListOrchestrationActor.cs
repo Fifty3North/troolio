@@ -4,7 +4,7 @@ using ShoppingList.Shared.Events;
 using ShoppingList.Shared.InternalCommands;
 using Troolio.Core;
 
-namespace ShoppingList.Host.App.ShoppingList;
+namespace ShoppingList.Host.App;
 
 [OrchestrationStreamSubscription(nameof(AllShoppingListsActor))]
 [Reentrant]

@@ -30,12 +30,12 @@ public class AllShoppingListsActor : StatefulActor<AllShoppingListsState>, IAllS
     }
     public IEnumerable<Event> Handle(JoinListUsingCode command)
     {
-        if (command.Payload.Code == null || !this.State.Lists.ContainsKey(command.Payload.Code))
+        if (command.Code == null || !this.State.Lists.ContainsKey(command.Code))
         {
             throw new InvalidJoinCodeException();
         }
 
-        yield return new ListJoinedUsingCode(command.Headers, command.UserId, this.State.Lists[command.Payload.Code]);
+        yield return new ListJoinedUsingCode(command.Headers, command.UserId, this.State.Lists[command.Code]);
     }
     #endregion
 

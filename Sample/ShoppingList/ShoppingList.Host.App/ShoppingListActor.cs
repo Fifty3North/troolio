@@ -27,16 +27,16 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
         }
 
         // check
-        if (this.State.Items.Any(i => i.Name == command.Payload.Description || i.Id == command.Payload.ItemId))
+        if (this.State.Items.Any(i => i.Name == command.Description || i.Id == command.ItemId))
         {
             throw new ItemAlreadyExistsException();
         }
 
-        yield return new ItemAddedToList(command.Headers, command.Payload.ItemId, command.Payload.Description, command.Payload.Quantity);
+        yield return new ItemAddedToList(command.Headers, command.ItemId, command.Description, command.Quantity);
     }
     public IEnumerable<Event> Handle(CreateNewList command)
     {
-        yield return new NewListCreated(command.Headers, command.UserId, command.Payload.Title);
+        yield return new NewListCreated(command.Headers, command.UserId, command.Title);
     }
     public IEnumerable<Event> Handle(CrossItemOffList command)
     {
@@ -44,12 +44,12 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
         {
             throw new UnauthorizedAccessException();
         }
-        else if (!this.State.Items.Any((i) => i.Id == command.Payload.ItemId))
+        else if (!this.State.Items.Any((i) => i.Id == command.ItemId))
         {
             throw new ItemDoesNotExistException();
         }
 
-        yield return new ItemCrossedOffList(command.Headers, command.Payload.ItemId);
+        yield return new ItemCrossedOffList(command.Headers, command.ItemId);
     }
     public IEnumerable<Event> Handle(JoinList command)
     {
@@ -75,12 +75,12 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
             throw new CollaboratorCannotRemoveItemFromListException();
         }
 
-        if (!this.State.Items.Any((i) => i.Id == command.Payload.ItemId))
+        if (!this.State.Items.Any((i) => i.Id == command.ItemId))
         {
             throw new ItemDoesNotExistException();
         }
 
-        yield return new ItemRemovedFromList(command.Headers, command.Payload.ItemId);
+        yield return new ItemRemovedFromList(command.Headers, command.ItemId);
     }
     #endregion
 

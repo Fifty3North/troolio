@@ -16,7 +16,7 @@ public class AllShoppingListsActor : StatefulActor<AllShoppingListsState>, IAllS
     
     public AllShoppingListsActor(IStore store, IConfiguration configuration) : base(store, configuration)
     { 
-         State = new AllShoppingListsState(ImmutableDictionary<string, Guid>.Empty);
+         State = new AllShoppingListsState(ImmutableList<Shared.Models.AllShoppingListsActorStateItem>.Empty);
     }
 
     #region Commands ...
@@ -30,12 +30,12 @@ public class AllShoppingListsActor : StatefulActor<AllShoppingListsState>, IAllS
     }
     public IEnumerable<Event> Handle(JoinListUsingCode command)
     {
-        if (command.Code == null || !this.State.Lists.ContainsKey(command.Code))
+        if (command.Code == null || !this.State.Lists.Any(l => l.JoinCode == command.Code))
         {
             throw new InvalidJoinCodeException();
         }
 
-        yield return new ListJoinedUsingCode(command.Headers, command.UserId, this.State.Lists[command.Code]);
+        yield return new ListJoinedUsingCode(command.Headers, command.UserId, this.State.Lists.First(l => l.JoinCode == command.Code).Id);
     }
     #endregion
 
@@ -45,14 +45,14 @@ public class AllShoppingListsActor : StatefulActor<AllShoppingListsState>, IAllS
     }
     public void On(ShoppingListAdded ev)
     {
-        this.State = this.State with { Lists = State.Lists.Add(ev.JoinCode, ev.ListId) };
+        this.State = this.State with { Lists = State.Lists.Add(new Shared.Models.AllShoppingListsActorStateItem(ev.JoinCode, ev.ListId)) };
     }
     #endregion
 
     #region Queries 
     internal string On(AuthorRequestedJoinCode query)
     {
-        return State.Lists.FirstOrDefault(l => l.Value == query.ListId).Key;
+        return State.Lists.FirstOrDefault(l => l.Id == query.ListId)?.JoinCode;
     }
     #endregion
 }

@@ -3,4 +3,4 @@ using Troolio.Core.State;
 
 namespace ShoppingList.Host.App;
 
-public record AllShoppingListsState(ImmutableDictionary<string, Guid> Lists) : IActorState;
+public record AllShoppingListsState(ImmutableList<Shared.Models.AllShoppingListsActorStateItem> Lists) : IActorState;

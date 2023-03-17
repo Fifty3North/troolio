@@ -31,4 +31,9 @@ public record ShoppingListReadModel : TroolioReadModel
         => this;
     public ShoppingListReadModel On(EventEnvelope<ShoppingListAdded> ev) 
         => this with { JoinCode = ev.Event.JoinCode };
+    public ShoppingListReadModel On(EventEnvelope<ItemCrossedOffList> ev) 
+    {
+        var item = Items.First(i => i.Id == ev.Event.ItemId);
+        return this with { Items = Items.Replace(item, item.On(ev)) };
+    }
 }

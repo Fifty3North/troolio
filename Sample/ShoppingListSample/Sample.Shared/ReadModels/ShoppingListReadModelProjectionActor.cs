@@ -17,6 +17,8 @@ public class ShoppingListReadModelProjectionActor : ReadModelProjectionActor<Sho
         => ev.Id.ToString();
     public string Handle(EventEnvelope<ItemRemovedFromList> ev) 
         => ev.Id.ToString();
+    public string Handle(EventEnvelope<ItemCrossedOffList> ev)
+        => ev.Id.ToString();
     public string Handle(EventEnvelope<ListJoined> ev) 
         => ev.Id.ToString();
     public string Handle(EventEnvelope<ShoppingListAdded> ev) 

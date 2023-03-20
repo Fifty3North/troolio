@@ -42,7 +42,7 @@ internal class ShoppingListTests
     {
         Metadata user = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
         Guid shoppingListId = await HavingCreatedShoppingListForUser(user);
-        string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListId, user);
+        await HavingAddedAnItemToAShoppingList(shoppingListId, user);
 
         var listDetails = await _client.Ask(shoppingListId.ToString(), new ShoppingListDetails());
         Assert.AreEqual(1, listDetails.Items.Count());
@@ -53,14 +53,14 @@ internal class ShoppingListTests
     {
         Metadata user = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
         Guid shoppingListId = await HavingCreatedShoppingListForUser(user);
-        string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListId, user);
+        var itemSummary = await HavingAddedAnItemToAShoppingList(shoppingListId, user);
         ShoppingListQueryResult list = await _client.Ask(shoppingListId.ToString(), new ShoppingListDetails());
-        var item = list.Items.Where(i => i.Name == itemDescription).FirstOrDefault();
+        var item = list.Items.Where(i => i.Name == itemSummary.Description).FirstOrDefault();
 
         await _client.Tell(shoppingListId.ToString(), new CrossItemOffList(user, new CrossItemOffListPayload(item.Id)));
 
         list = await _client.Ask(shoppingListId.ToString(), new ShoppingListDetails());
-        item = list.Items.Where(i => i.Name == itemDescription).FirstOrDefault();
+        item = list.Items.Where(i => i.Name == itemSummary.Description).FirstOrDefault();
         Assert.IsNotNull(item);
         Assert.AreEqual(ItemState.CrossedOff, item.Status);
     }
@@ -70,14 +70,14 @@ internal class ShoppingListTests
     {
         Metadata user = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
         Guid shoppingListId = await HavingCreatedShoppingListForUser(user);
-        string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListId, user);
+        var itemSummary = await HavingAddedAnItemToAShoppingList(shoppingListId, user);
         ShoppingListQueryResult list = await _client.Ask(shoppingListId.ToString(), new ShoppingListDetails());
-        var item = list.Items.Where(i => i.Name == itemDescription).FirstOrDefault();
+        var item = list.Items.Where(i => i.Name == itemSummary.Description).FirstOrDefault();
 
         await _client.Tell(shoppingListId.ToString(), new RemoveItemFromList(user, new RemoveItemFromListPayload(item.Id)));
 
         list = await _client.Ask(shoppingListId.ToString(), new ShoppingListDetails());
-        item = list.Items.Where(i => i.Name == itemDescription).FirstOrDefault();
+        item = list.Items.Where(i => i.Name == itemSummary.Description).FirstOrDefault();
         Assert.IsNull(item);
     }
 
@@ -86,7 +86,7 @@ internal class ShoppingListTests
     {
         Metadata user = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
         Guid shoppingListId = await HavingCreatedShoppingListForUser(user);
-        string item1Description = await HavingAddedAnItemToAShoppingList(shoppingListId, user, "Milk");
+        await HavingAddedAnItemToAShoppingList(shoppingListId, user, "Milk");
         Assert.ThrowsAsync<ItemAlreadyExistsException>(async () => { await HavingAddedAnItemToAShoppingList(shoppingListId, user, "Milk"); });
     }
     
@@ -143,11 +143,11 @@ internal class ShoppingListTests
         await _client.Tell(Constants.SingletonActorId, new JoinListUsingCode(collaborator, new JoinListUsingCodePayload(joinCode)));
         
         // add item to list
-        string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListId, author);
+        var itemSummary = await HavingAddedAnItemToAShoppingList(shoppingListId, author);
         
         // get item id
         var list = await _client.Ask(shoppingListId.ToString(), new ShoppingListDetails());
-        var itemId = list.Items.Where(i => i.Name == itemDescription).FirstOrDefault().Id;
+        var itemId = list.Items.Where(i => i.Name == itemSummary.Description).FirstOrDefault().Id;
 
         // try to remove item as a collaborator
         Assert.ThrowsAsync<CollaboratorCannotRemoveItemFromListException>(async () => { 
@@ -179,7 +179,7 @@ internal class ShoppingListTests
     {
         Metadata user = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
         Guid shoppingListId = await HavingCreatedShoppingListForUser(user);
-        string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListId, user);
+        await HavingAddedAnItemToAShoppingList(shoppingListId, user);
 
         Assert.ThrowsAsync<ItemDoesNotExistException>(async () => {
             await _client.Tell(shoppingListId.ToString(), new CrossItemOffList(user, new CrossItemOffListPayload(Guid.NewGuid())));
@@ -191,7 +191,7 @@ internal class ShoppingListTests
     {
         Metadata user = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
         Guid shoppingListId = await HavingCreatedShoppingListForUser(user);
-        string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListId, user);
+        await HavingAddedAnItemToAShoppingList(shoppingListId, user);
 
         Assert.ThrowsAsync<ItemDoesNotExistException>(async () => {
             await _client.Tell(shoppingListId.ToString(), new RemoveItemFromList(user, new RemoveItemFromListPayload(Guid.NewGuid())));
@@ -203,11 +203,15 @@ internal class ShoppingListTests
     {
         Metadata user = new Metadata(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
         Guid shoppingListId = await HavingCreatedShoppingListForUser(user);
-        string itemDescription = await HavingAddedAnItemToAShoppingList(shoppingListId, user);
+        var item1 = await HavingAddedAnItemToAShoppingList(shoppingListId, user, "Milk");
+        var item2 = await HavingAddedAnItemToAShoppingList(shoppingListId, user, "Onions");
+        await HavingCrossedAnItemOffAShoppingList(shoppingListId, user, item1.Id);
 
         var readModel = await _client.Get<Sample.Shared.ReadModels.ShoppingListReadModel>(shoppingListId.ToString());
-        Assert.AreEqual(1, readModel.Items.Count());
-        Assert.AreEqual(itemDescription, readModel.Items.First().Description);
+        
+        Assert.AreEqual(2, readModel.Items.Count());
+        Assert.AreEqual("Milk", readModel.Items.First().Description);
+        Assert.IsTrue(readModel.Items.First().CrossedOff);
     }
 
     #region Helpers ...
@@ -216,12 +220,18 @@ internal class ShoppingListTests
         return await _client.Ask(user.UserId.ToString(), new MyShoppingLists());
     }
 
-    private async Task<string> HavingAddedAnItemToAShoppingList(Guid shoppingListId, Metadata user, string item = null)
+    private async Task<(Guid Id, string Description)> HavingAddedAnItemToAShoppingList(Guid shoppingListId, Metadata user, string item = null)
     {
+        Guid itemId = Guid.NewGuid();
         string itemDescription = item == null ? Guid.NewGuid().ToString() : item;
-        await _client.Tell(shoppingListId.ToString(), new AddItemToList(user with { CorrelationId = Guid.NewGuid() }, new AddItemToListPayload(Guid.NewGuid(), itemDescription, 1)));
+        await _client.Tell(shoppingListId.ToString(), new AddItemToList(user with { CorrelationId = Guid.NewGuid() }, new AddItemToListPayload(itemId, itemDescription, 1)));
 
-        return itemDescription;
+        return (itemId, itemDescription);
+    }
+
+    private async Task HavingCrossedAnItemOffAShoppingList(Guid shoppingListId, Metadata user, Guid item)
+    {
+        await _client.Tell(shoppingListId.ToString(), new CrossItemOffList(user with { CorrelationId = Guid.NewGuid() }, new CrossItemOffListPayload(item)));
     }
 
     private async Task<Guid> HavingCreatedShoppingListForUser(Metadata user)

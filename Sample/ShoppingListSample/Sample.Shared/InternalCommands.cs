@@ -1,15 +1,21 @@
-﻿using Sample.Shared.ActorInterfaces;
+using Sample.Shared.ActorInterfaces;
+using Orleans;
 using Troolio.Core;
 
 namespace Sample.Shared.InternalCommands;
-public record AddShoppingList(Metadata Headers, Guid ListId) 
+
+[GenerateSerializer]
+public record AddShoppingList(Metadata Headers, Guid ListId)
     : InternalCommand<IAllShoppingListsActor>(Headers);
 
-public record JoinList(Metadata Headers) 
+[GenerateSerializer]
+public record JoinList(Metadata Headers)
     : InternalCommand<IShoppingListActor>(Headers);
 
-public record RecordListId(Metadata Headers, Guid ListId) 
+[GenerateSerializer]
+public record RecordListId(Metadata Headers, Guid ListId)
     : InternalCommand<IUserActor>(Headers);
 
+[GenerateSerializer]
 public record SendEmailNotification(Metadata Headers, string Email, string Description)
     : InternalCommand<IEmailActor>(Headers);

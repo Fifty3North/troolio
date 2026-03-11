@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
+using Orleans;
 using Sample.Shared.ActorInterfaces;
 using Sample.Shared.Commands;
 using Troolio.Core;
@@ -7,9 +8,11 @@ using Troolio.Stores;
 
 namespace Sample.Host.App.ShoppingList
 {
+    [GenerateSerializer]
     public record Pong(Metadata Headers) : Event(Headers);
 
     public record PingState(int Count) : IActorState { }
+
     internal class PingActor : EventSourcedActor<PingState>, IPingActor
     {
         public PingActor(IStore _store, IConfiguration configuration) : base(_store, configuration)
@@ -22,6 +25,9 @@ namespace Sample.Host.App.ShoppingList
             return new[] { new Pong(command.Headers) };
         }
 
-        public void On(Pong ev) { State = State with { Count = State.Count + 1 }; }
+        public void On(Pong ev)
+        {
+            State = State with { Count = State.Count + 1 };
+        }
     }
 }

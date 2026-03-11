@@ -102,7 +102,7 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
     public ShoppingListQueryResult Handle(ShoppingListDetails _)
     {
         return new ShoppingListQueryResult(
-            Guid.Parse(this.GrainReference.GrainIdentity.PrimaryKeyString),
+            Guid.Parse(this.GetPrimaryKeyString()),
             this.State.Title,
             this.State.Items.Select(
                 i => new ShoppingItemQueryItem(

@@ -1,12 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
 	  <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Troolio.Core" Version="1.0.3.112-prerelease" />
+    <ProjectReference Include="..\..\..\..\trool.io\Troolio.Core\Troolio.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\trool.io\Orleankka\Orleankka.csproj" />
+    <ProjectReference Include="..\..\..\..\trool.io\Orleankka.Runtime\Orleankka.Runtime.csproj" />
+    <ProjectReference Include="..\..\..\..\trool.io\Orleankka.TestKit\Orleankka.TestKit.csproj" />
   </ItemGroup>
 
 </Project>

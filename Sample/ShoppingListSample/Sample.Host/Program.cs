@@ -26,39 +26,16 @@ Action<IServiceCollection> configureServices = (s) =>
     ;
 };
 
-// For non-docker debugging using in-memory event database and actor registry
-if (configuration["Shopping:Clustering:Storage"] != null && configuration["Shopping:Clustering:Storage"] == "Local")
-{
-    var host = Host.CreateDefaultBuilder(args)
-        .TroolioServer("Shopping", new[] {
-            typeof(IShoppingListActor).Assembly,    // Sample.Shared
-            typeof(ShoppingListActor).Assembly      // Sample.Host.App
-        }, configureServices
-        // Lines below will disable MySQL projections if uncommented
-        //,
-        //disableActors: new[] {
-        //    "Sample.Database.Projection.ShoppingListEFProjection",
-        //    "Sample.Database.Projection.ShoppingListItemEFProjection"
-        //}
-        );
-
-    await host.RunAsync();
-}
-// Docker using Event Store and Azure table storage for actor registry
-else
-{
-    await Troolio.Stores.EventStore.Startup.RunWithDefaults("Shopping",
-    new[] {
+// Run in local mode for source-based execution while sample dependencies are modernized.
+var host = Host.CreateDefaultBuilder(args)
+    .TroolioServer("Shopping", new[] {
         typeof(IShoppingListActor).Assembly,    // Sample.Shared
         typeof(ShoppingListActor).Assembly      // Sample.Host.App
-    },
-    configureServices
-    // Lines below will disable MySQL projections if uncommented
-    //,
-    //disableActors: new[] {
-    //    "Sample.Database.Projection.ShoppingListEFProjection",
-    //    "Sample.Database.Projection.ShoppingListItemEFProjection"
-    //}
-    );
-}
+    }, configureServices,
+    disableActors: new[] {
+        "Sample.Database.Projection.ShoppingListEFProjection",
+        "Sample.Database.Projection.ShoppingListItemEFProjection"
+    });
+
+await host.RunAsync();
 

@@ -29,7 +29,7 @@ namespace Sample.Host.App.ShoppingList
             var actorPath = System.Worker<IEmailActor>().Path;
 
             await System.Worker<IBatchJobActor>()  
-                .Tell(new AddBatchJob(actorPath, command));
+                .Tell(new AddBatchJob(e.Event.Headers, actorPath, command));
         }
     }
 }

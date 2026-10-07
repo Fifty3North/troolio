@@ -248,13 +248,16 @@ def restore_consumer(source: str, destination: Path, records: list[dict]) -> Non
 }
 ''')
     ET.ElementTree(consumer_configuration(source)).write(destination / "NuGet.Config", encoding="utf-8")
-    env = dict(os.environ, NUGET_PACKAGES=str(destination / "cache"))
+    # Package caches contain .cs content files; keep them outside the SDK compile glob.
+    cache = destination.with_name(destination.name + "-cache")
+    cache.mkdir(parents=True, exist_ok=False)
+    env = dict(os.environ, NUGET_PACKAGES=str(cache))
     run(["dotnet", "restore", str(destination / "Consumer.csproj"), "--configfile", str(destination / "NuGet.Config"),
          "--no-http-cache", "--nologo"], env=env)
     run(["dotnet", "build", str(destination / "Consumer.csproj"), "--no-restore", "-c", "Release", "--nologo"], env=env)
     for record in records:
         identity, version = record["id"].lower(), record["version"]
-        archive = destination / "cache" / identity / version / f"{identity}.{version}.nupkg"
+        archive = cache / identity / version / f"{identity}.{version}.nupkg"
         if payload_hashes(archive.read_bytes()) != record["content"]:
             raise ValueError("Restored package payload differs from retained release artifacts")
 

@@ -1,16 +1,44 @@
-# Vue 3 + TypeScript + Vite
+# Shopping List browser client
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+A Vue 3 and TypeScript client for the public-package Shopping List sample. It demonstrates verified demo identities, collaborative list commands, paged SQL catalogs and live tracing.
 
-## Recommended IDE Setup
+## Start
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+Use Node.js 22.12 or newer. First start the [Shopping API and silo](../README.md), then:
 
-## Type Support For `.vue` Imports in TS
+```sh
+cd Sample/ShoppingListSample/Sample.Telemetry
+npm ci
+npm run dev
+```
 
-Since TypeScript cannot handle type information for `.vue` imports, they are shimmed to be a generic Vue component type by default. In most cases this is fine if you don't really care about component prop types outside of templates. However, if you wish to get actual prop types in `.vue` imports (for example to get props validation when using manual `h(...)` calls), you can enable Volar's Take Over mode by following these steps:
+Open `http://localhost:5173`. The checked-in development API URL is `http://localhost:8081/`; set `VITE_API_URL` when using another local API address. The API allows the documented localhost frontend origins.
 
-1. Run `Extensions: Show Built-in Extensions` from VS Code's command palette, look for `TypeScript and JavaScript Language Features`, then right click and select `Disable (Workspace)`. By default, Take Over mode will enable itself if the default TypeScript extension is disabled.
-2. Reload the VS Code window by running `Developer: Reload Window` from the command palette.
+Choose Alice, create a list and copy its join code. Choose Bob, join using the code, and refresh to see the collaboration projection. Authors see invite codes; collaborators do not. Previous/Next reads bounded pages of 50 lists.
 
-You can learn more about Take Over mode [here](https://github.com/johnsoncodehk/volar/discussions/471).
+## Follow a command
+
+```typescript
+await http.post(`ShoppingList/${listId}/AddItemToList`, {
+  itemId: crypto.randomUUID(), description: 'Oat milk', quantity: '2'
+});
+```
+
+`src/api.ts` attaches the selected account's Bearer demo token, a diagnostic device ID and a new request correlation ID. The API derives authority from the established demo principal. Client IDs do not grant permissions.
+
+A command response confirms the actor operation; live projections can lag it. Refresh shows the current relational view. Request failures appear in the interface.
+
+## Inspect tracing
+
+Open **Tracing**, select a trace level and enable logging. Switch to Shopping Lists, send a command, return to Tracing and choose Flush. Select a message to inspect its payload and lineage. Cancel polling and disable logging when finished. The view retains its state when switching tabs and cancels its timer when the selected user changes or the component unmounts.
+
+Tracing is a local teaching tool. All sample accounts are publicly known and the API refuses production startup until its demonstration authentication is replaced.
+
+## Build
+
+```sh
+npm run build
+npm run preview
+```
+
+The committed npm lockfile is authoritative. TypeScript stays on 5.9 because the current Vue type checker is incompatible with TypeScript 7's compiler export layout. Vite and Vue are kept on their current compatible releases.

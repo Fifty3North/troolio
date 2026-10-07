@@ -28,3 +28,14 @@ After publication, `python3 scripts/verify.py --published` verifies the applicat
 ## Documentation
 
 Public guides are Markdown under `docs/public/`, with example snippets matched to the runnable samples. The public Pages site remains in Fifty3North/troolio-docs. Operational test and publishing records belong in progress files or release artifacts, not in the site guides.
+
+## Documentation build
+
+To regenerate the public site from framework authoring sources and this repository's extension guides:
+
+```sh
+python3 -m pip install -r website/requirements.txt
+python3 scripts/build_public_docs.py --framework-source /path/to/trool.io-framework --output artifacts/public-site
+```
+
+The framework source checkout supplies the existing guides and design assets. This command writes only an isolated documentation artifact; it does not push a framework release. Publish only HTML/assets and original example source, excluding generated `bin` and `obj` directories.

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Sample.Shared.Events;
 using Sample.Shared.Exceptions;
 using Sample.Shared.Queries;
@@ -25,6 +25,8 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
             throw new UnauthorizedAccessException();
         }
 
+        if (command.Payload.ItemId == Guid.Empty || string.IsNullOrWhiteSpace(command.Payload.Description) || command.Payload.Description.Length > 120 || command.Payload.Quantity == 0)
+            throw new ArgumentException("An item ID, description and positive quantity are required.");
         // check
         if (this.State.Items.Any(i => i.Name == command.Payload.Description || i.Id == command.Payload.ItemId))
         {
@@ -33,7 +35,12 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
 
         return new[] { new ItemAddedToList(command.Payload.ItemId, command.Payload.Description, command.Payload.Quantity, command.Headers) };
     }
-    public IEnumerable<Event> Handle(CreateNewList command) => new[] { new NewListCreated(command.Payload.Title, command.Headers) };
+    public IEnumerable<Event> Handle(CreateNewList command)
+    {
+        if (command.Headers.UserId == Guid.Empty || string.IsNullOrWhiteSpace(command.Payload.Title) || command.Payload.Title.Length > 120)
+            throw new ArgumentException("A user and title of up to 120 characters are required.");
+        return [new NewListCreated(command.Payload.Title.Trim(), command.Headers, Guid.NewGuid().ToString("N"))];
+    }
     public IEnumerable<Event> Handle(CrossItemOffList command)
     {
         if (!(this.State.Author == command.Headers.UserId || this.State.Collaborators.Contains(command.Headers.UserId)))
@@ -55,7 +62,7 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
         }
         else if (this.State.Collaborators.Contains(command.Headers.UserId))
         {
-            throw new UserHasAlreadyJoinedListException();
+            yield break;
         }
 
         yield return new ListJoined(command.Headers);
@@ -65,7 +72,7 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
         if (!(this.State.Author == command.Headers.UserId || this.State.Collaborators.Contains(command.Headers.UserId)))
         {
             throw new UnauthorizedAccessException();
-        } 
+        }
         else if (this.State.Author != command.Headers.UserId)
         {
             throw new CollaboratorCannotRemoveItemFromListException();
@@ -99,8 +106,10 @@ public class ShoppingListActor : CreatableActor<ShoppingListState, CreateNewList
     #endregion
 
     #region Queries ...
-    public ShoppingListQueryResult Handle(ShoppingListDetails _)
+    public ShoppingListQueryResult Handle(ShoppingListDetails query)
     {
+        if (query.UserId != State.Author && !State.Collaborators.Contains(query.UserId))
+            throw new UnauthorizedAccessException();
         return new ShoppingListQueryResult(
             Guid.Parse(this.GetPrimaryKeyString()),
             this.State.Title,

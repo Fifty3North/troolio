@@ -1,0 +1,106 @@
+name: Publish Troolio extensions to NuGet.org
+on:
+  workflow_dispatch:
+    inputs:
+      resume_version:
+        description: Existing retained extension release to resume (empty for next patch)
+        required: false
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: troolio-extensions-nuget-production
+  cancel-in-progress: false
+  queue: max
+jobs:
+  publish:
+    if: github.repository == 'Fifty3North/troolio' && github.ref == 'refs/heads/main'
+    environment: nuget-production
+    permissions:
+      contents: write
+      id-token: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    services:
+      redis:
+        image: redis:8.2-alpine
+        ports: ["16379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s
+          --health-timeout 5s --health-retries 20
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: troolio_extensions
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: development
+        ports: ["15432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s
+          --health-timeout 5s --health-retries 20
+      kurrent:
+        image: kurrentplatform/kurrentdb:26.0.1
+        env:
+          KURRENTDB_INSECURE: "true"
+          KURRENTDB_RUN_PROJECTIONS: None
+          KURRENTDB_START_STANDARD_PROJECTIONS: "false"
+        ports: ["12113:2113"]
+    env:
+      GH_TOKEN: ${{ github.token }}
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+      MSBUILDDISABLENODEREUSE: "1"
+      TROOLIO_TEST_REDIS: localhost:16379
+      TROOLIO_TEST_MARTEN: Host=localhost;Port=15432;Database=troolio_extensions;Username=postgres;Password=development
+      TROOLIO_TEST_EVENTSTORE: esdb://localhost:12113?tls=false
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Install .NET 10
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Install Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22
+      - name: Check release safeguards
+        run: python3 -m unittest discover -s scripts/tests -v
+      - name: Require the NuGet trust policy account
+        env:
+          NUGET_USER: ${{ vars.NUGET_USER }}
+        run: |
+          echo "RELEASE_WORK=$RUNNER_TEMP/troolio-extensions-release" >> "$GITHUB_ENV"
+          test -n "$NUGET_USER"
+      - name: Test, build and retain the exact extension cohort
+        env:
+          RESUME_VERSION: ${{ inputs.resume_version }}
+        run: |
+          if [[ -n "$RESUME_VERSION" ]]; then
+            python3 scripts/nuget_release.py prepare "$RELEASE_WORK" --resume-version "$RESUME_VERSION"
+          else
+            python3 scripts/nuget_release.py prepare "$RELEASE_WORK"
+          fi
+      - name: Retain packages and verification records
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: troolio-extensions-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.RELEASE_WORK }}/packages.zip
+            ${{ env.RELEASE_WORK }}/packages/package-manifest.json
+            ${{ env.RELEASE_WORK }}/state.json
+            ${{ env.RELEASE_WORK }}/test-results
+          if-no-files-found: ignore
+      - name: Exchange GitHub OIDC identity for a temporary NuGet key
+        id: login
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+      - name: Publish and verify public packages
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+        run: python3 scripts/nuget_release.py publish "$RELEASE_WORK"

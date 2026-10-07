@@ -1,63 +1,42 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Threading.Tasks;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Sample.Database.Model;
-public class ShoppingListsDbContext : DbContext
+
+public sealed class ShoppingListsDbContext(DbContextOptions<ShoppingListsDbContext> options) : DbContext(options)
 {
-    protected readonly IConfiguration Configuration;
-    private string _connectionString = "Server=db;port=3306;Database=shopping;User=root;Password=secret;Connection Timeout=30";
+    public DbSet<ShoppingList> ShoppingLists => Set<ShoppingList>();
+    public DbSet<ShoppingListItem> ShoppingListItems => Set<ShoppingListItem>();
+    public DbSet<ShoppingListMember> ShoppingListMembers => Set<ShoppingListMember>();
 
-    // empty constructor for use with command line migrations
-    public ShoppingListsDbContext() { }
-
-    // configuration constructor for use with runtime builder
-    public ShoppingListsDbContext(IConfiguration configuration)
+    protected override void OnModelCreating(ModelBuilder model)
     {
-        Configuration = configuration;
-        _connectionString = Configuration.GetConnectionString("MySQLConnection");
+        model.Entity<ShoppingList>().HasKey(x => x.Id);
+        model.Entity<ShoppingListItem>().HasKey(x => x.Id);
+        model.Entity<ShoppingListMember>().HasKey(x => x.Id);
+        model.Entity<ShoppingListMember>().HasIndex(x => new { x.UserId, x.ShoppingListId }).IsUnique();
     }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder options)
-    => options.UseMySql(_connectionString, ServerVersion.AutoDetect(_connectionString));
-
-    private Task Migrate()
+    public static string ConnectionString(IConfiguration configuration)
     {
-        return this.Database.MigrateAsync();
+        var configured = configuration["Shopping:ReadModels:Path"];
+        var path = string.IsNullOrWhiteSpace(configured)
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TroolioSamples", "shopping", "readmodels.db")
+            : Path.GetFullPath(configured);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        return $"Data Source={path};Default Timeout=30";
     }
-    
-    public async Task RunMigrations()
-    {
-        await ExecuteWithRetries(Migrate, async ex =>
-        {  // replace Console with actual logging
-            Console.WriteLine(ex);
-            Console.WriteLine("Retrying MySQL...");
-            await Task.Delay(2000);
-            return true;
-        });
+}
 
-        Console.WriteLine("MySQL Ready!!!");
-    }
+public sealed class ShoppingListMember
+{
+    public Guid Id { get; set; }
+    public Guid ShoppingListId { get; set; }
+    public Guid UserId { get; set; }
 
-    async Task ExecuteWithRetries(Func<Task> task, Func<Exception, Task<bool>> shouldRetry)
-    {
-        while (true)
-        {
-            try
-            {
-                await task();
-                return;
-            }
-            catch (Exception exception) when (shouldRetry != null)
-            {
-                var retry = await shouldRetry(exception);
-                if (!retry) throw;
-            }
-        }
-    }
-
-    public DbSet<ShoppingList> ShoppingLists { get; set; }
-    public DbSet<ShoppingListItem> ShoppingListItems { get; set; }
-
+    // Domain identity, independent of delivery retries or diagnostic message headers.
+    public static Guid Key(Guid listId, Guid userId)
+        => new(SHA256.HashData(Encoding.UTF8.GetBytes($"{listId:N}:{userId:N}"))[..16]);
 }

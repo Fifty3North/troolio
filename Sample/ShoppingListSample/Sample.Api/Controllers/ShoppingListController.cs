@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Sample.Shared.ActorInterfaces;
 using Sample.Shared.Commands;
 using Sample.Shared.Queries;
@@ -21,9 +21,9 @@ public class ShoppingListController : BaseController
     public ShoppingListController(ITroolioClient troolioClient) : base(troolioClient) { }
 
     /// <summary>
-    /// Command execution giver full headers and a specific actor, this is intended for internal use.
+    /// Command execution given verified headers and a specific actor, this is intended for internal use.
     /// </summary>
-    /// <param name="userHeaders">Metadata object, collation id needs to be unique per command</param>
+    /// <param name="userHeaders">Verified caller metadata; correlation identifies the logical request</param>
     /// <param name="actorId">The id of the actor to execute the command against</param>
     /// <param name="command">The command to be executed using the metadata passed in the call</param>
     /// <returns></returns>
@@ -32,6 +32,10 @@ public class ShoppingListController : BaseController
         try
         {
             await _troolioClient.Tell(actorId, command with { Headers = userHeaders });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
         }
         catch (Exception ex)
         {
@@ -76,7 +80,7 @@ public class ShoppingListController : BaseController
     [Route("ping")]
     public async Task<IActionResult> Ping([FromHeader] Guid userId, [FromHeader] Guid deviceId)
     {
-        await _troolioClient.Tell(Guid.NewGuid().ToString(), new Ping(new Metadata(Guid.NewGuid(), userId, deviceId)));
+        await _troolioClient.Tell(Guid.NewGuid().ToString(), new Ping(GetUserMetadata(userId, deviceId)));
         return Ok();
     }
 
@@ -117,7 +121,11 @@ public class ShoppingListController : BaseController
 
         try
         {
-            result = await _troolioClient.Ask(ShoppingListId.ToString(), new ShoppingListDetails());
+            result = await _troolioClient.Ask(ShoppingListId.ToString(), new ShoppingListDetails(GetUserMetadata(userId, deviceId).UserId));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
         }
         catch (Exception ex)
         {
@@ -137,23 +145,27 @@ public class ShoppingListController : BaseController
         {
             result = await _troolioClient.Get<ShoppingListReadModel>(ShoppingListId.ToString());
 
-            if (result.Title == null)
+            if (string.IsNullOrEmpty(result.Title))
             {
                 throw new ApplicationException("Shopping list has not been created");
             }
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
         }
         catch (Exception ex)
         {
             return BadRequest(ex.Message);
         }
 
-        if (result.Authorized(new Metadata(Guid.Empty, userId, deviceId)))
+        if (result.Authorized(GetUserMetadata(userId, deviceId)))
         {
             return Ok(result);
-        } 
+        }
         else
         {
-            return Unauthorized();
+            return Forbid();
         }
     }
 }

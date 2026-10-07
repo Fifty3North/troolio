@@ -1,0 +1,27 @@
+<Solution>
+  <Folder Name="/Projections/">
+    <Project Path="Projections/Troolio.Projection.EntityFramework/Troolio.Projection.EntityFramework.csproj" />
+  </Folder>
+  <Folder Name="/Sample/">
+    <Project Path="Sample/Calculator/Calculator.csproj" />
+    <Project Path="Sample/MartenCounter/MartenCounter.csproj" />
+    <Project Path="Sample/RedisReadModels/RedisReadModels.csproj" />
+    <Project Path="Sample/ToDo.EventStoreEfApi.Tests/ToDo.EventStoreEfApi.Tests.csproj" />
+    <Project Path="Sample/ToDo.EventStoreEfApi/ToDo.EventStoreEfApi.csproj" />
+  </Folder>
+  <Folder Name="/Sample/ShoppingListSample/">
+    <Project Path="Sample/ShoppingListSample/Sample.Api/Sample.Api.csproj" />
+    <Project Path="Sample/ShoppingListSample/Sample.Database/Sample.Database.csproj" />
+    <Project Path="Sample/ShoppingListSample/Sample.Host.App/Sample.Host.App.csproj" />
+    <Project Path="Sample/ShoppingListSample/Sample.Host/Sample.Host.csproj" />
+    <Project Path="Sample/ShoppingListSample/Sample.LoadTest/Sample.LoadTest.csproj" />
+    <Project Path="Sample/ShoppingListSample/Sample.Shared/Sample.Shared.csproj" />
+  </Folder>
+  <Folder Name="/Stores/">
+    <Project Path="Stores/Troolio.Extensions.Tests/Troolio.Extensions.Tests.csproj" />
+    <Project Path="Stores/Troolio.Stores.EventStore/Troolio.Stores.EventStore.csproj" />
+    <Project Path="Stores/Troolio.Stores.Marten/Troolio.Stores.Marten.csproj" />
+  </Folder>
+  <Project Path="Tests/Tests.csproj" />
+  <Project Path="Troolio.Projection.Redis/Troolio.Projection.Redis.csproj" />
+</Solution>

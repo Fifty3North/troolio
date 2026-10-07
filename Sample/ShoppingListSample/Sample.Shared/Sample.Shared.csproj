@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -6,10 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\trool.io\Troolio.Core\Troolio.Core.csproj" />
-    <ProjectReference Include="..\..\..\..\trool.io\Orleankka\Orleankka.csproj" />
-    <ProjectReference Include="..\..\..\..\trool.io\Orleankka.Runtime\Orleankka.Runtime.csproj" />
-    <ProjectReference Include="..\..\..\..\trool.io\Orleankka.TestKit\Orleankka.TestKit.csproj" />
+    <PackageReference Include="Troolio.Core" Version="$(TroolioCoreVersion)" />
+    <PackageReference Include="Microsoft.Orleans.Sdk" Version="$(OrleansVersion)" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

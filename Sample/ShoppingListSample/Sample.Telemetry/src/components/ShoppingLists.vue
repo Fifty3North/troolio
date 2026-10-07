@@ -1,159 +1,86 @@
-<template lang="pug">
-.shoppingLists
-    .header
-        .form
-            input.form-control.add-task(type='text' v-model="ShoppingListName" placeholder='New Shopping List...' @keydown.enter="CreateNewShoppingList")
-            button.btn.btn-primary(v-on:click="CreateNewShoppingList") Create New
-    .data
-        ShoppingList(v-for="list in ShoppingLists" 
-            :shoppingList="list"
-            :key="list.id"
-            @add="AddItemToList(list.id, $event)"
-            @check="CheckItem(list.id, $event)"
-            @remove="RemoveItem(list.id, $event)" )
+<template>
+  <section class="shoppingLists" aria-label="Your shopping lists">
+    <form class="list-form" @submit.prevent="createList">
+      <label for="list-title">New list</label>
+      <input id="list-title" v-model="title" placeholder="Weekend groceries" maxlength="120" required />
+      <button :disabled="busy || !title.trim()">Create list</button>
+      <button type="button" @click="refresh" :disabled="busy">Refresh</button>
+    </form>
+    <form class="list-form" @submit.prevent="joinList">
+      <label for="join-code">Join code</label>
+      <input id="join-code" v-model="joinCode" placeholder="Code shared by the owner" required />
+      <button :disabled="busy || !joinCode.trim()">Join list</button>
+    </form>
+    <nav class="list-form" aria-label="Shopping list pages">
+      <button type="button" @click="previousPage" :disabled="busy || offset === 0">Previous</button>
+      <span>Page {{ Math.floor(offset / pageSize) + 1 }}</span>
+      <button type="button" @click="nextPage" :disabled="busy || lists.length < pageSize">Next</button>
+    </nav>
+    <p v-if="error" class="request-error" role="alert">{{ error }}</p>
+    <p v-if="notice" role="status">{{ notice }}</p>
+    <p v-if="!lists.length && !busy">No lists yet. Create one or join a shared list.</p>
+    <div v-for="list in lists" :key="list.id" class="list-section">
+      <p v-if="list.joinCode" class="join-code">Share this join code: <code>{{ list.joinCode }}</code></p>
+      <ShoppingList :shopping-list="list" @add="addItem(list.id, $event)" @check="checkItem(list.id, $event)" @remove="removeItem(list.id, $event)" />
+    </div>
+  </section>
 </template>
-<script lang="ts">
-export default {
-    name:'ShoppingLists'
-}
-</script>
-<script lang="ts" setup>
-import axios from 'axios'
-import { ref } from 'vue'
-import {metaEnv} from "../globals";
-import { Guid } from 'typescript-guid';
-import { LocalVariables } from '../Enums'
-import * as Interfaces from '../Interfaces';
+<script setup lang="ts">
+import { onMounted, ref } from 'vue';
+import { LocalVariables } from '../Enums';
+import type { ShoppingList as ListModel, AddToShoppingListEmit } from '../Interfaces';
+import { http, describeError } from '../api';
 import ShoppingList from './ShoppingList.vue';
-const ShoppingLists = ref<Interfaces.ShoppingList[]>([]);
-const ShoppingListName = ref('');
-
-function GetHeaders():Interfaces.PayloadHeaders{
-    const userId =  localStorage.getItem(LocalVariables.UserId) as string;
-    const deviceId =  localStorage.getItem(LocalVariables.DeviceId) as string;
-    const toReturn:Interfaces.PayloadHeaders = {
-        'userId': userId,
-        'deviceId': deviceId
-    }
-    return toReturn;
+const lists = ref<ListModel[]>([]);
+const title = ref('');
+const joinCode = ref('');
+const busy = ref(false);
+const error = ref('');
+const notice = ref('');
+const userId = localStorage.getItem(LocalVariables.UserId)!;
+const offset = ref(0);
+const pageSize = 50;
+interface CatalogList { id: string; title: string; collaborators: string[]; joinCode?: string; items: { id: string; name: string; status: number; quantity: number }[] }
+function nextPage() { offset.value += pageSize; refresh(); }
+function previousPage() { offset.value = Math.max(0, offset.value - pageSize); refresh(); }
+async function refresh() {
+  error.value = '';
+  try {
+    const catalog = (await http.get<CatalogList[]>(`User/${userId}/MyShoppingLists?skip=${offset.value}&take=${pageSize}`)).data;
+    lists.value = catalog.map(list => ({ ...list, items: list.items.map(item => ({
+      id: item.id, description: item.name, quantity: String(item.quantity), crossedOff: item.status === 1
+    })) }));
+  }
+  catch (failure) { error.value = describeError(failure); }
 }
-
-function CreateNewShoppingList(){
-    if(!ShoppingListName.value.trim()){
-        return;
-    }
-    
-    const headers:Interfaces.PayloadHeaders = GetHeaders();
-    const shoppingListId = Guid.create().toString();
-    const payload:Interfaces.CreateShoppingListPayload = {
-        title: ShoppingListName.value
-    }
-    
-    axios.post(`${metaEnv.VITE_API_URL}ShoppingList/${shoppingListId}/CreateNewList`,payload, { headers }).then((response: any) => {
-        if(response && response.status === 200){
-            const newShoppingList:Interfaces.ShoppingList ={
-                id:shoppingListId,
-                title:payload.title,
-                ownerId:headers.userId,
-                collaborators:[],
-                items:[]
-            } 
-            ShoppingLists.value.push(newShoppingList);
-            ShoppingListName.value='';
-        }
-    },(error) => {
-        console.log('error',error)
-    })
+async function command(action: () => Promise<unknown>) {
+  busy.value = true; error.value = ''; notice.value = '';
+  try { await action(); notice.value = 'Command accepted. Read models may take a moment to update.'; await refresh(); }
+  catch (failure) { error.value = describeError(failure); }
+  finally { busy.value = false; }
 }
-
-//trims 0 from the start
-const regexExp = RegExp('^[0]*')
-function AddItemToList(listId:string,emitPayload:Interfaces.AddToShoppingListEmit){
-    const headers:Interfaces.PayloadHeaders = GetHeaders();
-
-    emitPayload.quantity = emitPayload.quantity.replace(regexExp,'')
-    const payload:Interfaces.AddToShoppingListPayload = {
-        description: emitPayload.description,
-        quantity: emitPayload.quantity,
-        itemId: Guid.create().toString()
-    }
-    
-    axios.post(`${metaEnv.VITE_API_URL}ShoppingList/${listId}/AddItemToList`,payload, { headers }).then((response: any) => {
-        if(response && response.status === 200){
-            const newShoppingList:Interfaces.ShoppingListItem ={
-                id:payload.itemId,
-                crossedOff:false,
-                quantity:payload.quantity,
-                description:payload.description
-            } 
-            ShoppingLists.value.find(x=>x.id == listId)?.items.push(newShoppingList);     
-        }
-    },(error) => {
-        console.log('error',error)
-    })
+async function createList() {
+  await command(async () => { await http.post(`ShoppingList/${crypto.randomUUID()}/CreateNewList`, { title: title.value.trim() }); title.value = ''; });
 }
-
-function CheckItem(listId:string, itemId:string){
-    const headers:Interfaces.PayloadHeaders = GetHeaders();
-    const payload:Interfaces.CheckItemPayload = {
-        itemId:itemId
-    }
-    
-    axios.post(`${metaEnv.VITE_API_URL}ShoppingList/${listId}/CrossItemOffList`,payload, { headers }).then((response: any) => {
-        if(response && response.status === 200){
-            let found = ShoppingLists.value.find(x=>x.id == listId)?.items.find(i=>i.id == itemId);
-            if(found != null){
-                found.crossedOff = true;
-            }
-        }
-    },(error) => {
-        console.log('error',error)
-    })
+async function joinList() {
+  await command(async () => { await http.post('AllShoppingLists/JoinListUsingCode', { joinCode: joinCode.value.trim() }); joinCode.value = ''; });
 }
-
-function RemoveItem(listId:string, itemId:string){
-    const headers:Interfaces.PayloadHeaders = GetHeaders();
-    const payload:Interfaces.RemoveItemPayload = { 
-        itemId:itemId 
-    }
-    
-    axios.post(`${metaEnv.VITE_API_URL}ShoppingList/${listId}/RemoveItemFromList`,payload, { headers }).then((response: any) => {
-        if(response && response.status === 200){
-            let shoppingList = ShoppingLists.value.find(x=>x.id == listId);
-            const foundIndex = shoppingList?.items.findIndex(i=>i.id == itemId);
-            if(shoppingList && foundIndex != null){
-                shoppingList.items.splice(foundIndex,1);
-            }
-        }
-    },(error) => {
-        console.log('error',error)
-    })
+async function addItem(listId: string, item: AddToShoppingListEmit) {
+  await command(() => http.post(`ShoppingList/${listId}/AddItemToList`, { ...item, itemId: crypto.randomUUID() }));
 }
-
+async function checkItem(listId: string, itemId: string) { await command(() => http.post(`ShoppingList/${listId}/CrossItemOffList`, { itemId })); }
+async function removeItem(listId: string, itemId: string) { await command(() => http.post(`ShoppingList/${listId}/RemoveItemFromList`, { itemId })); }
+onMounted(refresh);
 </script>
-<style lang="scss" scoped>
-.shoppingLists{
-    height: 100%;
-    width:100%;
-    .header{
-        display: flex;
-        justify-content: center;
-        padding:1rem;
-        text-align: left;
-        .form{
-            display:flex;
-            input{
-                width: fit-content;
-                margin-right: 10px;
-            }
-            button{
-                
-            }
-        }
-    }
-    .data{
-        max-height: 88%;
-        overflow:auto;
-    }
-}
+<style scoped>
+.shoppingLists { max-width: 70rem; margin: auto; }
+.list-form { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem; margin: 1rem 0; }
+.list-form input { flex: 1; min-width: 12rem; }
+.list-form input, .list-form button { padding: .7rem; border: 1px solid #64677a; border-radius: .4rem; }
+.list-form input { color: #eee; background: #222635; }
+.list-form button { color: #151a24; background: #83e4da; }
+.list-form button:disabled { opacity: .5; }
+.list-section { margin: 1rem 0; }
+.request-error { color: #ffb5b5; }
+.join-code { color: #b9c1d8; }
 </style>

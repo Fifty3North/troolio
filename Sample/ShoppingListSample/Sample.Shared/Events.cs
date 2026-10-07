@@ -22,7 +22,7 @@ public record ListJoined(Metadata Headers) : Event(Headers);
 public record ListJoinedUsingCode(Guid ListId, Metadata Headers) : Event(Headers);
 
 [GenerateSerializer]
-public record NewListCreated(string Title, Metadata Headers) : Event(Headers);
+public record NewListCreated(string Title, Metadata Headers, string JoinCode) : Event(Headers);
 
 [GenerateSerializer]
 public record ShoppingListAdded(Guid ListId, string JoinCode, Metadata Headers) : Event(Headers);

@@ -1,75 +1,33 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Troolio.Core;
 
 namespace Sample.Api.Controllers;
 
 [ApiController]
-[Route("[Controller]")]
-public class TelemetryController : Controller
+[Route("Telemetry")]
+public sealed class TelemetryController(ApiTracing tracing, ILogger<TelemetryController> logger) : ControllerBase
 {
-    private ApiTracing _tracing { get; }
-
-    public TelemetryController(ApiTracing tracing)
-    {
-        _tracing = tracing;
-    }
-
-
-
-
-
-    [HttpPost]
-    [Route("disablelogging")]
+    [HttpPost("disablelogging")]
     public async Task<IActionResult> DisableLogging()
     {
-        try
-        {
-            await _tracing.DisableTracing();
-
-            return Ok();
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex);
-        }
+        try { await tracing.DisableTracing(); return Ok(); }
+        catch (Exception error) { return Failure(error); }
     }
-
-    [HttpPost]
-    [Route("enablelogging")]
-    public async Task<IActionResult> EnableLogging(Troolio.Core.TraceLevel? logLevel = null)
+    [HttpPost("enablelogging")]
+    public async Task<IActionResult> EnableLogging(TraceLevel? logLevel = null)
     {
-        try
-        {
-            if (!logLevel.HasValue)
-            {
-                await _tracing.EnableTracing();
-            }
-            else
-            {
-                await _tracing.EnableTracing(logLevel.Value);
-            }
-
-            return Ok();
-        }
-        catch(Exception ex)
-        {
-            return BadRequest(ex);
-        }
+        try { await tracing.EnableTracing(logLevel ?? TraceLevel.Error); return Ok(); }
+        catch (Exception error) { return Failure(error); }
     }
-
-    [HttpGet]
-    [Route("flush")]
+    [HttpGet("flush")]
     public async Task<ActionResult<IList<MessageLog>>> Flush()
     {
-        try
-        {
-            IList<MessageLog> messages = await _tracing.Flush();
-
-            return Ok(messages);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex);
-        }
+        try { return Ok(await tracing.Flush()); }
+        catch (Exception error) { return Failure(error); }
+    }
+    private ObjectResult Failure(Exception error)
+    {
+        logger.LogError(error, "The tracing operation failed.");
+        return Problem(title: "Tracing is temporarily unavailable.", statusCode: StatusCodes.Status503ServiceUnavailable);
     }
 }

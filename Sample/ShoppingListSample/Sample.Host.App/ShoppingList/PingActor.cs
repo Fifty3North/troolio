@@ -11,6 +11,7 @@ namespace Sample.Host.App.ShoppingList
     [GenerateSerializer]
     public record Pong(Metadata Headers) : Event(Headers);
 
+    [GenerateSerializer]
     public record PingState(int Count) : IActorState { }
 
     internal class PingActor : EventSourcedActor<PingState>, IPingActor

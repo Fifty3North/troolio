@@ -1,4 +1,4 @@
-﻿using Orleans.Concurrency;
+using Orleans.Concurrency;
 using Sample.Shared.ActorInterfaces;
 using Sample.Shared.Events;
 using Sample.Shared.InternalCommands;
@@ -13,6 +13,6 @@ public class AllShoppingListsOrchestrationActor : OrchestrationActor
 {
     public async Task On(EventEnvelope<NewListCreated> e)
     {
-        await System.ActorOf<IAllShoppingListsActor>(Constants.SingletonActorId).Tell(new AddShoppingList(e.Event.Headers, Guid.Parse(e.Id)));
+        await System.ActorOf<IAllShoppingListsActor>(Constants.SingletonActorId).Tell(new AddShoppingList(e.Event.Headers, Guid.Parse(e.Id), e.Event.JoinCode));
     }
 }

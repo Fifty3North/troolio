@@ -16,7 +16,7 @@
     --#{$variable-prefix}actor-bg: #{$white};
     --#{$variable-prefix}node-bg: #{$gray-800};
     --#{$variable-prefix}navbar-bg: #{$gray-900};
-    --#{$variable-prefix}canvas-img-bg: url(/images/dark-pattern-bg.jpg);
+    --#{$variable-prefix}canvas-img-bg: radial-gradient(circle at 1px 1px, #68718422 1px, transparent 0);
 
     --#{$variable-prefix}hover-bg: #{rgba($gray-900, 0.4)};
     --#{$variable-prefix}active-bg: #{$gray-900};

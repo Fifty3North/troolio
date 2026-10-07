@@ -5,7 +5,7 @@ using Troolio.Core;
 namespace Sample.Shared.InternalCommands;
 
 [GenerateSerializer]
-public record AddShoppingList(Metadata Headers, Guid ListId)
+public record AddShoppingList(Metadata Headers, Guid ListId, string JoinCode)
     : InternalCommand<IAllShoppingListsActor>(Headers);
 
 [GenerateSerializer]

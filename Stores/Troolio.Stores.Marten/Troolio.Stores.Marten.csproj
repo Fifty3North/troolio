@@ -1,21 +1,19 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-	  <Authors>Fifty3North (F3N Limited)</Authors>
-	  <Description>trool.io Marten store</Description>
-	  <Copyright></Copyright>
-	  <PackageProjectUrl>https://github.com/Fifty3North/troolio</PackageProjectUrl>
-	  <RepositoryUrl>https://github.com/Fifty3North/troolio.git</RepositoryUrl>
-	  <RepositoryType>git</RepositoryType>
-	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <IsPackable>true</IsPackable>
+    <Version>$(TroolioExtensionsVersion)</Version>
+    <Authors>Fifty3North (F3N Limited)</Authors>
+    <Description>PostgreSQL event persistence through Marten for ordinary Troolio actors.</Description>
+    <PackageProjectUrl>https://fifty3north.github.io/troolio-docs/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Fifty3North/troolio.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>package-readme.md</PackageReadmeFile>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="Marten" Version="5.10.1" />
-    <PackageReference Include="Troolio.Core" Version="1.0.3" />
+    <PackageReference Include="Troolio.Core" Version="$(TroolioCoreVersion)" />
+    <PackageReference Include="Marten" Version="9.46.0" />
+    <PackageReference Include="Marten.Newtonsoft" Version="9.46.0" />
+    <None Include="package-readme.md" Pack="true" PackagePath="" />
   </ItemGroup>
-
 </Project>

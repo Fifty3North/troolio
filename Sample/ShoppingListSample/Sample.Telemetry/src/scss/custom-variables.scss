@@ -41,6 +41,8 @@ $silver: #8fa5bf;
 
 $primary: #0c69f4;
 $secondary: $gray-600;
+$color-contrast-dark: #000000;
+$color-contrast-light: #ffffff;
 $success: $green;
 $info: $cyan;
 $warning: $yellow;
@@ -167,8 +169,8 @@ $btn-font-size: $font-size-base * 0.875;
 $body-bg: $white;
 $body-color: $gray-700;
 
-$canvas-light-bg: $gray-100 url(images/light-pattern-bg.png);
-$canvas-dark-bg: $gray-100 url(images/dark-pattern-bg.png);
+$canvas-light-bg: $gray-100 radial-gradient(circle at 1px 1px, #68718422 1px, transparent 0);
+$canvas-dark-bg: $gray-100 radial-gradient(circle at 1px 1px, #68718422 1px, transparent 0);
 
 $breadcrumb-divider: quote('→');
 $breadcrumb-font-size: $font-size-sm;

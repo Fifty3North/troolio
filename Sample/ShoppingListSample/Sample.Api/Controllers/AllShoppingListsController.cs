@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Troolio.Core;
 using Troolio.Core.Client;
 
@@ -20,9 +20,9 @@ public class AllShoppingListsController : BaseController
     public AllShoppingListsController(ITroolioClient troolioClient) : base(troolioClient) { }
 
     /// <summary>
-    /// Command execution giver full headers and a specific actor, this is intended for internal use.
+    /// Command execution given verified headers and a specific actor, this is intended for internal use.
     /// </summary>
-    /// <param name="userHeaders">Metadata object, collation id needs to be unique per command</param>
+    /// <param name="userHeaders">Verified caller metadata; correlation identifies the logical request</param>
     /// <param name="actorId">The id of the actor to execute the command against</param>
     /// <param name="command">The command to be executed using the metadata passed in the call</param>
     /// <returns></returns>

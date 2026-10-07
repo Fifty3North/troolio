@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Troolio ToDo</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0a0e14;--surface:#12161e;--surface2:#1a1f2b;--border:#222938;
+      --accent:#0C69F4;--accent-hover:#0a5ad4;--accent-glow:rgba(12,105,244,.15);
+      --teal:#46b4da;--teal-bg:rgba(70,180,218,.1);
+      --green:#34d399;--green-bg:rgba(52,211,153,.1);
+      --text:#e8eaed;--text2:#94a3b8;--text3:#5b6477;
+      --radius:14px;--shadow:0 8px 32px rgba(0,0,0,.4);
+    }
+    body{font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+    body::before{content:'';position:fixed;top:0;left:0;right:0;height:400px;background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(12,105,244,.06),transparent);pointer-events:none;z-index:0}
+
+    .app{max-width:680px;margin:0 auto;padding:40px 20px 80px;position:relative;z-index:1}
+    header{text-align:center;margin-bottom:48px}
+    header h1{font-size:1.75rem;font-weight:700;letter-spacing:-.3px;color:var(--text)}
+    header h1 span{color:var(--teal)}
+    header p{color:var(--text3);font-size:.8rem;margin-top:4px;letter-spacing:.3px;text-transform:uppercase}
+
+    /* ── logo ── */
+    .logo{width:72px;height:72px;margin:0 auto 20px;position:relative}
+    .logo-glow{position:absolute;inset:-12px;border-radius:50%;background:radial-gradient(circle,rgba(12,105,244,.2),transparent 70%);animation:breathe 3s ease-in-out infinite}
+    .logo svg{width:100%;height:100%;position:relative;z-index:1}
+    .logo-nodes{animation:nodeFloat 4s ease-in-out infinite}
+    @keyframes breathe{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.1)}}
+    @keyframes nodeFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+
+    /* ── input ── */
+    .input-bar{display:flex;gap:10px;margin-bottom:32px}
+    .input-bar input{
+      flex:1;padding:14px 18px;font-size:.95rem;color:var(--text);
+      background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);
+      outline:none;transition:border .2s,box-shadow .2s;
+    }
+    .input-bar input::placeholder{color:var(--text3)}
+    .input-bar input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+    .input-bar button{
+      padding:14px 28px;font-size:.95rem;font-weight:600;color:#fff;cursor:pointer;
+      background:var(--accent);border:none;border-radius:var(--radius);
+      transition:background .2s,transform .1s;white-space:nowrap;
+    }
+    .input-bar button:hover{background:var(--accent-hover)}
+    .input-bar button:active{transform:scale(.97)}
+    .input-bar button:disabled{opacity:.5;cursor:not-allowed}
+
+    nav button{padding:6px 16px;border:1px solid var(--border);border-radius:8px;color:var(--text);background:var(--surface);cursor:pointer}
+    nav button:disabled{opacity:.45;cursor:default}
+    /* ── filters ── */
+    .filters{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;align-items:center}
+    .filters .count{margin-left:auto;font-size:.78rem;color:var(--text3)}
+    .pill{
+      padding:7px 16px;font-size:.78rem;font-weight:500;border-radius:99px;cursor:pointer;
+      background:var(--surface);border:1.5px solid var(--border);color:var(--text2);
+      transition:all .2s;
+    }
+    .pill:hover{border-color:var(--accent);color:var(--text)}
+    .pill.active{background:var(--accent-glow);border-color:var(--accent);color:var(--accent)}
+
+    /* ── list ── */
+    .todo-list{display:flex;flex-direction:column;gap:6px}
+    .todo-item{
+      display:flex;align-items:center;gap:14px;padding:14px 18px;
+      background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);
+      transition:border .2s,transform .15s,box-shadow .2s;
+    }
+    .todo-item:hover{border-color:rgba(12,105,244,.3);box-shadow:0 2px 16px rgba(12,105,244,.06);transform:translateY(-1px)}
+    .todo-item.completed{opacity:1}
+    .todo-item.completed .todo-title{text-decoration:line-through;color:var(--text2)}
+
+    .check{
+      width:22px;height:22px;flex-shrink:0;border-radius:6px;cursor:pointer;
+      border:2px solid var(--border);background:transparent;
+      display:flex;align-items:center;justify-content:center;
+      transition:all .2s;
+    }
+    .check:hover{border-color:var(--accent)}
+    .check.done{background:var(--teal);border-color:var(--teal)}
+    .check.done svg{opacity:1}
+    .check svg{width:13px;height:13px;opacity:0;transition:opacity .15s}
+
+    .todo-body{flex:1;min-width:0}
+    .todo-title{font-size:.9rem;font-weight:500;word-break:break-word}
+    .todo-meta{font-size:.72rem;color:var(--text3);margin-top:4px;display:flex;gap:12px;flex-wrap:wrap}
+    .todo-meta .badge{
+      display:inline-flex;align-items:center;gap:4px;padding:2px 8px;
+      border-radius:99px;font-size:.68rem;font-weight:600;
+    }
+    .badge-open{background:var(--accent-glow);color:var(--accent)}
+    .badge-done{background:var(--teal-bg);color:var(--teal)}
+
+    /* ── empty ── */
+    .empty{text-align:center;padding:60px 0;color:var(--text3)}
+    .empty svg{width:56px;height:56px;margin-bottom:14px;opacity:.25}
+    .empty p{font-size:.9rem}
+
+    /* ── toast ── */
+    .toast-container{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:999}
+    .toast{
+      padding:12px 20px;border-radius:var(--radius);font-size:.85rem;font-weight:500;
+      color:#fff;box-shadow:var(--shadow);animation:slideIn .3s ease;
+      backdrop-filter:blur(8px);
+    }
+    .toast.success{background:rgba(5,150,105,.9)}
+    .toast.error{background:rgba(220,38,38,.9)}
+    @keyframes slideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+    .spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    @media(max-width:500px){
+      .input-bar{flex-direction:column}
+      .input-bar button{width:100%}
+      .filters .count{margin-left:0;width:100%;text-align:center}
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="logo">
+      <div class="logo-glow"></div>
+      <svg viewBox="0 0 24 22" fill="none" xmlns="http://www.w3.org/2000/svg" class="logo-nodes">
+        <!-- Troolio node-graph mark: 3 connected circles -->
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M11.0285 8.85783L6.71599 14.6703L4.90901 13.3297L9.22151 7.51717L11.0285 8.85783Z" fill="#0C69F4"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M11.0285 8.85783L6.71599 14.6703L4.90901 13.3297L9.22151 7.51717L11.0285 8.85783Z" fill="url(#lg0)" fill-opacity="0.25"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M15.4048 7.42564L18.9673 13.4256L17.0327 14.5744L13.4702 8.57436L15.4048 7.42564Z" fill="#0C69F4"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M15.4048 7.42564L18.9673 13.4256L17.0327 14.5744L13.4702 8.57436L15.4048 7.42564Z" fill="url(#lg1)" fill-opacity="0.25"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M12 7.25C13.2426 7.25 14.25 6.24264 14.25 5C14.25 3.75736 13.2426 2.75 12 2.75C10.7574 2.75 9.75 3.75736 9.75 5C9.75 6.24264 10.7574 7.25 12 7.25ZM12 9.5C14.4853 9.5 16.5 7.48528 16.5 5C16.5 2.51472 14.4853 0.5 12 0.5C9.51472 0.5 7.5 2.51472 7.5 5C7.5 7.48528 9.51472 9.5 12 9.5Z" fill="#0C69F4"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M12 7.25C13.2426 7.25 14.25 6.24264 14.25 5C14.25 3.75736 13.2426 2.75 12 2.75C10.7574 2.75 9.75 3.75736 9.75 5C9.75 6.24264 10.7574 7.25 12 7.25ZM12 9.5C14.4853 9.5 16.5 7.48528 16.5 5C16.5 2.51472 14.4853 0.5 12 0.5C9.51472 0.5 7.5 2.51472 7.5 5C7.5 7.48528 9.51472 9.5 12 9.5Z" fill="url(#lg2)" fill-opacity="0.25"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M4.5 19.25C5.74264 19.25 6.75 18.2426 6.75 17C6.75 15.7574 5.74264 14.75 4.5 14.75C3.25736 14.75 2.25 15.7574 2.25 17C2.25 18.2426 3.25736 19.25 4.5 19.25ZM4.5 21.5C6.98528 21.5 9 19.4853 9 17C9 14.5147 6.98528 12.5 4.5 12.5C2.01472 12.5 0 14.5147 0 17C0 19.4853 2.01472 21.5 4.5 21.5Z" fill="#46b4da"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M4.5 19.25C5.74264 19.25 6.75 18.2426 6.75 17C6.75 15.7574 5.74264 14.75 4.5 14.75C3.25736 14.75 2.25 15.7574 2.25 17C2.25 18.2426 3.25736 19.25 4.5 19.25ZM4.5 21.5C6.98528 21.5 9 19.4853 9 17C9 14.5147 6.98528 12.5 4.5 12.5C2.01472 12.5 0 14.5147 0 17C0 19.4853 2.01472 21.5 4.5 21.5Z" fill="url(#lg3)" fill-opacity="0.25"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M19.5 19.25C20.7426 19.25 21.75 18.2426 21.75 17C21.75 15.7574 20.7426 14.75 19.5 14.75C18.2574 14.75 17.25 15.7574 17.25 17C17.25 18.2426 18.2574 19.25 19.5 19.25ZM19.5 21.5C21.9853 21.5 24 19.4853 24 17C24 14.5147 21.9853 12.5 19.5 12.5C17.0147 12.5 15 14.5147 15 17C15 19.4853 17.0147 21.5 19.5 21.5Z" fill="#46b4da"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M19.5 19.25C20.7426 19.25 21.75 18.2426 21.75 17C21.75 15.7574 20.7426 14.75 19.5 14.75C18.2574 14.75 17.25 15.7574 17.25 17C17.25 18.2426 18.2574 19.25 19.5 19.25ZM19.5 21.5C21.9853 21.5 24 19.4853 24 17C24 14.5147 21.9853 12.5 19.5 12.5C17.0147 12.5 15 14.5147 15 17C15 19.4853 17.0147 21.5 19.5 21.5Z" fill="url(#lg4)" fill-opacity="0.25"/>
+        <defs>
+          <linearGradient id="lg0" x1="12" y1="5" x2="12" y2="21.5" gradientUnits="userSpaceOnUse"><stop stop-opacity="0"/><stop offset="1"/></linearGradient>
+          <linearGradient id="lg1" x1="12" y1="5" x2="12" y2="21.5" gradientUnits="userSpaceOnUse"><stop stop-opacity="0"/><stop offset="1"/></linearGradient>
+          <linearGradient id="lg2" x1="12" y1="5" x2="12" y2="21.5" gradientUnits="userSpaceOnUse"><stop stop-opacity="0"/><stop offset="1"/></linearGradient>
+          <linearGradient id="lg3" x1="12" y1="5" x2="12" y2="21.5" gradientUnits="userSpaceOnUse"><stop stop-opacity="0"/><stop offset="1"/></linearGradient>
+          <linearGradient id="lg4" x1="12" y1="5" x2="12" y2="21.5" gradientUnits="userSpaceOnUse"><stop stop-opacity="0"/><stop offset="1"/></linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <h1>Troolio ToDo</h1>
+    <p>Event-sourced task management</p>
+  </header>
+
+  <form class="input-bar" id="addForm">
+    <input type="text" id="titleInput" placeholder="What needs to be done?" maxlength="200" autocomplete="off" required>
+    <button type="submit" id="addBtn">Add</button>
+  </form>
+
+  <div class="filters" id="filters">
+    <button class="pill active" data-filter="all">All</button>
+    <button class="pill" data-filter="active">Active</button>
+    <button class="pill" data-filter="completed">Completed</button>
+    <span class="count" id="countLabel"></span>
+  </div>
+
+  <div class="todo-list" id="todoList"></div>
+
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<nav aria-label="Todo pages" style="display:flex;gap:12px;justify-content:center;padding:16px;color:#94a3b8">
+  <button id="previousPage" type="button" disabled>Previous</button>
+  <span id="pageLabel">Page 1</span>
+  <button id="nextPage" type="button" disabled>Next</button>
+</nav>
+<script>
+(function () {
+  'use strict';
+
+  var API = window.location.origin;
+  var todos = [];
+  var filter = 'all';
+  var pageOffset = 0;
+  var pageSize = 50;
+
+  function qs(s) { return document.querySelector(s); }
+  var listEl = qs('#todoList');
+  var countEl = qs('#countLabel');
+  var titleInput = qs('#titleInput');
+  var addBtn = qs('#addBtn');
+
+  function toast(msg, type) {
+    var el = document.createElement('div');
+    el.className = 'toast ' + type;
+    el.textContent = msg;
+    qs('#toasts').appendChild(el);
+    setTimeout(function() { el.style.opacity = '0'; setTimeout(function() { el.remove(); }, 300); }, 3000);
+  }
+
+  function api(path, opts) {
+    return fetch(API + path, opts).then(function(res) {
+      if (!res.ok) {
+        return res.json().catch(function() { return {}; }).then(function(body) {
+          throw new Error(body.error || res.statusText);
+        });
+      }
+      if (res.status === 202 || res.status === 204) return null;
+      return res.json();
+    });
+  }
+
+  function loadTodos() {
+    return api('/todos?skip=' + pageOffset + '&take=' + pageSize).then(function(data) {
+      todos = data;
+      render();
+    }).catch(function(e) {
+      toast('Failed to load todos: ' + e.message, 'error');
+    });
+  }
+
+  function waitForProjection(expectedCount, attempts) {
+    if (attempts <= 0) return loadTodos();
+    return new Promise(function(resolve) { setTimeout(resolve, 300); }).then(function() {
+      return api('/todos?skip=' + pageOffset + '&take=' + pageSize);
+    }).then(function(data) {
+      if (data.length !== expectedCount && attempts > 1) {
+        return waitForProjection(expectedCount, attempts - 1);
+      }
+      todos = data;
+      render();
+    });
+  }
+
+  function createTodo(title) {
+    addBtn.disabled = true;
+    addBtn.innerHTML = '<span class="spinner"></span>';
+    var prevCount = pageOffset === 0 ? todos.length : 0;
+    pageOffset = 0;
+    return api('/todos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: title }),
+    }).then(function() {
+      titleInput.value = '';
+      toast('Todo created', 'success');
+      return waitForProjection(prevCount + 1, 5);
+    }).catch(function(e) {
+      toast(e.message, 'error');
+    }).then(function() {
+      addBtn.disabled = false;
+      addBtn.textContent = 'Add';
+    });
+  }
+
+  function completeTodo(id) {
+    var prevCompleted = todos.filter(function(t) { return t.isCompleted; }).length;
+    return api('/todos/' + encodeURIComponent(id) + '/complete', { method: 'POST' }).then(function() {
+      toast('Marked complete', 'success');
+      return waitForChange(prevCompleted, 5);
+    }).catch(function(e) {
+      toast(e.message, 'error');
+    });
+  }
+
+  function waitForChange(prevCompleted, attempts) {
+    if (attempts <= 0) return loadTodos();
+    return new Promise(function(resolve) { setTimeout(resolve, 300); }).then(function() {
+      return api('/todos?skip=' + pageOffset + '&take=' + pageSize);
+    }).then(function(data) {
+      var nowCompleted = data.filter(function(t) { return t.isCompleted; }).length;
+      if (nowCompleted === prevCompleted && attempts > 1) {
+        return waitForChange(prevCompleted, attempts - 1);
+      }
+      todos = data;
+      render();
+    });
+  }
+
+  function getFiltered() {
+    if (filter === 'active') return todos.filter(function(t) { return !t.isCompleted; });
+    if (filter === 'completed') return todos.filter(function(t) { return t.isCompleted; });
+    return todos;
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' +
+           d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function escapeHtml(str) {
+    var d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function render() {
+    qs('#previousPage').disabled = pageOffset === 0;
+    qs('#nextPage').disabled = todos.length < pageSize;
+    qs('#pageLabel').textContent = 'Page ' + (Math.floor(pageOffset / pageSize) + 1);
+    var items = getFiltered();
+    var active = todos.filter(function(t) { return !t.isCompleted; }).length;
+    countEl.textContent = active + ' remaining on this page';
+
+    if (items.length === 0) {
+      listEl.innerHTML =
+        '<div class="empty">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>' +
+          '<p>' + (filter === 'all' ? 'No todos yet \u2014 add one above!' : 'No ' + filter + ' todos') + '</p>' +
+        '</div>';
+      return;
+    }
+
+    listEl.innerHTML = items.map(function(t) {
+      return '<div class="todo-item' + (t.isCompleted ? ' completed' : '') + '" data-id="' + t.id + '">' +
+        '<button class="check' + (t.isCompleted ? ' done' : '') + '" aria-label="Toggle complete"' +
+          (t.isCompleted ? ' disabled' : '') + '>' +
+          '<svg viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6l2.5 2.5 5-5"/></svg>' +
+        '</button>' +
+        '<div class="todo-body">' +
+          '<div class="todo-title">' + escapeHtml(t.title) + '</div>' +
+          '<div class="todo-meta">' +
+            '<span class="badge ' + (t.isCompleted ? 'badge-done' : 'badge-open') + '">' +
+              (t.isCompleted ? '\u2713 Done' : '\u25CB Open') +
+            '</span>' +
+            '<span>Created ' + fmtDate(t.createdAt) + '</span>' +
+            (t.completedAt ? '<span>Done ' + fmtDate(t.completedAt) + '</span>' : '') +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  qs('#addForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var title = titleInput.value.trim();
+    if (title) createTodo(title);
+  });
+
+  listEl.addEventListener('click', function(e) {
+    var btn = e.target.closest('.check');
+    if (!btn || btn.disabled) return;
+    var item = btn.closest('.todo-item');
+    completeTodo(item.dataset.id);
+  });
+
+  var pills = document.querySelectorAll('.pill');
+  for (var i = 0; i < pills.length; i++) {
+    pills[i].addEventListener('click', function() {
+      for (var j = 0; j < pills.length; j++) pills[j].classList.remove('active');
+      this.classList.add('active');
+      filter = this.dataset.filter;
+      render();
+    });
+  }
+
+  qs('#previousPage').addEventListener('click', function() { pageOffset = Math.max(0, pageOffset - pageSize); loadTodos(); });
+  qs('#nextPage').addEventListener('click', function() { pageOffset += pageSize; loadTodos(); });
+  loadTodos();
+})();
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-﻿using StackExchange.Redis;
+using StackExchange.Redis;
 using System.Linq.Expressions;
 using Troolio.Projection.Redis.Exceptions;
 using Troolio.Projection.Redis.Models;
@@ -65,21 +65,47 @@ namespace Troolio.Projection.Redis.Providers
             }
         }
 
-        private RedisProviderException ToRedisProviderException(Exception ex)
+        protected async Task DatabaseActionAsync(Func<IDatabase, Task> action)
         {
-            RedisProviderException rpex;
-            if (ex.GetType().IsSerializable)
+            try { await action(GetDatabase()); }
+            catch (Exception exception) { throw ToRedisProviderException(exception); }
+        }
+
+        private static RedisProviderException ToRedisProviderException(Exception exception) =>
+            new(exception.Message, exception);
+
+        /// <summary>Returns at most 1000 committed changes at an absolute list offset.</summary>
+        public async Task<RedisChangePage> GetChangePageAsync(Guid partitionId, long offset, int maxCount = 100)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(offset);
+            if (maxCount is < 1 or > 1000) throw new ArgumentOutOfRangeException(nameof(maxCount));
+            List<ChangeHashEntry> entries = [];
+            await DatabaseActionAsync(async db =>
             {
-                rpex = new RedisProviderException(ex.Message, ex);
-            }
-            else
-            {
-                rpex = new RedisProviderException(ex.Message)
+                RedisValue[] ids = await db.ListRangeAsync(GetChangeIndexKey(partitionId), offset, checked(offset + maxCount - 1)).ConfigureAwait(false);
+                foreach (RedisValue id in ids)
                 {
-                    Source = ex.Source
-                };
+                    RedisValue value = await db.HashGetAsync(GetChangeHashKey(partitionId), id).ConfigureAwait(false);
+                    if (!value.HasValue) throw new InvalidDataException("Change-feed history is incomplete; reload the read model.");
+                    entries.Add(new ChangeHashEntry(id, value));
+                }
+            }).ConfigureAwait(false);
+            return new RedisChangePage(entries, checked(offset + entries.Count), entries.Count == maxCount);
+        }
+
+        public RedisChangePage GetChangePage(Guid partitionId, long offset, int maxCount = 100)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(offset);
+            if (maxCount is < 1 or > 1000) throw new ArgumentOutOfRangeException(nameof(maxCount));
+            RedisValue[] ids = DatabaseAction(db => db.ListRange(GetChangeIndexKey(partitionId), offset, checked(offset + maxCount - 1)));
+            List<ChangeHashEntry> entries = new(ids.Length);
+            foreach (RedisValue id in ids)
+            {
+                RedisValue value = HashGet(GetChangeHashKey(partitionId), id);
+                if (!value.HasValue) throw new InvalidDataException("Change-feed cursor history is incomplete; reload the read model.");
+                entries.Add(new ChangeHashEntry(id, value));
             }
-            return rpex;
+            return new RedisChangePage(entries, checked(offset + ids.Length), ids.Length == maxCount);
         }
 
         /// <summary>
@@ -172,7 +198,7 @@ namespace Troolio.Projection.Redis.Providers
             }
             else
             {
-                return Guid.Parse(changeId);
+                return Guid.Parse(changeId.ToString());
             }
         }
 
@@ -204,76 +230,12 @@ namespace Troolio.Projection.Redis.Providers
 
         private RedisValue[] DiffChangesFromList(IDatabase db, string key, string lastChangeId, int batchSize)
         {
-            // get the number of changes
-            long listLength = db.ListLength(key);
-
-            // early exit if nothing in list (very unlikely)
-            if (listLength <= 0)
-            {
-                return new RedisValue[0];
-            }
-
-            // collection to hold changes
-            // we will read list from end to start (until lastChange found) but we want the changes returned earliset first
-            // hence use a FIFO collection
-            Stack<RedisValue> changes = new Stack<RedisValue>();
-
-            // determine here if lastChange provided so we do not need to compare each RedisValue if not
-            bool checkLastChange = !string.IsNullOrEmpty(lastChangeId);
-
-            // initialize check to determine if lastChange found
-            bool lastChangeFound = false;
-
-            // determine initial start and end index for batch to retrieve
-            if (batchSize <= 0)
-            {
-                batchSize = 1000;
-            }
-
-            int startIndexOffset = batchSize - 1;
-            long endIndex = listLength - 1;
-            long startIndex = endIndex - startIndexOffset;
-            if (startIndex < 0)
-            {
-                startIndex = 0;
-            }
-
-            while (!lastChangeFound && endIndex >= 0)
-            {
-                // get values in list from long start idx to long end idx
-                RedisValue[] rangeValues = db.ListRange(key, startIndex, endIndex);
-
-                // read batch from latest first
-                for (int i = rangeValues.Length - 1; i >= 0; i--)
-                {
-                    // read value
-                    RedisValue change = rangeValues[i];
-
-                    // check that not reached lastChange
-                    if (checkLastChange && change == lastChangeId)
-                    {
-                        lastChangeFound = true;
-                        break;
-                    }
-
-                    // add value to stack
-                    changes.Push(change);
-                }
-
-                // determine new bounds (unless we have already found last change)
-                if (!lastChangeFound)
-                {
-                    endIndex = endIndex - batchSize;
-                    startIndex = endIndex - startIndexOffset;
-                    if (startIndex < 0)
-                    {
-                        startIndex = 0;
-                    }
-                }
-            }
-
-            RedisValue[] values = changes.ToArray();
-            return values;
+            long length = db.ListLength(key);
+            RedisValue[] values = db.ListRange(key, Math.Max(0, length - batchSize), -1);
+            if (string.IsNullOrEmpty(lastChangeId)) return values;
+            int position = Array.FindIndex(values, value => value == lastChangeId);
+            if (position < 0) throw new InvalidOperationException("Cursor is outside the bounded change window; reload the read model or use GetChangePage.");
+            return values.Skip(position + 1).ToArray();
         }
 
         public bool EntityIndexContains(string entityKey, string entityTypeName, Guid partitionId)
@@ -372,6 +334,17 @@ namespace Troolio.Projection.Redis.Providers
             return KeyExists(key);
         }
 
+        public async Task<TEntity?> GetEntityAsync(Guid id)
+        {
+            TEntity? entity = null;
+            await DatabaseActionAsync(async db =>
+            {
+                HashEntry[] entries = await db.HashGetAllAsync(GetEntityKey(id)).ConfigureAwait(false);
+                if (entries.Length > 0) entity = RedisConverter<TEntity>.FromHashEntries(entries);
+            }).ConfigureAwait(false);
+            return entity;
+        }
+
         public TEntity GetEntity(Guid id)
         {
             string key = GetEntityKey(id);
@@ -391,14 +364,6 @@ namespace Troolio.Projection.Redis.Providers
             return GetEntityProperty<TProperty>(id, propertyName);
         }
 
-        // TODO: lastChange should be specific to a partition
-        private string _lastChange;
-
-        private void SetLastChange(string changeId)
-        {
-            _lastChange = changeId;
-        }
-
         public async Task<string> CreateEntity(Guid id, TEntity entity, Guid partitionId)
         {
             string key = GetEntityKey(id);
@@ -406,19 +371,22 @@ namespace Troolio.Projection.Redis.Providers
 
             HashEntry[] entries = RedisConverter<TEntity>.ToHashEntries(entity);
 
-            await DatabaseAction(async db =>
+            string? operationChange = null;
+            await DatabaseActionAsync(async db =>
             {
                 ITransaction trans = db.CreateTransaction();
                 Task txTask = trans.HashSetAsync(key, entries);
                 Task<bool> addTxTask = trans.SetAddAsync(entityIndexKey, key);
-                string lastChange = UpdateChangeSet(trans, key, partitionId);
-                SetLastChange(lastChange);
-                await trans.ExecuteAsync();
+                var change = UpdateChangeSet(trans, key, partitionId);
+                string lastChange = change.Id;
+                operationChange = lastChange;
+                if (!await trans.ExecuteAsync()) throw new InvalidOperationException("Redis transaction was not committed.");
+                await Task.WhenAll(change.Tasks);
                 await txTask;
                 await addTxTask;
             });
 
-            return _lastChange;
+            return operationChange!;
         }
 
         public async Task<string> UpdateEntity(Guid id, TEntity entity, Guid partitionId, params Expression<Func<TEntity, object>>[] updatedProperties)
@@ -426,17 +394,20 @@ namespace Troolio.Projection.Redis.Providers
             string key = GetEntityKey(id);
             HashEntry[] entityHash = RedisConverter<TEntity>.ToHashEntries(entity, updatedProperties);
 
-            await DatabaseAction(async db =>
+            string? operationChange = null;
+            await DatabaseActionAsync(async db =>
             {
                 ITransaction trans = db.CreateTransaction();
                 Task txTask = trans.HashSetAsync(key, entityHash);
-                string lastchange = UpdateChangeSet(trans, key, partitionId);
-                SetLastChange(lastchange);
-                await trans.ExecuteAsync();
+                var change = UpdateChangeSet(trans, key, partitionId);
+                string lastchange = change.Id;
+                operationChange = lastchange;
+                if (!await trans.ExecuteAsync()) throw new InvalidOperationException("Redis transaction was not committed.");
+                await Task.WhenAll(change.Tasks);
                 await txTask;
             });
 
-            return _lastChange;
+            return operationChange!;
         }
 
         public async Task<string> DeleteEntity(Guid id, Guid partitionId)
@@ -444,19 +415,22 @@ namespace Troolio.Projection.Redis.Providers
             string key = GetEntityKey(id);
             string entityIndexKey = GetEntityIndexKey(partitionId);
 
-            await DatabaseAction(async db =>
+            string? operationChange = null;
+            await DatabaseActionAsync(async db =>
             {
                 ITransaction trans = db.CreateTransaction();
                 Task<bool> txTask = trans.KeyDeleteAsync(key);
                 Task<bool> deleteTxTask = trans.SetRemoveAsync(entityIndexKey, key);
-                string lastChange = UpdateChangeSet(trans, key, partitionId);
-                SetLastChange(lastChange);
-                await trans.ExecuteAsync();
+                var change = UpdateChangeSet(trans, key, partitionId);
+                string lastChange = change.Id;
+                operationChange = lastChange;
+                if (!await trans.ExecuteAsync()) throw new InvalidOperationException("Redis transaction was not committed.");
+                await Task.WhenAll(change.Tasks);
                 await txTask;
                 await deleteTxTask;
             });
 
-            return _lastChange;
+            return operationChange!;
         }
 
         public async Task<string> AddEntityKeyToPartition(Guid id, Guid partitionId)
@@ -478,17 +452,20 @@ namespace Troolio.Projection.Redis.Providers
             string key = GetEntityKey(id);
             string entityIndexKey = GetEntityIndexKey(partitionId);
 
-            await DatabaseAction(async db =>
+            string? operationChange = null;
+            await DatabaseActionAsync(async db =>
             {
                 ITransaction trans = db.CreateTransaction();
                 Task<bool> addTxTask = trans.SetAddAsync(entityIndexKey, key);
-                string lastChange = UpdateChangeSet(trans, key, partitionId);
-                SetLastChange(lastChange);
-                await trans.ExecuteAsync();
+                var change = UpdateChangeSet(trans, key, partitionId);
+                string lastChange = change.Id;
+                operationChange = lastChange;
+                if (!await trans.ExecuteAsync()) throw new InvalidOperationException("Redis transaction was not committed.");
+                await Task.WhenAll(change.Tasks);
                 await addTxTask;
             });
 
-            return _lastChange;
+            return operationChange!;
         }
 
         public async Task<string> RemoveEntityKeyFromPartition(Guid id, Guid partitionId)
@@ -496,29 +473,31 @@ namespace Troolio.Projection.Redis.Providers
             string key = GetEntityKey(id);
             string entityIndexKey = GetEntityIndexKey(partitionId);
 
-            await DatabaseAction(async db =>
+            string? operationChange = null;
+            await DatabaseActionAsync(async db =>
             {
                 ITransaction trans = db.CreateTransaction();
                 Task<bool> deleteTxTask = trans.SetRemoveAsync(entityIndexKey, key);
-                string lastChange = UpdateChangeSet(trans, key, partitionId);
-                SetLastChange(lastChange);
-                await trans.ExecuteAsync();
+                var change = UpdateChangeSet(trans, key, partitionId);
+                string lastChange = change.Id;
+                operationChange = lastChange;
+                if (!await trans.ExecuteAsync()) throw new InvalidOperationException("Redis transaction was not committed.");
+                await Task.WhenAll(change.Tasks);
                 await deleteTxTask;
             });
 
-            return _lastChange;
+            return operationChange!;
         }
 
-        private string UpdateChangeSet(ITransaction trans, string entityKey, Guid partitionId)
+        private (string Id, Task[] Tasks) UpdateChangeSet(ITransaction trans, string entityKey, Guid partitionId)
         {
             string changeIndexKey = GetChangeIndexKey(partitionId);
             string changeHashKey = GetChangeHashKey(partitionId);
             string changeId = Guid.NewGuid().ToString();
 
-            trans.ListRightPushAsync(changeIndexKey, changeId);
-            trans.HashSetAsync(changeHashKey, changeId, entityKey);
-
-            return changeId;
+            Task append = trans.ListRightPushAsync(changeIndexKey, changeId);
+            Task hash = trans.HashSetAsync(changeHashKey, changeId, entityKey);
+            return (changeId, new[] { append, hash });
         }
     }
 }

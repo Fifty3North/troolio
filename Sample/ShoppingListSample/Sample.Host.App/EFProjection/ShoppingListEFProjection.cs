@@ -1,4 +1,4 @@
-﻿using Omu.ValueInjecter;
+using Omu.ValueInjecter;
 using Orleans.Concurrency;
 using Sample.Host.App.ShoppingList;
 using Sample.Shared.Events;
@@ -8,7 +8,6 @@ using Troolio.Core.Projection;
 namespace Sample.Database.Projection
 {
     [ProjectionStreamSubscription(nameof(ShoppingListActor))]
-    [Reentrant]
     public class ShoppingListEFProjection : EntityFrameworkBatchedProjection<Model.ShoppingList, Model.ShoppingListsDbContext>, Shared.ActorInterfaces.IShoppingListEFProjection
     {
         protected override void SetupMappings()
@@ -21,6 +20,7 @@ namespace Sample.Database.Projection
                 {
                     Id = listId,
                     Title = src.Event.Title,
+                    JoinCode = src.Event.JoinCode,
                     AuthorId = src.Event.Headers.UserId,
                 };
 
@@ -28,6 +28,6 @@ namespace Sample.Database.Projection
             });
         }
 
-        async Task On(EventEnvelope<NewListCreated> e) => await base.Create(e);
+        public async Task On(EventEnvelope<NewListCreated> e) => await base.Create(e);
     }
 }

@@ -1,4 +1,4 @@
-﻿
+
 using Microsoft.Extensions.Logging;
 using Omu.ValueInjecter;
 using Orleankka;
@@ -57,6 +57,10 @@ namespace Troolio.Projection.Persistence
                 {
                     await RemoveFromPartition(remove.EntityId, remove.PartitionId);
                 }
+                else
+                {
+                    throw new NotSupportedException($"Unsupported Redis projection mapping: {redisEventEntity.GetType().Name}.");
+                }
             }
         }
 
@@ -100,7 +104,7 @@ namespace Troolio.Projection.Persistence
 
             // Add update for IStatefulItem.Id
             Expression<Func<TEntity, object>>[] updatedProperties = update.UpdatedProperties;
-            Array.Resize(ref updatedProperties, updatedProperties.Length + 1);
+            // Preserve the supplied property expressions without adding an empty expression.
             //updatedProperties[updatedProperties.Length - 1] = (o) => o.Id;
 
             // Update
@@ -111,7 +115,7 @@ namespace Troolio.Projection.Persistence
         {
             string changeId = await _redisWriteProvider.UpdateEntity(entityId, entity, partitionId, updatedProperties);
 
-            TEntity updatedEntity = _redisReadProvider.GetEntity(entityId);
+
 
             if (entityId == Guid.Empty)
             {
@@ -135,11 +139,11 @@ namespace Troolio.Projection.Persistence
         {
             if (entity == null)
             {
-                entity = GetEntity(entityId);
+                entity = await _redisReadProvider.GetEntityAsync(entityId);
                 if (entity == null)
                 {
                     _logger.Log(LogLevel.Error, $"Redis AddToPartition entity not found for type: {typeof(TEntity).Name}, Entity Id: {entityId}, PartitionId: {partitionId}.");
-                    return;
+                    throw new InvalidOperationException("The Redis entity must exist before it is added to a partition.");
                 }
             }
 
@@ -149,11 +153,11 @@ namespace Troolio.Projection.Persistence
 
         protected async Task UpdateInPartition(Guid entityId, Guid partitionId)
         {
-            TEntity entity = GetEntity(entityId);
+            TEntity? entity = await _redisReadProvider.GetEntityAsync(entityId);
             if (entity == null)
             {
                 _logger.Log(LogLevel.Error, $"Redis UpdatePartition entity not found for type: {typeof(TEntity).Name}, Entity Id: {entityId}, PartitionId: {partitionId}.");
-                return;
+                throw new InvalidOperationException("The Redis entity must exist before its partition entry is updated.");
             }
 
             string changeId = await _redisWriteProvider.UpdateEntityKeyInPartition(entityId, partitionId);

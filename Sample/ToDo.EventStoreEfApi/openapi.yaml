@@ -1,0 +1,105 @@
+openapi: 3.0.3
+info:
+  title: Troolio ToDo learning API
+  version: 1.0.0
+  description: >-
+    Actual Troolio actors and SQLite read models. Local demonstration only;
+    everyone acts as the server-configured DemoUserId. X-User-Id is not trusted.
+servers:
+  - url: http://localhost:5080
+paths:
+  /todos:
+    get:
+      summary: Read a bounded SQL page owned by the demo user
+      parameters:
+        - in: query
+          name: skip
+          schema: { type: integer, minimum: 0, default: 0 }
+        - in: query
+          name: take
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+      responses:
+        '400': { description: Invalid page range }
+        '200':
+          description: Current user's todos
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Todo' }
+    post:
+      summary: Create a todo; use a stable ID for idempotent retries
+      parameters:
+        - in: header
+          name: X-Correlation-Id
+          schema: { type: string, format: uuid }
+          description: Optional diagnostic correlation ID; invalid IDs are replaced.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title: { type: string, minLength: 1, maxLength: 200 }
+                id: { type: string, format: uuid, nullable: true }
+      responses:
+        '201':
+          description: Created or exact same-owner retry
+          headers:
+            Location: { schema: { type: string } }
+            X-Correlation-Id: { schema: { type: string, format: uuid } }
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string, format: uuid }
+                  title: { type: string }
+        '400': { description: Invalid title or empty ID }
+        '403': { description: Existing todo belongs to another owner }
+        '409': { description: Existing ID has another title }
+  /todos/{id}:
+    parameters:
+      - $ref: '#/components/parameters/TodoId'
+    get:
+      summary: Get an owned todo from SQLite
+      responses:
+        '200':
+          description: Todo read model
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Todo' }
+        '404': { description: Missing or not owned by the current demo user }
+  /todos/{id}/complete:
+    parameters:
+      - $ref: '#/components/parameters/TodoId'
+    post:
+      summary: Complete an owned todo; repeating the command is safe
+      responses:
+        '202': { description: Completed or already complete }
+        '404': { description: Todo does not exist }
+        '403': { description: Todo belongs to another owner }
+  /health:
+    get:
+      summary: Readiness of the started application and silo
+      responses:
+        '200': { description: Ready }
+components:
+  parameters:
+    TodoId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    Todo:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        ownerId: { type: string, format: uuid }
+        title: { type: string }
+        isCompleted: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        completedAt: { type: string, format: date-time, nullable: true }

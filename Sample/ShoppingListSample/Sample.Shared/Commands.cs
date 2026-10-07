@@ -34,7 +34,7 @@ public record RemoveItemFromList(Metadata Headers, RemoveItemFromListPayload Pay
     : Command<IShoppingListActor>(Headers);
 
 [GenerateSerializer]
-public record JoinListUsingCodePayload(string Code);
+public record JoinListUsingCodePayload(string JoinCode);
 
 [GenerateSerializer]
 public record JoinListUsingCode(Metadata Headers, JoinListUsingCodePayload Payload)

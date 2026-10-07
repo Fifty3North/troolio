@@ -1,5 +1,3 @@
-﻿using System.Runtime.Serialization;
-
 namespace Troolio.Projection.Redis.Exceptions
 {
     [Serializable]
@@ -17,8 +15,5 @@ namespace Troolio.Projection.Redis.Exceptions
         {
         }
 
-        protected RedisProviderException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
     }
 }

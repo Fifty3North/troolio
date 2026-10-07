@@ -25,7 +25,7 @@
   --#{$variable-prefix}actor-bg: #{$white};
   --#{$variable-prefix}node-bg: #{$white};
   --#{$variable-prefix}navbar-bg: #{$white};
-  --#{$variable-prefix}canvas-img-bg: url(/images/light-pattern-bg.jpg);
+  --#{$variable-prefix}canvas-img-bg: radial-gradient(circle at 1px 1px, #68718422 1px, transparent 0);
 
   --#{$variable-prefix}hover-bg: #{rgba($gray-300, 0.5)};
   --#{$variable-prefix}active-bg: #{$gray-200};

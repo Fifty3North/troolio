@@ -1,20 +1,8 @@
-﻿using NUnit.Framework;
-
-namespace Troolio.Tests
+using NUnit.Framework;
+namespace Troolio.Tests;
+[SetUpFixture]
+public sealed class SetupFixture
 {
-    [SetUpFixture]
-    public class SetupFixture
-    {
-        [OneTimeSetUp]
-        public async Task Setup()
-        {
-            await Tests.Setup.ActorSystemServer.Start();
-        }
-
-        [OneTimeTearDown]
-        public async Task Shutdown()
-        {
-            await Tests.Setup.ActorSystemServer.Shutdown();
-        }
-    }
+    [OneTimeSetUp] public Task Start() => Setup.ActorSystemServer.Start();
+    [OneTimeTearDown] public Task Stop() => Setup.ActorSystemServer.Shutdown();
 }

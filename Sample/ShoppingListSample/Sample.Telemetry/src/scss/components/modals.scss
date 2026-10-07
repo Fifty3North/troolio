@@ -40,7 +40,7 @@
 
     &--has-background {
         #{$modal-parent}-header {
-            background: url("../images/light-pattern-bg.jpg") repeat;
+            background: radial-gradient(circle at 1px 1px, #68718422 1px, transparent 0) repeat;
 
             background: var(--#{$variable-prefix}normal-bg);
             border-bottom: 1px solid var(--#{$variable-prefix}border-color);

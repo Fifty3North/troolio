@@ -1,107 +1,19 @@
-﻿using System.Text;
-using NBomber.CSharp;
-using NBomber.Plugins.Http.CSharp;
-using Newtonsoft.Json;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 
-namespace Troolio.Deployment.LoadTest
+// Bounded sequential smoke load. Run only against a disposable local sample database.
+var count = args.Length > 0 ? int.Parse(args[0]) : 10;
+if (count is < 1 or > 1000) throw new ArgumentOutOfRangeException(nameof(count), "Use between 1 and 1000 lists.");
+using var client = new HttpClient { BaseAddress = new Uri(args.Length > 1 ? args[1] : "http://localhost:8081"), Timeout = TimeSpan.FromSeconds(30) };
+client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "demo-alice");
+client.DefaultRequestHeaders.Add("userId", "11111111-1111-1111-1111-111111111111");
+client.DefaultRequestHeaders.Add("deviceId", "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+for (var index = 0; index < count; index++)
 {
-    public record ListTitle(string Title);
-
-    public record ListItem(Guid ItemId, string Description, ushort Quantity = 1);
-
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            var serverIp = "127.0.0.1";
-            var serverPath = "http://" + serverIp + ":8081";
-
-            var deviceId = "B8118E16-3530-4B65-94B9-CF38D2E5F749";
-
-            var http = HttpClientFactory.Create();
-
-            var step = Step.Create("create_list",
-                clientFactory: http,
-                execute: async context =>
-                {
-                    var listId = Guid.NewGuid().ToString();
-                    var userId = Guid.NewGuid().ToString();
-                    var listPrefix = "/ShoppingList/" + listId;
-
-                    var requestPath = serverPath + listPrefix + "/CreateNewList";
-                    var request = Http.CreateRequest("POST", requestPath)
-                        .WithHeader("Accept", "*/*")
-                        .WithHeader("userId", userId)
-                        .WithHeader("deviceId", deviceId)
-                        .WithBody(new StringContent(JsonConvert.SerializeObject(new ListTitle($"testlist-{listId}")), Encoding.UTF8, "application/json"));
-
-                    context.Data.Add("listId", listId);
-                    context.Data.Add("userId", userId);
-
-                    context.Logger.Debug($"Creating new list: {requestPath}");
-                    var response = await Http.Send(request, context);
-                    return response;
-                }, TimeSpan.FromSeconds(30));
-
-            var step2 = Step.Create("add_first_item_to_list",
-                clientFactory: http,
-                execute: async context =>
-                {
-                    var listId = Guid.Parse((string)context.Data["listId"]);
-                    var userId = Guid.Parse((string)context.Data["userId"]);
-                    var listPrefix = $"/ShoppingList/{listId}";
-
-                    var requestPath = serverPath + listPrefix + "/AddItemToList";
-                    var request = Http.CreateRequest("POST", requestPath)
-                        .WithHeader("Accept", "*/*")
-                        .WithHeader("userId", userId.ToString())
-                        .WithHeader("deviceId", deviceId)
-                        .WithBody(new StringContent(JsonConvert.SerializeObject(new ListItem(Guid.NewGuid(), "Item 1", 1)), Encoding.UTF8, "application/json"));
-
-
-                    context.Logger.Debug($"Creating item in list: {requestPath}");
-                    var response = await Http.Send(request, context);
-                    return response;
-                }, TimeSpan.FromSeconds(30));
-
-            var step3 = Step.Create("add_second_item_to_list",
-                clientFactory: http,
-                execute: async context =>
-                {
-                    var listId = Guid.Parse((string)context.Data["listId"]);
-                    var userId = Guid.Parse((string)context.Data["userId"]);
-                    var listPrefix = $"/ShoppingList/{listId}";
-
-                    var requestPath = serverPath + listPrefix + "/AddItemToList";
-                    var request = Http.CreateRequest("POST", requestPath)
-                        .WithHeader("Accept", "*/*")
-                        .WithHeader("userId", userId.ToString())
-                        .WithHeader("deviceId", deviceId)
-                        .WithBody(new StringContent(JsonConvert.SerializeObject(new ListItem(Guid.NewGuid(), "Item 2", 2)), Encoding.UTF8, "application/json"));
-
-                    context.Logger.Debug($"Creating item in list: {requestPath}");
-                    var response = await Http.Send(request, context);
-                    return response;
-                }, TimeSpan.FromSeconds(30));
-
-            var scenario = ScenarioBuilder
-                .CreateScenario("simple_http", step, step2, step3)
-                .WithWarmUpDuration(TimeSpan.FromSeconds(5))
-                .WithLoadSimulations(
-                    Simulation.InjectPerSec(rate: 1, during: TimeSpan.FromSeconds(5)),
-                    Simulation.InjectPerSec(rate: 5, during: TimeSpan.FromSeconds(5)),
-                    Simulation.InjectPerSec(rate: 10, during: TimeSpan.FromSeconds(5)),
-                    Simulation.InjectPerSec(rate: 15, during: TimeSpan.FromSeconds(10)),
-                    Simulation.InjectPerSec(rate: 30, during: TimeSpan.FromSeconds(10)),
-                    Simulation.InjectPerSec(rate: 60, during: TimeSpan.FromSeconds(10)),
-                    Simulation.InjectPerSec(rate: 120, during: TimeSpan.FromSeconds(10)),
-                    Simulation.InjectPerSec(rate: 240, during: TimeSpan.FromSeconds(10)),
-                    Simulation.InjectPerSec(rate: 480, during: TimeSpan.FromSeconds(10))
-                );;
-
-            NBomberRunner
-                .RegisterScenarios(scenario)
-                .Run();
-        }
-    }
+    var listId = Guid.NewGuid();
+    using var created = await client.PostAsJsonAsync($"/ShoppingList/{listId}/CreateNewList", new { title = $"Load sample {index}" });
+    created.EnsureSuccessStatusCode();
+    using var added = await client.PostAsJsonAsync($"/ShoppingList/{listId}/AddItemToList", new { itemId = Guid.NewGuid(), description = "Milk", quantity = 1 });
+    added.EnsureSuccessStatusCode();
 }
+Console.WriteLine($"Created {count} lists and items. Read models may finish asynchronously.");

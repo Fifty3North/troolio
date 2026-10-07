@@ -6,7 +6,7 @@
     <ProjectGuid>a4fbc061-8de7-4f3b-ad0c-b0d92de37d25</ProjectGuid>
     <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
     <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/swagger</DockerServiceUrl>
-    <DockerServiceName>troolio.builder.api</DockerServiceName>
+    <DockerServiceName>shopping</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
     <None Include="docker-compose.yml" />

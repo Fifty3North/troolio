@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><IsTestProject>true</IsTestProject><IsPackable>false</IsPackable><UseLocalExtensions Condition="'$(UseLocalExtensions)' == ''">false</UseLocalExtensions></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageReference Include="NUnit" Version="4.5.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="5.1.0" />
+    <PackageReference Include="Microsoft.Orleans.Sdk" Version="$(OrleansVersion)" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(EntityFrameworkVersion)" />
+    <ProjectReference Condition="'$(UseLocalExtensions)' == 'true'" Include="../Troolio.Stores.EventStore/Troolio.Stores.EventStore.csproj" />
+    <ProjectReference Condition="'$(UseLocalExtensions)' == 'true'" Include="../Troolio.Stores.Marten/Troolio.Stores.Marten.csproj" />
+    <ProjectReference Condition="'$(UseLocalExtensions)' == 'true'" Include="../../Troolio.Projection.Redis/Troolio.Projection.Redis.csproj" />
+    <ProjectReference Condition="'$(UseLocalExtensions)' == 'true'" Include="../../Projections/Troolio.Projection.EntityFramework/Troolio.Projection.EntityFramework.csproj" />
+    <PackageReference Include="Troolio.Projection.EntityFramework" Version="$(TroolioExtensionsVersion)" Condition="'$(UseLocalExtensions)' != 'true'" />
+    <PackageReference Include="Troolio.Projection.Redis" Version="$(TroolioExtensionsVersion)" Condition="'$(UseLocalExtensions)' != 'true'" />
+    <PackageReference Include="Troolio.Stores.EventStore" Version="$(TroolioExtensionsVersion)" Condition="'$(UseLocalExtensions)' != 'true'" />
+    <PackageReference Include="Troolio.Stores.Marten" Version="$(TroolioExtensionsVersion)" Condition="'$(UseLocalExtensions)' != 'true'" />
+  </ItemGroup>
+</Project>

@@ -1,21 +1,20 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <Version>$(TroolioExtensionsVersion)</Version>
     <Authors>Fifty3North (F3N Limited)</Authors>
-    <Description>trool.io projection to redis</Description>
-    <Copyright>F3N Limited 2022</Copyright>
-    <PackageProjectUrl>https://github.com/Fifty3North/troolio</PackageProjectUrl>
+    <Description>Redis derived read models and partition change feeds for Troolio applications.</Description>
+    <PackageProjectUrl>https://fifty3north.github.io/troolio-docs/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Fifty3North/troolio.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>package-readme.md</PackageReadmeFile>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="StackExchange.Redis" Version="2.6.48" />
-    <PackageReference Include="Troolio.Core" Version="1.0.3.112-prerelease" />
+    <PackageReference Include="Troolio.Core" Version="$(TroolioCoreVersion)" />
+    <PackageReference Include="StackExchange.Redis" Version="3.3.1" />
     <PackageReference Include="ValueInjecter" Version="3.2.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <None Include="package-readme.md" Pack="true" PackagePath="" />
   </ItemGroup>
-
 </Project>

@@ -9,3 +9,20 @@ Sample/ShoppingListSample/Sample.Silo/shoppinglists.db*
 *.trace
 reports
 .idea
+
+# Local build, runtime and IDE state
+**/node_modules/
+**/bin/
+**/obj/
+**/dist/
+.nupkgs/
+artifacts/
+TestResults/
+*.user
+*.db
+*.db-shm
+*.db-wal
+
+# Python tooling caches
+**/__pycache__/
+*.pyc

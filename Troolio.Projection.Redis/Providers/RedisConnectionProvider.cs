@@ -1,31 +1,14 @@
-﻿using StackExchange.Redis;
+using StackExchange.Redis;
 
-namespace Troolio.Projection.Redis.Providers
+namespace Troolio.Projection.Redis.Providers;
+
+/// <summary>A reusable connection owned by this provider's DI lifetime.</summary>
+public sealed class RedisConnectionProvider : IRedisConnectionProvider, IDisposable
 {
-    public class RedisConnectionProvider : IRedisConnectionProvider
-    {
-        private static Lazy<ConnectionMultiplexer> lazyConnection = null;
-
-        private static readonly object locker = new object();
-
-        public IConnectionMultiplexer Connection
-        {
-            get { return lazyConnection.Value; }
-        }
-
-        public RedisConnectionProvider(string configurationString) : this(ConfigurationOptions.Parse(configurationString))
-        {
-        }
-
-        public RedisConnectionProvider(ConfigurationOptions configuration)
-        {
-            lock (locker)
-            {
-                if (lazyConnection == null)
-                {
-                    lazyConnection = new Lazy<ConnectionMultiplexer>(() => ConnectionMultiplexer.Connect(configuration));
-                }
-            }
-        }
-    }
+    private readonly Lazy<ConnectionMultiplexer> _connection;
+    public IConnectionMultiplexer Connection => _connection.Value;
+    public RedisConnectionProvider(string configuration) : this(ConfigurationOptions.Parse(configuration)) { }
+    public RedisConnectionProvider(ConfigurationOptions configuration) =>
+        _connection = new(() => ConnectionMultiplexer.Connect(configuration));
+    public void Dispose() { if (_connection.IsValueCreated) _connection.Value.Dispose(); }
 }

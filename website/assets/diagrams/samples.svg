@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 390" role="img" aria-labelledby="title desc">
+<title id="title">One actor, two paths</title>
+<desc id="desc">HTTP commands append events for one actor. Live delivery updates SQL read models. Historical replay restores only actor state. Catalog reads query SQL directly.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#77dacf"/></marker></defs>
+<rect width="960" height="390" rx="20" fill="#111724"/>
+<g font-family="system-ui,sans-serif" fill="#e9edf8" text-anchor="middle">
+<text x="480" y="38" font-size="21" font-weight="700">A command records a fact; each reader has a purpose</text>
+<g fill="#202b40" stroke="#536884"><rect x="30" y="80" width="175" height="76" rx="12"/><rect x="275" y="80" width="180" height="76" rx="12"/><rect x="535" y="80" width="185" height="76" rx="12"/><rect x="785" y="80" width="145" height="76" rx="12"/><rect x="535" y="240" width="185" height="76" rx="12"/><rect x="275" y="240" width="180" height="76" rx="12"/><rect x="785" y="240" width="145" height="76" rx="12"/></g>
+<g font-size="17"><text x="118" y="111">HTTP command</text><text x="118" y="136" font-size="13" fill="#b9c7df">Established caller + IDs</text><text x="365" y="111">One actor's rules</text><text x="365" y="136" font-size="13" fill="#b9c7df">Validate and decide</text><text x="627" y="111">Append events</text><text x="627" y="136" font-size="13" fill="#b9c7df">One actor's history</text><text x="857" y="111">Pure state</text><text x="857" y="136" font-size="13" fill="#b9c7df">Live and replay</text><text x="627" y="271">Live projection</text><text x="627" y="296" font-size="13" fill="#b9c7df">Await read-model write</text><text x="365" y="271">Catalog query</text><text x="365" y="296" font-size="13" fill="#b9c7df">Filter and page in SQL</text><text x="857" y="271">SQL view</text><text x="857" y="296" font-size="13" fill="#b9c7df">Derived durable data</text></g>
+<text x="480" y="360" font-size="14" fill="#b9c7df">Historical actor replay has no SQL writes, orchestration, emails or global stream scan.</text>
+</g><g fill="none" stroke="#77dacf" stroke-width="2.5" marker-end="url(#arrow)"><path d="M205 118 H270"/><path d="M455 118 H530"/><path d="M720 118 H780"/><path d="M627 156 V235"/><path d="M720 278 H780"/><path d="M455 278 V330 H857 V321"/></g>
+<text x="650" y="202" fill="#d0b4ff" font-family="system-ui,sans-serif" font-size="13">live delivery</text>
+</svg>

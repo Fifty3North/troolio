@@ -22,7 +22,7 @@
               .checker 
                 span
                   input(type='checkbox' 
-                    :v-model="!item.crossedOff" 
+                    :checked="item.crossedOff"
                     v-on:click="emit('check',item.id)" 
                     :disabled="item.crossedOff" )
               .truncated(:title="item.description")

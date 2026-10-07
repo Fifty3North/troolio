@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Sample.Shared.ActorInterfaces;
 using Sample.Shared.Events;
 using Sample.Shared.InternalCommands;
@@ -12,30 +12,18 @@ namespace Sample.Host.App.ShoppingList;
 
 public class UserActor : StatefulActor<UserState>, IUserActor
 {
-    public UserActor(IStore store, IConfiguration configuration) : base(store, configuration) 
-    { 
-        State = new UserState(ImmutableList<Guid>.Empty); 
+    public UserActor(IStore store, IConfiguration configuration) : base(store, configuration)
+    {
+        State = new UserState(ImmutableList<Guid>.Empty);
     }
 
     #region Commands ...
-    public IEnumerable<Event> Handle(RecordListId command) => new[] { new ListIdRecorded(command.ListId, command.Headers) };
+    public IEnumerable<Event> Handle(RecordListId command) => State.Lists.Contains(command.ListId)
+        ? [] : [new ListIdRecorded(command.ListId, command.Headers)];
     #endregion
 
     #region Events ...
-    public void On(ListIdRecorded ev) => State = State with { Lists = State.Lists.Add(ev.ListId) };
+    public void On(ListIdRecorded ev) => State = State with { Lists = State.Lists.Contains(ev.ListId) ? State.Lists : State.Lists.Add(ev.ListId) };
     #endregion
 
-    #region Queries ...
-    public async Task<ImmutableList<ShoppingListQueryResult>> Handle(MyShoppingLists query)
-    {
-        return (
-          await Task.WhenAll(
-            this.State.Lists.Select(async (l) =>
-                await this.System.ActorOf<IShoppingListActor>(l.ToString())
-                    .Ask(new ShoppingListDetails())
-            )
-          )
-        ).ToImmutableList<ShoppingListQueryResult>();
-    }
-    #endregion
 }

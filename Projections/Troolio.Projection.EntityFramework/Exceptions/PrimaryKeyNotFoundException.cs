@@ -1,4 +1,4 @@
-﻿using Orleans.Runtime;
+using Orleans.Runtime;
 using System.Runtime.Serialization;
 
 namespace Troolio.Core.Projection.Exceptions
@@ -11,6 +11,5 @@ namespace Troolio.Core.Projection.Exceptions
 
         public PrimaryKeyNotFoundException(string message, Exception innerException) : base(message, innerException) { }
 
-        protected PrimaryKeyNotFoundException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 }

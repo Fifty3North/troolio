@@ -1,4 +1,4 @@
-﻿using Troolio.Core;
+using Troolio.Core;
 using Troolio.Core.Creatable;
 using Troolio.Core.Stateful.Interfaces;
 
@@ -10,5 +10,5 @@ public interface IShoppingListActor : ICreatableActor { }
 public interface IUserActor : IStatefulActor { }
 public interface IPingActor : IActor { }
 
-public interface IShoppingListEFProjection : IActor { }
-public interface IShoppingListItemEFProjection : IActor { }
+public interface IShoppingListEFProjection : IProjectionActor { }
+public interface IShoppingListItemEFProjection : IProjectionActor { }

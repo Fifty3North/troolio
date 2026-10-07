@@ -1,5 +1,3 @@
-﻿using System.Runtime.Serialization;
-
 namespace Troolio.Stores.Exceptions
 {
     public class MaximumRetriesExceededException : Exception
@@ -10,6 +8,5 @@ namespace Troolio.Stores.Exceptions
 
         public MaximumRetriesExceededException(string message, Exception? innerException) : base(message, innerException) { }
 
-        protected MaximumRetriesExceededException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 }

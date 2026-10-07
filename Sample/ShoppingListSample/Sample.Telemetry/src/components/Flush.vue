@@ -26,7 +26,7 @@ ul.messages(v-if="data != null && data.length > 0")
                         
 </template>
 <script setup lang="ts">
-import { onMounted, onUpdated, ref} from "vue";
+import { onMounted, onUpdated, onUnmounted, ref} from "vue";
 import feather from "feather-icons";
 import * as Interfaces from '../Interfaces'
 import * as Enums from '../Enums'
@@ -73,7 +73,7 @@ function flush(){
       axios.get(`${metaEnv.VITE_API_URL}Telemetry/flush`).then((response: any) => {
         if(response && response.status === 200){
           console.log('flush', response.data)
-          data.value = [...data.value,...pushToList(JSON.parse(JSON.stringify(response?.data)))]
+          data.value = [...data.value,...pushToList(JSON.parse(JSON.stringify(response?.data)))].slice(-300)
         }
       },(error) => {
         console.log('error',error)
@@ -115,7 +115,7 @@ function pushToList(data:Interfaces.MessageLogListEntity[]){
     
     if (messageRef.message.headers.causationId != null)   {
       let parentRef = data[map[messageRef.message.headers.causationId.toString()]];
-      toPushToRef = parentRef.children;
+      if (parentRef && parentRef !== messageRef) toPushToRef = parentRef.children;
     }
     //children are pushed to last of msg
     let existingMessage = toPushToRef.find(x=> messageRef.message.headers.messageId == x.message.headers.messageId)
@@ -135,6 +135,8 @@ function pushToList(data:Interfaces.MessageLogListEntity[]){
   //return as value type
   return JSON.parse(JSON.stringify(roots));
 }
+
+onUnmounted(stopFlush);
 
 onMounted(()=>{
   feather.replace();

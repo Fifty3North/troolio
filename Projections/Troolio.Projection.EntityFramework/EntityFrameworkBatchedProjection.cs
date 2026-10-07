@@ -7,10 +7,10 @@ namespace Troolio.Core.Projection
             where TEntity : class
             where TDbContext : DbContext
     {
-        public override Task OnActivateAsync()
+        public override Task OnActivateAsync(CancellationToken cancellationToken)
         {
             SetupMappings();
-            return base.OnActivateAsync();
+            return base.OnActivateAsync(cancellationToken);
         }
 
         protected abstract void SetupMappings();

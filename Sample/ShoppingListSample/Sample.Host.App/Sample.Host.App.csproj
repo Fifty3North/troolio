@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -7,20 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Orleans.Sdk" Version="10.0.0">
+    <PackageReference Include="Microsoft.Orleans.Sdk" Version="$(OrleansVersion)">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="EFProjection\**\*.cs" />
-    <Compile Remove="LoggingCallFilter.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <ProjectReference Include="../../../Projections/Troolio.Projection.EntityFramework/Troolio.Projection.EntityFramework.csproj" Condition="'$(UseLocalExtensions)' == 'true'" />
+    <PackageReference Include="Troolio.Projection.EntityFramework" Version="$(TroolioExtensionsVersion)" Condition="'$(UseLocalExtensions)' != 'true'" />
     <ProjectReference Include="..\Sample.Database\Sample.Database.csproj" />
-    <ProjectReference Include="..\..\..\..\trool.io\Orleankka.TestKit\Orleankka.TestKit.csproj" />
     <ProjectReference Include="..\Sample.Shared\Sample.Shared.csproj" />
   </ItemGroup>
 

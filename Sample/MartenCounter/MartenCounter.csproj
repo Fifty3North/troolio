@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TroolioExtensionsSourceRoot Condition="'$(TroolioExtensionsSourceRoot)' == ''">../..</TroolioExtensionsSourceRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Troolio.Core" Version="$(TroolioCoreVersion)" />
+    <PackageReference Include="Microsoft.Orleans.Sdk" Version="$(OrleansVersion)" PrivateAssets="all" />
+    <PackageReference Include="Troolio.Stores.Marten" Version="$(TroolioExtensionsVersion)" Condition="'$(UseLocalExtensions)' != 'true'" />
+    <ProjectReference Include="$(TroolioExtensionsSourceRoot)/Stores/Troolio.Stores.Marten/Troolio.Stores.Marten.csproj" Condition="'$(UseLocalExtensions)' == 'true'" />
+  </ItemGroup>
+</Project>

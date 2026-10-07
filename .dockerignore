@@ -1,0 +1,13 @@
+.git
+**/node_modules
+**/bin
+**/obj
+**/dist
+.nupkgs
+artifacts
+**/*.user
+**/*.db
+**/*.db-shm
+**/*.db-wal
+plans
+progress

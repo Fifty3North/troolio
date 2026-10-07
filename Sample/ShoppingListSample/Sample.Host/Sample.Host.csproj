@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -22,11 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\trool.io\Orleankka.TestKit\Orleankka.TestKit.csproj" />
     <ProjectReference Include="..\Sample.Database\Sample.Database.csproj" />
     <ProjectReference Include="..\Sample.Host.App\Sample.Host.App.csproj" />
   </ItemGroup>

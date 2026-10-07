@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TroolioExtensionsSourceRoot Condition="'$(TroolioExtensionsSourceRoot)' == ''">../..</TroolioExtensionsSourceRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Troolio.Core" Version="$(TroolioCoreVersion)" />
+    <PackageReference Include="Troolio.Projection.Redis" Version="$(TroolioExtensionsVersion)" Condition="'$(UseLocalExtensions)' != 'true'" />
+    <ProjectReference Include="$(TroolioExtensionsSourceRoot)/Troolio.Projection.Redis/Troolio.Projection.Redis.csproj" Condition="'$(UseLocalExtensions)' == 'true'" />
+  </ItemGroup>
+</Project>

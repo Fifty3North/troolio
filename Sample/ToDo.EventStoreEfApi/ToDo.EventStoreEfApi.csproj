@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <PackageReference Include="Troolio.Core" Version="$(TroolioCoreVersion)" />
+    <PackageReference Include="Microsoft.Orleans.Sdk" Version="$(OrleansVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(EntityFrameworkVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseLocalExtensions)' != 'true'">
+    <PackageReference Include="Troolio.Projection.EntityFramework" Version="$(TroolioExtensionsVersion)" />
+    <PackageReference Include="Troolio.Stores.EventStore" Version="$(TroolioExtensionsVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseLocalExtensions)' == 'true'">
+    <ProjectReference Include="../../Projections/Troolio.Projection.EntityFramework/Troolio.Projection.EntityFramework.csproj" />
+    <ProjectReference Include="../../Stores/Troolio.Stores.EventStore/Troolio.Stores.EventStore.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using Troolio.Projection.Redis.Models;
 
 namespace Troolio.Projection.Redis.Providers
@@ -6,6 +6,9 @@ namespace Troolio.Projection.Redis.Providers
     public interface IRedisReadProvider
     {
         long GetChangeIndexLength(Guid partitionId);
+
+        RedisChangePage GetChangePage(Guid partitionId, long offset, int maxCount = 100);
+        Task<RedisChangePage> GetChangePageAsync(Guid partitionId, long offset, int maxCount = 100);
 
         IList<ChangeHashEntry> GetChangeEntries(string lastChangeId, Guid partitionId);
 
@@ -34,6 +37,7 @@ namespace Troolio.Projection.Redis.Providers
         bool EntityKeyExists(Guid id);
 
         TEntity GetEntity(Guid id);
+        Task<TEntity?> GetEntityAsync(Guid id);
 
         TProperty GetEntityProperty<TProperty>(Guid id, string property);
 

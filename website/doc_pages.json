@@ -1,0 +1,51 @@
+[
+  {
+    "group": "Samples",
+    "slug": "calculator-sample",
+    "title": "Run the Calculator sample",
+    "description": "Start with commands, events and a query through a real actor.",
+    "source": "docs/public/261007-0035-calculator-sample.md"
+  },
+  {
+    "group": "Samples",
+    "slug": "todo-sample",
+    "title": "Build the ToDo API",
+    "description": "Follow HTTP commands, pure replay and durable SQLite read models.",
+    "source": "docs/public/261007-0035-todo-sample.md"
+  },
+  {
+    "group": "Samples",
+    "slug": "shopping-sample",
+    "title": "Explore Shopping List",
+    "description": "Learn collaboration, orchestration, authorized catalog queries and tracing.",
+    "source": "docs/public/261007-0035-shopping-sample.md"
+  },
+  {
+    "group": "Extensions",
+    "slug": "ef-projections",
+    "title": "EF Core projections",
+    "description": "Map live actor events to relational read models with EF Core 10.",
+    "source": "docs/public/261007-0035-ef-projections.md"
+  },
+  {
+    "group": "Extensions",
+    "slug": "redis-projections",
+    "title": "Redis projections",
+    "description": "Build derived hashes, partitions and bounded change-feed readers.",
+    "source": "docs/public/261007-0035-redis-projections.md"
+  },
+  {
+    "group": "Extensions",
+    "slug": "marten-store",
+    "title": "Marten event storage",
+    "description": "Store ordinary actor events and snapshots in PostgreSQL.",
+    "source": "docs/public/261007-0035-marten-store.md"
+  },
+  {
+    "group": "Extensions",
+    "slug": "eventstore-store",
+    "title": "Ordinary gRPC event storage",
+    "description": "Use the EventStore extension with current KurrentDB transport.",
+    "source": "docs/public/261007-0035-eventstore-store.md"
+  }
+]

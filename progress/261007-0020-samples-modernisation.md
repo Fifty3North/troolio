@@ -29,3 +29,11 @@ Publicdocs52guidesbuilt; localguide links valid; sevennew/updatedguidescontain s
 Readonlyrelease reviewer /root/audit_samples identified old-artifact recovery beingvalidatedagainstcurrentCore version; fixed byreadingpropsfromacceptedsourcecommit andcoveredwithregressiontests. Fixed403authorizationdocsnippet.
 
 Publication remainspending: additional NuGet-sidepolicyrequestedforFifty3North/troolio; sourcePR/CI/main release dispatch next. Userhasnotyetconfirmedpolicycreation.
+
+## Main integration and release consumer correction
+
+PR #21 merged at `4c265e2`; both latest branch/PR CI runs succeeded. All three worker worktrees were clean, reviewed patches were integrated (extension source identical after normalizing line endings; Shopping and ToDo differences are documented coordinator fixes), and disposable checkouts were removed. Worker branches and evidence remain.
+
+Release run 37550711609 passed the runtime suite and packing but failed before tag reservation or publication: its empty NuGet cache was nested inside the consumer project, so the SDK's recursive C# glob compiled package-cache content files. Move the isolated cache beside the project. A regression exercises the actual SDK Compile item evaluation with a cached C# trap; all ten safeguards pass. The runtime source is unchanged, so the latest full-suite result is reused for this focused correction.
+
+A fresh final site contains 52 guides, valid internal links, no generated bin/obj paths, and no excluded library or release-evidence text. Pages publication still waits for actual package availability. Owned Shopping/UI/docs previews stopped; three provider fixtures retained for the pending public-package regression.

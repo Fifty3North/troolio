@@ -1,5 +1,6 @@
 import importlib.util
 import io
+import json
 import subprocess
 import tempfile
 import unittest
@@ -27,6 +28,26 @@ class ReleaseSafeguards(unittest.TestCase):
         packages = root.findall("./packageSourceMapping/packageSource[@key='release']/package")
         self.assertEqual({p.get("pattern") for p in packages}, set(release.PACKAGES))
         self.assertNotIn("Troolio.Core", {p.get("pattern") for p in packages})
+
+    def test_cached_csharp_sources_are_outside_the_sdk_compile_glob(self):
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "consumer"
+            observed = []
+            def command(args, **kwargs):
+                cache = Path(kwargs["env"]["NUGET_PACKAGES"])
+                if args[1] == "restore":
+                    source = cache / "dependency/contentFiles/cs/net10.0/CachedSource.cs"
+                    source.parent.mkdir(parents=True)
+                    source.write_text("#error Package-cache source must not be compiled")
+                else:
+                    result = subprocess.run(["dotnet", "msbuild", str(destination / "Consumer.csproj"),
+                                             "-getItem:Compile", "-nologo"],
+                                            check=True, capture_output=True, text=True)
+                    observed.extend(item["FullPath"] for item in json.loads(result.stdout)["Items"]["Compile"])
+                return subprocess.CompletedProcess(args, 0)
+            with mock.patch.object(release, "run", side_effect=command):
+                release.restore_consumer(release.SOURCE, destination, [])
+            self.assertEqual(observed, [str(destination / "Smoke.cs")])
 
     def test_nuget_signature_can_change_but_library_bytes_cannot(self):
         def package(dll, signature=None):
